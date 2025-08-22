@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Header, APIRouter
+from fastapi import Header, APIRouter
 from fastapi.responses import StreamingResponse, JSONResponse
 from models.chat import ChatRequest
 from services.provider import get_provider

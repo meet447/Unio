@@ -1,10 +1,12 @@
 from providers.openrouter.client import OpenrouterClient
 from providers.google.client import GoogleClient
+from providers.groq.client import GroqClient
 from auth.check_key import fetch_api_keys
 
 models = {
     'google':'5c696eb8-43ce-4d2b-8f4a-46a29a577104',
-    'openrouter':'19dcbee7-3d66-4620-82de-918026af3257'
+    'openrouter':'19dcbee7-3d66-4620-82de-918026af3257',
+    'groq': 'b98b8844-81ac-4baa-9ca9-e349e369c600'
 }
 
 def get_provider(model, user_id):
@@ -21,6 +23,9 @@ def get_provider(model, user_id):
         
     elif provider == "openrouter":
         return OpenrouterClient(api_keys=api_key_list)
-        
+    
+    elif provider == "groq":
+        return GroqClient(api_keys=api_key_list)
+    
     else:
         raise ValueError(f"Unsupported provider: {provider}")
