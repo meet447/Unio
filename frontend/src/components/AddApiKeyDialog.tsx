@@ -16,9 +16,10 @@ interface Provider {
 
 interface AddApiKeyDialogProps {
   onApiKeyAdded: () => void;
+  children?: React.ReactNode;
 }
 
-export const AddApiKeyDialog = ({ onApiKeyAdded }: AddApiKeyDialogProps) => {
+export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProps) => {
   const [open, setOpen] = useState(false);
   const [providers, setProviders] = useState<Provider[]>([]);
   const [name, setName] = useState("");
@@ -83,10 +84,12 @@ export const AddApiKeyDialog = ({ onApiKeyAdded }: AddApiKeyDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Add API Key
-        </Button>
+        {children || (
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Add API Key
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

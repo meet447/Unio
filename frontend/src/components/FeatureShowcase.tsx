@@ -1,21 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Activity, 
-  BarChart3, 
-  Shield, 
-  Zap,
-  Clock,
-  AlertTriangle 
-} from "lucide-react";
 
 const FeatureShowcase = () => {
   return (
     <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
       {/* API Logs Demo */}
       <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
-        <div className="flex items-center gap-2 mb-4">
-          <Activity className="w-5 h-5 text-blue-600" />
+        <div className="mb-4">
           <h3 className="font-semibold">Real-time API Logs</h3>
         </div>
         <div className="space-y-2 text-sm">
@@ -36,8 +27,7 @@ const FeatureShowcase = () => {
 
       {/* Rate Limiting Demo */}
       <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="w-5 h-5 text-green-600" />
+        <div className="mb-4">
           <h3 className="font-semibold">Smart Rate Limiting</h3>
         </div>
         <div className="space-y-3">
@@ -67,8 +57,7 @@ const FeatureShowcase = () => {
 
       {/* Analytics Demo */}
       <Card className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20 border-purple-200 dark:border-purple-800">
-        <div className="flex items-center gap-2 mb-4">
-          <BarChart3 className="w-5 h-5 text-purple-600" />
+        <div className="mb-4">
           <h3 className="font-semibold">Usage Analytics</h3>
         </div>
         <div className="space-y-3">
@@ -93,8 +82,7 @@ const FeatureShowcase = () => {
 
       {/* Fallback Demo */}
       <Card className="p-6 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/20 dark:to-red-950/20 border-orange-200 dark:border-orange-800">
-        <div className="flex items-center gap-2 mb-4">
-          <Shield className="w-5 h-5 text-orange-600" />
+        <div className="mb-4">
           <h3 className="font-semibold">Auto Fallback</h3>
         </div>
         <div className="space-y-2">
@@ -111,7 +99,6 @@ const FeatureShowcase = () => {
             <span className="text-sm">Google AI - Standby</span>
           </div>
           <div className="text-xs text-muted-foreground mt-2">
-            <Clock className="w-3 h-3 inline mr-1" />
             Switched to Anthropic in 50ms
           </div>
         </div>

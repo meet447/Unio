@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Plus, Key, Activity, BarChart3, MoreHorizontal, ChevronRight, ChevronDown } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Plus, Key, Activity, BarChart3, MoreHorizontal, ChevronRight, ChevronDown, Power, Trash2 } from "lucide-react";
 import { AddApiKeyDialog } from "@/components/AddApiKeyDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -85,6 +86,40 @@ const Dashboard = () => {
       console.error('Error fetching API keys:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleApiKeyStatus = async (keyId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('api_keys')
+        .update({ is_active: !currentStatus })
+        .eq('id', keyId);
+
+      if (error) throw error;
+
+      await fetchApiKeys(); // Refresh the data
+    } catch (error) {
+      console.error('Error toggling API key status:', error);
+    }
+  };
+
+  const deleteApiKey = async (keyId: string) => {
+    if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('api_keys')
+        .delete()
+        .eq('id', keyId);
+
+      if (error) throw error;
+
+      await fetchApiKeys(); // Refresh the data
+    } catch (error) {
+      console.error('Error deleting API key:', error);
     }
   };
 
@@ -279,9 +314,29 @@ const Dashboard = () => {
                             </div>
                             
                             <div className="flex items-center gap-2 mt-3 sm:mt-0 sm:ml-4">
-                              <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
+                                    <MoreHorizontal className="w-4 h-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => toggleApiKeyStatus(apiKey.id, apiKey.is_active)}
+                                    className="flex items-center gap-2"
+                                  >
+                                    <Power className="w-4 h-4" />
+                                    {apiKey.is_active ? 'Deactivate' : 'Activate'}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => deleteApiKey(apiKey.id)}
+                                    className="flex items-center gap-2 text-red-600 dark:text-red-400"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         ))}
