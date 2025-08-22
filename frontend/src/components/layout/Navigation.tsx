@@ -22,7 +22,7 @@ const Navigation = () => {
           </Link>
 
           {/* Navigation Links */}
-          <div className="hidden md:flex items-center space-x-8">
+          <div className="flex items-center space-x-8">
             {user ? (
               <>
                 {navItems.map((item) => {
@@ -66,27 +66,6 @@ const Navigation = () => {
                   <Link to="/register">Sign Up</Link>
                 </Button>
               </>
-            )}
-          </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            {user ? (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={signOut}
-                className="text-gray-600 dark:text-gray-400"
-              >
-                Logout
-              </Button>
-            ) : (
-              <Button 
-                asChild 
-                className="bg-black dark:bg-white text-white dark:text-black rounded-full px-6 text-sm font-medium"
-              >
-                <Link to="/register">Sign Up</Link>
-              </Button>
             )}
           </div>
         </div>

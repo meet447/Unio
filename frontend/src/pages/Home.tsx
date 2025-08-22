@@ -29,7 +29,7 @@ const Home = () => {
               </Link>
             </Button>
             <Button variant="outline" asChild className="border-gray-300 dark:border-gray-700 rounded-full px-8 sm:px-10 py-6 sm:py-7 text-base sm:text-lg font-medium">
-              <Link to="/login">Documentation</Link>
+              <Link to="/login">dashboard</Link>
             </Button>
           </div>
 

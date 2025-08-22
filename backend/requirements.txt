@@ -1,0 +1,4 @@
+uvicorn 
+openai
+fastapi
+pydantic

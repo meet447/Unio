@@ -25,7 +25,7 @@ const Footer = () => {
 
   return (
     <footer className="border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-black">
-      <div className="max-w-6xl mx-auto px-6 py-16">
+      <div className="max-w-6xl mx-auto px-6 py-8">
         <div className="grid md:grid-cols-4 gap-8">
           {/* Logo and description */}
           <div className="md:col-span-1">
@@ -60,7 +60,7 @@ const Footer = () => {
         </div>
 
         {/* Bottom section */}
-        <div className="mt-16 pt-8 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center">
+        <div className="mt-8 pt-4 border-t border-gray-200 dark:border-gray-800 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-gray-600 dark:text-gray-400 font-light">
             © {currentYear} Unio. All rights reserved.
           </p>
