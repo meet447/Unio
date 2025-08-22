@@ -1,23 +1,26 @@
-from openai import OpenAI, RateLimitError, APIError
-from models.chat import ChatRequest, ChatResponse, ChatCompletionChunk
+from openai import AsyncOpenAI, RateLimitError, APIError
+from models.chat import ChatResponse, ChatRequest, ChatCompletionChunk
 from auth.check_key import increment_usage_count, increment_rate_limit_count
 from exceptions import RateLimitExceededError, ProviderAPIError
-import json, time
+import json, time, uuid
 
 class OpenrouterClient:
     def __init__(self, api_keys):
         self.base_url = "https://openrouter.ai/api/v1"
         self.api_keys = api_keys
 
-    def chat_completions(self, req: ChatRequest):
-        model = ":".join(req.model.split(":")[1:])
+    async def chat_completions(self, req: ChatRequest):
+        # Safe model extraction
+        parts = req.model.split(":", 1)
+        model = parts[1] if len(parts) > 1 else req.model
+
         last_error = None
         for key_data in self.api_keys:
             api_key = key_data['encrypted_key']
             api_key_id = key_data['id']
             try:
-                client = OpenAI(api_key=api_key, base_url=self.base_url)
-                response = client.chat.completions.create(
+                client = AsyncOpenAI(api_key=api_key, base_url=self.base_url)
+                response = await client.chat.completions.create(
                     model=model,
                     messages=req.messages,
                     temperature=req.temperature
@@ -54,30 +57,38 @@ class OpenrouterClient:
         if last_error:
             raise last_error
 
-    def stream_chat_completions(self, req: ChatRequest):
-        model = ":".join(req.model.split(":")[1:])
+    async def stream_chat_completions(self, req: ChatRequest):
+        # Safe model extraction
+        parts = req.model.split(":", 1)
+        model = parts[1] if len(parts) > 1 else req.model
+
         last_error = None
         for key_data in self.api_keys:
             api_key = key_data['encrypted_key']
             api_key_id = key_data['id']
             try:
-                client = OpenAI(api_key=api_key, base_url=self.base_url)
-                response = client.chat.completions.create(
+                client = AsyncOpenAI(api_key=api_key, base_url=self.base_url)
+                response = await client.chat.completions.create(
                     model=model,
                     messages=req.messages,
                     temperature=req.temperature,
                     stream=True
                 )
                 increment_usage_count(api_key_id)
-                for chunk in response:
+
+                async for chunk in response:
+                    delta = {}
+                    if chunk.choices[0].delta.role:
+                        delta["role"] = chunk.choices[0].delta.role
+                    if chunk.choices[0].delta.content:
+                        delta["content"] = chunk.choices[0].delta.content
+
                     event = ChatCompletionChunk(
-                        id="82882",
+                        id=str(uuid.uuid4()),
                         object="chat.completion.chunk",
                         created=int(time.time()),
                         model=req.model,
-                        choices=[
-                            {"index": 0, "delta": {"content": chunk.choices[0].delta.content}}
-                        ]
+                        choices=[{"index": 0, "delta": delta}]
                     ).model_dump_json()
                     
                     yield f"data: {event}\n\n"
@@ -106,4 +117,4 @@ class OpenrouterClient:
                 }
             }
             yield f"data: {json.dumps(error_content)}\n\n"
-            yield "data: [DONE]\n\n"
+            return  # don't send [DONE] after error

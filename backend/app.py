@@ -19,4 +19,8 @@ app.include_router(
 
 @app.get('/')
 async def root():
-    return {"message": "Welcome to the ChatGPT API!"}
+    return {"message": "Welcome to the Unio API!"}
+    
+@app.get("/health")
+async def health():
+    return {"status": "ok"}

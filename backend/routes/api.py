@@ -8,7 +8,7 @@ from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIEr
 router = APIRouter()
 
 @router.post("/chat/completions")
-def chat_completions(req: ChatRequest, authorization: str = Header(None)):
+async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
         return JSONResponse(
             status_code=401,
@@ -56,7 +56,7 @@ def chat_completions(req: ChatRequest, authorization: str = Header(None)):
     if req.stream:
         try:
             return StreamingResponse(
-                client.stream_chat_completions(req=req),
+                client.stream_chat_completions(req=req),  # async generator, ok
                 media_type="text/event-stream"
             )
         except RateLimitExceededError as e:
@@ -98,7 +98,7 @@ def chat_completions(req: ChatRequest, authorization: str = Header(None)):
 
     else:
         try:
-            response = client.chat_completions(req=req)
+            response = await client.chat_completions(req=req)  # ✅ await here
             return response
         except RateLimitExceededError as e:
             return JSONResponse(

@@ -1,4 +1,4 @@
-from openai import APIError, OpenAI, RateLimitError
+from openai import APIError, OpenAI
 
 client = OpenAI(api_key="rk_f112c370d4b0f82940d9a4274e9b0b78e547a904af65e933577b825a7b8f3ebd", base_url="http://localhost:8000/v1/api")
 
