@@ -2,3 +2,4 @@ uvicorn
 openai
 fastapi
 pydantic
+supabase
