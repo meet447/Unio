@@ -3,3 +3,4 @@ openai
 fastapi
 pydantic
 supabase
+dotenv
