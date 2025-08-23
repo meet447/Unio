@@ -1,11 +1,12 @@
 from config import supabase
+from datetime import datetime, timezone
 
 async def log_request(
     user_id: str,
     api_key: str,
     provider: str,
     model: str,
-    status: int,  # integer column
+    status: int,
     request_payload: dict,
     response_payload: dict,
     prompt_tokens: int = 0,
@@ -17,13 +18,17 @@ async def log_request(
     """
     Insert a log into the request_logs table.
     """
-    provider, model = model.split(":", 1)
+    # Split provider and model if combined
+    provider_name, model_name = model.split(":", 1) if ":" in model else (provider, model)
+
+    # Current timestamp as ISO string
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     log_data = {
         "user_id": user_id,
         "api_key": api_key,
-        "provider": provider,
-        "model": model,
+        "provider": provider_name,
+        "model": model_name,
         "status": status,
         "request_payload": request_payload,
         "response_payload": response_payload,
@@ -31,7 +36,8 @@ async def log_request(
         "completion_tokens": completion_tokens,
         "total_tokens": total_tokens,
         "estimated_cost": estimated_cost,
-        "response_time_ms": response_time_ms
+        "response_time_ms": response_time_ms,
+        "time_stamp": timestamp  # now JSON-serializable
     }
 
     try:
