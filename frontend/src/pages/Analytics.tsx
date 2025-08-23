@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from "react";
+import { useAnalytics, RequestLog } from "@/hooks/useAnalytics";
 import { Input } from "@/components/ui/input";
 import { 
   Select,
@@ -16,7 +16,6 @@ import {
   Filter,
   Search,
   TrendingUp,
-  Zap,
   AlertCircle,
   CheckCircle,
   XCircle
@@ -27,135 +26,54 @@ const Analytics = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
-  // Mock data for analytics
-  const stats = [
-    {
-      title: "Total Requests",
-      value: "24,847",
-      change: "+12.5%",
-      trend: "up"
-    },
-    {
-      title: "Success Rate",
-      value: "99.2%",
-      change: "+0.3%",
-      trend: "up"
-    },
-    {
-      title: "Avg Response Time",
-      value: "142ms",
-      change: "-8ms",
-      trend: "up"
-    },
-    {
-      title: "Total Cost",
-      value: "$127.50",
-      change: "+$23.10",
-      trend: "down"
-    }
-  ];
+  const { logs, loading, error } = useAnalytics();
 
-  // Mock data for API logs
-  const apiLogs = [
-    {
-      id: 1,
-      timestamp: "2024-01-15 14:32:15",
-      method: "POST",
-      endpoint: "/v1/chat/completions",
-      provider: "OpenAI",
-      model: "gpt-4",
-      status: 200,
-      responseTime: 1250,
-      tokens: 156,
-      cost: 0.0234
-    },
-    {
-      id: 2,
-      timestamp: "2024-01-15 14:31:58",
-      method: "POST",
-      endpoint: "/v1/chat/completions",
-      provider: "Anthropic",
-      model: "claude-3-sonnet",
-      status: 200,
-      responseTime: 890,
-      tokens: 203,
-      cost: 0.0156
-    },
-    {
-      id: 3,
-      timestamp: "2024-01-15 14:31:42",
-      method: "POST",
-      endpoint: "/v1/embeddings",
-      provider: "OpenAI",
-      model: "text-embedding-ada-002",
-      status: 200,
-      responseTime: 340,
-      tokens: 512,
-      cost: 0.0008
-    },
-    {
-      id: 4,
-      timestamp: "2024-01-15 14:31:28",
-      method: "POST",
-      endpoint: "/v1/chat/completions",
-      provider: "OpenAI",
-      model: "gpt-3.5-turbo",
-      status: 429,
-      responseTime: 120,
-      tokens: 0,
-      cost: 0.0000
-    },
-    {
-      id: 5,
-      timestamp: "2024-01-15 14:31:15",
-      method: "POST",
-      endpoint: "/v1/chat/completions",
-      provider: "Google AI",
-      model: "gemini-pro",
-      status: 200,
-      responseTime: 1680,
-      tokens: 289,
-      cost: 0.0087
-    },
-    {
-      id: 6,
-      timestamp: "2024-01-15 14:30:59",
-      method: "POST",
-      endpoint: "/v1/completions",
-      provider: "Cohere",
-      model: "command",
-      status: 500,
-      responseTime: 5000,
-      tokens: 0,
-      cost: 0.0000
-    },
-    {
-      id: 7,
-      timestamp: "2024-01-15 14:30:45",
-      method: "POST",
-      endpoint: "/v1/chat/completions",
-      provider: "OpenAI",
-      model: "gpt-4",
-      status: 200,
-      responseTime: 1120,
-      tokens: 178,
-      cost: 0.0267
-    },
-    {
-      id: 8,
-      timestamp: "2024-01-15 14:30:32",
-      method: "POST",
-      endpoint: "/v1/chat/completions",
-      provider: "Anthropic",
-      model: "claude-3-haiku",
-      status: 200,
-      responseTime: 650,
-      tokens: 145,
-      cost: 0.0029
+  const stats = useMemo(() => {
+    if (!logs || logs.length === 0) {
+      return [
+        { title: "Total Requests", value: "0", change: "", trend: "up" },
+        { title: "Success Rate", value: "0%", change: "", trend: "up" },
+        { title: "Avg Response Time", value: "0ms", change: "", trend: "up" },
+        { title: "Total Cost", value: "$0.00", change: "", trend: "down" },
+      ];
     }
-  ];
 
-  const getStatusIcon = (status: number) => {
+    const totalRequests = logs.length;
+    const successfulRequests = logs.filter(log => log.status && log.status >= 200 && log.status < 300).length;
+    const successRate = totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 0;
+    const avgResponseTime = logs.reduce((acc, log) => acc + (log.response_time_ms || 0), 0) / totalRequests;
+    const totalCost = logs.reduce((acc, log) => acc + (log.estimated_cost || 0), 0);
+
+    return [
+      {
+        title: "Total Requests",
+        value: totalRequests.toLocaleString(),
+        change: "", // Placeholder for change calculation
+        trend: "up"
+      },
+      {
+        title: "Success Rate",
+        value: `${successRate.toFixed(1)}%`,
+        change: "", // Placeholder for change calculation
+        trend: "up"
+      },
+      {
+        title: "Avg Response Time",
+        value: `${avgResponseTime.toFixed(0)}ms`,
+        change: "", // Placeholder for change calculation
+        trend: "up"
+      },
+      {
+        title: "Total Cost",
+        value: `$${totalCost.toFixed(2)}`,
+        change: "", // Placeholder for change calculation
+        trend: "down"
+      }
+    ];
+  }, [logs]);
+
+  const getStatusIcon = (status: number | null) => {
+    if (status === null) return <AlertCircle className="w-4 h-4 text-gray-500" />;
     if (status >= 200 && status < 300) {
       return <CheckCircle className="w-4 h-4 text-green-500" />;
     } else if (status >= 400 && status < 500) {
@@ -165,7 +83,8 @@ const Analytics = () => {
     }
   };
 
-  const getStatusColor = (status: number) => {
+  const getStatusColor = (status: number | null) => {
+    if (status === null) return "text-gray-600 dark:text-gray-400";
     if (status >= 200 && status < 300) {
       return "text-green-600 dark:text-green-400";
     } else if (status >= 400 && status < 500) {
@@ -175,18 +94,43 @@ const Analytics = () => {
     }
   };
 
-  const filteredLogs = apiLogs.filter(log => {
-    const matchesSearch = searchQuery === "" || 
-      log.endpoint.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.model.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === "all" ||
-      (statusFilter === "success" && log.status >= 200 && log.status < 300) ||
-      (statusFilter === "error" && log.status >= 400);
-    
-    return matchesSearch && matchesStatus;
-  });
+  const filteredLogs = useMemo(() => {
+    return logs.filter(log => {
+      const matchesSearch = searchQuery === "" || 
+        (log.provider && log.provider.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (log.model && log.model.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesStatus = statusFilter === "all" ||
+        (statusFilter === "success" && log.status && log.status >= 200 && log.status < 300) ||
+        (statusFilter === "error" && log.status && log.status >= 400);
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [logs, searchQuery, statusFilter]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <Activity className="w-12 h-12 text-gray-400 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center">
+          <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-black dark:text-white mb-2">
+            Error fetching data
+          </h3>
+          <p className="text-gray-600 dark:text-gray-400 font-light">
+            {error.message}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white dark:bg-black">
@@ -347,16 +291,13 @@ const Analytics = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-800">
-                  {filteredLogs.map((log) => (
-                    <tr key={log.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+                  {filteredLogs.map((log: RequestLog) => (
+                    <tr key={log.log_id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 font-mono">
-                        {log.timestamp}
+                        {log.time_stamp ? new Date(log.time_stamp).toLocaleString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-black dark:text-white">
-                          {log.method} {log.endpoint}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-500">
                           {log.model}
                         </div>
                       </td>
@@ -367,18 +308,18 @@ const Analytics = () => {
                         <div className="flex items-center gap-2">
                           {getStatusIcon(log.status)}
                           <span className={`text-sm font-medium ${getStatusColor(log.status)}`}>
-                            {log.status}
+                            {log.status || 'N/A'}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white font-mono">
-                        {log.responseTime}ms
+                        {log.response_time_ms ? `${log.response_time_ms}ms` : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white">
-                        {log.tokens.toLocaleString()}
+                        {log.total_tokens ? log.total_tokens.toLocaleString() : 'N/A'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white font-mono">
-                        ${log.cost.toFixed(4)}
+                        {log.estimated_cost ? `$${log.estimated_cost.toFixed(4)}` : 'N/A'}
                       </td>
                     </tr>
                   ))}

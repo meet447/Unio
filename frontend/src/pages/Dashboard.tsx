@@ -45,11 +45,16 @@ const Dashboard = () => {
       const { data, error } = await supabase
         .from('api_keys')
         .select(`
-          *,
+          id,
+          name,
+          is_active,
+          usage_count,
+          created_at,
           providers (
             name
           )
         `)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
