@@ -1,7 +1,7 @@
-import openai
+from openai import OpenAI
 import time
 
-unio = openai.Client(
+unio =OpenAI(
     base_url="https://unio.onrender.com/v1/api",
     api_key="rk_f112c370d4b0f82940d9a4274e9b0b78e547a904af65e933577b825a7b8f3ebd"
 )
@@ -52,4 +52,4 @@ run_model("OpenRouter", "openrouter:moonshotai/kimi-k2:free", messages)
 run_model("OpenRouter", "openrouter:google/gemma-3n-e2b-it:free", messages)
 run_model("Groq", "groq:openai/gpt-oss-20b", messages)
 run_model("Groq", "groq:openai/gpt-oss-120b", messages)
-run_model("Groq", "groq:gemma2-9b-it", messages)
+run_model("Groq", "groq:meta-llama/llama-4-maverick-17b-128e-instruct", messages)

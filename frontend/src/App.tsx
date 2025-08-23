@@ -13,6 +13,7 @@ import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import CheckEmail from "./pages/CheckEmail";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +33,7 @@ const App = () => (
               <Route path="help" element={<HelpCenter />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
+              <Route path="check-email" element={<CheckEmail />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

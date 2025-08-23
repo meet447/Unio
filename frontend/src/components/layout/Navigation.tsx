@@ -1,15 +1,17 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu, BarChart, User, HelpCircle, LogOut } from "lucide-react";
 
 const Navigation = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
 
   const navItems = [
-    { path: "/dashboard", label: "Dashboard" },
-    { path: "/profile", label: "Profile" },
-    { path: "/help", label: "Docs" },
+    { path: "/dashboard", label: "Dashboard", icon: <BarChart className="h-5 w-5" /> },
+    { path: "/profile", label: "Profile", icon: <User className="h-5 w-5" /> },
+    { path: "/help", label: "Docs", icon: <HelpCircle className="h-5 w-5" /> },
   ];
 
   return (
@@ -24,33 +26,35 @@ const Navigation = () => {
           {/* Navigation Links */}
           <div className="flex items-center space-x-8">
             {user ? (
-              <>
-                {navItems.map((item) => {
-                  const isActive = location.pathname === item.path;
-                  
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`text-sm font-medium transition-colors ${
-                        isActive
-                          ? "text-black dark:text-white"
-                          : "text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
-                      }`}
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <Menu className="h-6 w-6" />
+                  </Button>
+                </SheetTrigger>
+                <SheetContent>
+                  <div className="flex flex-col space-y-4">
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
+                      >
+                        {item.icon}
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                    <Button
+                      variant="ghost"
+                      onClick={signOut}
+                      className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
                     >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={signOut}
-                  className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white"
-                >
-                  Logout
-                </Button>
-              </>
+                      <LogOut className="h-5 w-5" />
+                      <span>Logout</span>
+                    </Button>
+                  </div>
+                </SheetContent>
+              </Sheet>
             ) : (
               <>
                 <Link
@@ -59,8 +63,8 @@ const Navigation = () => {
                 >
                   Login
                 </Link>
-                <Button 
-                  asChild 
+                <Button
+                  asChild
                   className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-full px-6 text-sm font-medium"
                 >
                   <Link to="/register">Sign Up</Link>

@@ -19,7 +19,7 @@ app.include_router(
 
 @app.get('/')
 async def root():
-    return {"message": "Welcome to the Unio API!"}
+    return {"message": "Welcome to the Unio API!", "version": "1.0.0", "status": "ok"}
     
 @app.get("/health")
 async def health():
