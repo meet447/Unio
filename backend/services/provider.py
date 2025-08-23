@@ -2,6 +2,7 @@ from providers.openrouter.client import OpenrouterClient
 from providers.google.client import GoogleClient
 from providers.groq.client import GroqClient
 from providers.anthropic.client import AnthropicClient
+from providers.together.client import TogetherClient
 from auth.check_key import fetch_api_keys
 
 models = {
@@ -9,6 +10,7 @@ models = {
     'openrouter':'19dcbee7-3d66-4620-82de-918026af3257',
     'groq': 'b98b8844-81ac-4baa-9ca9-e349e369c600',
     'anthropic': 'ecce63a9-7c47-4167-9eb0-61cbe62f7711',
+    'together':'e25a4be0-508b-4fc1-a2f5-4fb483cd4fcc',
 }
 
 def get_provider(model, user_id):
@@ -31,6 +33,9 @@ def get_provider(model, user_id):
         
     elif provider == "anthropic":
         return AnthropicClient(api_keys=api_key_list)
+    
+    elif provider == "together":
+        return TogetherClient(api_keys=api_key_list)
     
     else:
         raise ValueError(f"Unsupported provider: {provider}")
