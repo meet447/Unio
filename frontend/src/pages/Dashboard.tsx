@@ -5,7 +5,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Plus, Key, Activity, BarChart3, MoreHorizontal, ChevronRight, ChevronDown, Power, Trash2 } from "lucide-react";
 import { AddApiKeyDialog } from "@/components/AddApiKeyDialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useAnalytics, AnalyticsFilters } from "@/hooks/useAnalytics";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+} from "recharts";
 
 interface ApiKey {
   id: string;
@@ -30,6 +45,16 @@ const Dashboard = () => {
   const [providers, setProviders] = useState<Provider[]>([]);
   const [expandedProviders, setExpandedProviders] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+
+  // Use analytics for dashboard insights
+  const analyticsFilters: AnalyticsFilters = {
+    timeRange: 'all',
+    searchQuery: '',
+    statusFilter: 'all',
+    limit: 10
+  };
+  
+  const { logs, chartData, stats } = useAnalytics(analyticsFilters);
 
   useEffect(() => {
     if (!user) {
@@ -138,7 +163,7 @@ const Dashboard = () => {
     setExpandedProviders(newExpanded);
   };
 
-  const stats = [
+  const displayStats = [
     {
       title: "API Keys",
       value: apiKeys.length.toString(),
@@ -151,10 +176,41 @@ const Dashboard = () => {
     },
     {
       title: "Requests",
-      value: apiKeys.reduce((sum, k) => sum + k.usage_count, 0).toLocaleString(),
-      subtitle: "Total usage",
+      value: stats.totalRequests.toLocaleString(),
+      subtitle: "All time",
+    },
+    {
+      title: "Success Rate",
+      value: `${stats.successRate.toFixed(1)}%`,
+      subtitle: "All time",
     }
   ];
+
+  // Chart configurations
+  const requestTrendConfig = {
+    requests: {
+      label: "Requests",
+      color: "hsl(var(--chart-1))",
+    },
+  };
+
+  const responseTimeConfig = {
+    responseTime: {
+      label: "Avg Response Time (ms)",
+      color: "hsl(var(--chart-2))",
+    },
+  };
+
+  // Format chart data for display
+  const formatChartData = (data: typeof chartData) => {
+    return data.slice(-12).map(point => ({
+      ...point,
+      time: new Date(point.time).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
+    }));
+  };
 
   if (loading) {
     return (
@@ -191,8 +247,8 @@ const Dashboard = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid md:grid-cols-3 gap-6 sm:gap-8 mb-12">
-          {stats.map((stat, index) => (
+        <div className="grid md:grid-cols-4 gap-6 sm:gap-8 mb-12">
+          {displayStats.map((stat, index) => (
             <div key={index} className="text-center p-6 sm:p-8">
               <div className="text-4xl sm:text-5xl font-medium text-black dark:text-white mb-2">
                 {stat.value}
@@ -207,7 +263,158 @@ const Dashboard = () => {
           ))}
         </div>
 
-        {/* Providers Section */}
+        {/* Analytics Overview */}
+        {chartData.length > 0 && (
+          <div className="mb-12">
+            <h2 className="text-2xl font-medium text-black dark:text-white mb-6">
+              Usage Overview
+            </h2>
+            <div className="grid lg:grid-cols-2 gap-8">
+              {/* Request Trend */}
+              <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center">
+                    <BarChart3 className="w-5 h-5 text-white dark:text-black" />
+                  </div>
+                  <h3 className="text-lg font-medium text-black dark:text-white">
+                    Request Trend
+                  </h3>
+                </div>
+                <ChartContainer config={requestTrendConfig} className="h-48">
+                  <AreaChart data={formatChartData(chartData)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="time" 
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={12}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Area
+                      type="monotone"
+                      dataKey="requests"
+                      stroke="var(--color-requests)"
+                      fill="var(--color-requests)"
+                      fillOpacity={0.6}
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </div>
+
+              {/* Response Time Trend */}
+              <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center">
+                    <Activity className="w-5 h-5 text-white dark:text-black" />
+                  </div>
+                  <h3 className="text-lg font-medium text-black dark:text-white">
+                    Performance
+                  </h3>
+                </div>
+                <ChartContainer config={responseTimeConfig} className="h-48">
+                  <LineChart data={formatChartData(chartData)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="time" 
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={12}
+                    />
+                    <YAxis 
+                      axisLine={false}
+                      tickLine={false}
+                      fontSize={12}
+                    />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line
+                      type="monotone"
+                      dataKey="responseTime"
+                      stroke="var(--color-responseTime)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Recent Activity */}
+        {logs.length > 0 && (
+          <div className="mb-12">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+              <h2 className="text-2xl font-medium text-black dark:text-white mb-4 sm:mb-0">
+                Recent Activity
+              </h2>
+              <Button variant="outline" asChild className="border-gray-300 dark:border-gray-700 rounded-full">
+                <Link to="/analytics">View All Logs</Link>
+              </Button>
+            </div>
+            <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 dark:bg-gray-900/50">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Time
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Provider
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Model
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                        Response Time
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-800">
+                    {logs.slice(0, 5).map((log) => (
+                      <tr key={log.log_id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 font-mono">
+                          {log.time_stamp ? new Date(log.time_stamp).toLocaleTimeString() : 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white font-medium">
+                          {log.provider || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white">
+                          {log.model || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2">
+                            {log.status && log.status >= 200 && log.status < 300 ? (
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            ) : log.status && log.status >= 400 ? (
+                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                            ) : (
+                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            )}
+                            <span className="text-sm text-black dark:text-white font-medium">
+                              {log.status || 'N/A'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white font-mono">
+                          {log.response_time_ms ? `${log.response_time_ms}ms` : 'N/A'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="mb-8">
           <h2 className="text-2xl font-medium text-black dark:text-white mb-6">
             Your Providers

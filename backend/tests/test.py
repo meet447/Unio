@@ -8,11 +8,8 @@ try:
         model="google:gemini-2.0-flash-lite",
         stream=True
     )
-    for chunk in chat_completion:
+    for chunk in chat_completion:   
         print(chunk.choices[0].delta.content, end="")
         
 except APIError as e:
-    print(f"Rate limit exceeded ✅: {e}`")
-
-except Exception as e:
-    print(f"An error occurred: {e}")
+    print(f"Error: {e}`")

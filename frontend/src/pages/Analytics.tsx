@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
-import { useAnalytics, RequestLog } from "@/hooks/useAnalytics";
+import { useAnalytics, RequestLog, AnalyticsFilters } from "@/hooks/useAnalytics";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { 
   Select,
   SelectContent,
@@ -8,6 +9,23 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+} from "recharts";
 import { 
   Activity, 
   BarChart3, 
@@ -18,59 +36,54 @@ import {
   TrendingUp,
   AlertCircle,
   CheckCircle,
-  XCircle
+  XCircle,
+  RefreshCw
 } from "lucide-react";
 
 const Analytics = () => {
-  const [timeRange, setTimeRange] = useState("7d");
+  const [timeRange, setTimeRange] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showMore, setShowMore] = useState(false);
 
-  const { logs, loading, error } = useAnalytics();
+  const filters: AnalyticsFilters = {
+    timeRange,
+    searchQuery,
+    statusFilter,
+    limit: showMore ? 50 : 10,
+    offset: 0
+  };
 
-  const stats = useMemo(() => {
-    if (!logs || logs.length === 0) {
-      return [
-        { title: "Total Requests", value: "0", change: "", trend: "up" },
-        { title: "Success Rate", value: "0%", change: "", trend: "up" },
-        { title: "Avg Response Time", value: "0ms", change: "", trend: "up" },
-        { title: "Total Cost", value: "$0.00", change: "", trend: "down" },
-      ];
-    }
+  const { logs, allLogs, loading, loadingMore, error, hasMore, totalCount, loadMore, refetch, chartData, stats } = useAnalytics(filters);
 
-    const totalRequests = logs.length;
-    const successfulRequests = logs.filter(log => log.status && log.status >= 200 && log.status < 300).length;
-    const successRate = totalRequests > 0 ? (successfulRequests / totalRequests) * 100 : 0;
-    const avgResponseTime = logs.reduce((acc, log) => acc + (log.response_time_ms || 0), 0) / totalRequests;
-    const totalCost = logs.reduce((acc, log) => acc + (log.estimated_cost || 0), 0);
-
+  const displayStats = useMemo(() => {
     return [
       {
         title: "Total Requests",
-        value: totalRequests.toLocaleString(),
-        change: "", // Placeholder for change calculation
+        value: stats.totalRequests.toLocaleString(),
+        change: "",
         trend: "up"
       },
       {
         title: "Success Rate",
-        value: `${successRate.toFixed(1)}%`,
-        change: "", // Placeholder for change calculation
+        value: `${stats.successRate.toFixed(1)}%`,
+        change: "",
         trend: "up"
       },
       {
         title: "Avg Response Time",
-        value: `${avgResponseTime.toFixed(0)}ms`,
-        change: "", // Placeholder for change calculation
+        value: `${stats.avgResponseTime.toFixed(0)}ms`,
+        change: "",
         trend: "up"
       },
       {
         title: "Total Cost",
-        value: `$${totalCost.toFixed(2)}`,
-        change: "", // Placeholder for change calculation
+        value: `$${stats.totalCost.toFixed(2)}`,
+        change: "",
         trend: "down"
       }
     ];
-  }, [logs]);
+  }, [stats]);
 
   const getStatusIcon = (status: number | null) => {
     if (status === null) return <AlertCircle className="w-4 h-4 text-gray-500" />;
@@ -94,19 +107,42 @@ const Analytics = () => {
     }
   };
 
-  const filteredLogs = useMemo(() => {
-    return logs.filter(log => {
-      const matchesSearch = searchQuery === "" || 
-        (log.provider && log.provider.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        (log.model && log.model.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      const matchesStatus = statusFilter === "all" ||
-        (statusFilter === "success" && log.status && log.status >= 200 && log.status < 300) ||
-        (statusFilter === "error" && log.status && log.status >= 400);
-      
-      return matchesSearch && matchesStatus;
-    });
-  }, [logs, searchQuery, statusFilter]);
+  // Chart configurations
+  const requestVolumeConfig = {
+    requests: {
+      label: "Requests",
+      color: "hsl(var(--chart-1))",
+    },
+    errors: {
+      label: "Errors",
+      color: "hsl(var(--chart-2))",
+    },
+  };
+
+  const responseTimeConfig = {
+    responseTime: {
+      label: "Avg Response Time (ms)",
+      color: "hsl(var(--chart-3))",
+    },
+  };
+
+  const costConfig = {
+    cost: {
+      label: "Cost ($)",
+      color: "hsl(var(--chart-4))",
+    },
+  };
+
+  // Format chart data for display
+  const formatChartData = (data: typeof chartData) => {
+    return data.map(point => ({
+      ...point,
+      time: new Date(point.time).toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      })
+    }));
+  };
 
   if (loading) {
     return (
@@ -151,6 +187,7 @@ const Analytics = () => {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Time</SelectItem>
                 <SelectItem value="1d">Last 24h</SelectItem>
                 <SelectItem value="7d">Last 7 days</SelectItem>
                 <SelectItem value="30d">Last 30 days</SelectItem>
@@ -160,9 +197,22 @@ const Analytics = () => {
           </div>
         </div>
 
+        {/* Header Actions */}
+        <div className="flex items-center gap-3 mb-8">
+          <Button
+            onClick={refetch}
+            disabled={loading}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid md:grid-cols-4 gap-6 sm:gap-8 mb-12">
-          {stats.map((stat, index) => (
+          {displayStats.map((stat, index) => (
             <div key={index} className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-sm text-gray-600 dark:text-gray-400 font-light">
@@ -189,21 +239,42 @@ const Analytics = () => {
                 <BarChart3 className="w-5 h-5 text-white dark:text-black" />
               </div>
               <h3 className="text-lg font-medium text-black dark:text-white">
-                Request Volume
+                Request Volume & Errors
               </h3>
             </div>
-            <div className="h-48 flex items-end justify-between gap-2">
-              {[65, 45, 78, 52, 89, 67, 94, 73, 85, 91, 76, 88, 82, 95].map((height, index) => (
-                <div key={index} className="flex-1 bg-gray-200 dark:bg-gray-800 rounded-t" style={{ height: `${height}%` }}></div>
-              ))}
-            </div>
-            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-500 mt-2">
-              <span>00:00</span>
-              <span>06:00</span>
-              <span>12:00</span>
-              <span>18:00</span>
-              <span>24:00</span>
-            </div>
+            <ChartContainer config={requestVolumeConfig} className="h-64">
+              <AreaChart data={formatChartData(chartData)}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="time" 
+                  axisLine={false}
+                  tickLine={false}
+                  fontSize={12}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  fontSize={12}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Area
+                  type="monotone"
+                  dataKey="requests"
+                  stackId="1"
+                  stroke="var(--color-requests)"
+                  fill="var(--color-requests)"
+                  fillOpacity={0.6}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="errors"
+                  stackId="1"
+                  stroke="var(--color-errors)"
+                  fill="var(--color-errors)"
+                  fillOpacity={0.6}
+                />
+              </AreaChart>
+            </ChartContainer>
           </div>
 
           {/* Response Time Chart */}
@@ -213,22 +284,68 @@ const Analytics = () => {
                 <Clock className="w-5 h-5 text-white dark:text-black" />
               </div>
               <h3 className="text-lg font-medium text-black dark:text-white">
-                Response Time
+                Average Response Time
               </h3>
             </div>
-            <div className="h-48 flex items-end justify-between gap-2">
-              {[45, 52, 38, 65, 43, 58, 41, 67, 39, 55, 48, 62, 44, 59].map((height, index) => (
-                <div key={index} className="flex-1 bg-blue-200 dark:bg-blue-800 rounded-t" style={{ height: `${height}%` }}></div>
-              ))}
-            </div>
-            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-500 mt-2">
-              <span>00:00</span>
-              <span>06:00</span>
-              <span>12:00</span>
-              <span>18:00</span>
-              <span>24:00</span>
-            </div>
+            <ChartContainer config={responseTimeConfig} className="h-64">
+              <LineChart data={formatChartData(chartData)}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="time" 
+                  axisLine={false}
+                  tickLine={false}
+                  fontSize={12}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  fontSize={12}
+                />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <Line
+                  type="monotone"
+                  dataKey="responseTime"
+                  stroke="var(--color-responseTime)"
+                  strokeWidth={2}
+                  dot={false}
+                />
+              </LineChart>
+            </ChartContainer>
           </div>
+        </div>
+
+        {/* Cost Over Time Chart */}
+        <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl mb-12">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center">
+              <DollarSign className="w-5 h-5 text-white dark:text-black" />
+            </div>
+            <h3 className="text-lg font-medium text-black dark:text-white">
+              Cost Over Time
+            </h3>
+          </div>
+          <ChartContainer config={costConfig} className="h-64">
+            <BarChart data={formatChartData(chartData)}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="time" 
+                axisLine={false}
+                tickLine={false}
+                fontSize={12}
+              />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                fontSize={12}
+              />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar
+                dataKey="cost"
+                fill="var(--color-cost)"
+                radius={[2, 2, 0, 0]}
+              />
+            </BarChart>
+          </ChartContainer>
         </div>
 
         {/* API Logs Section */}
@@ -291,7 +408,7 @@ const Analytics = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-800">
-                  {filteredLogs.map((log: RequestLog) => (
+                  {logs.slice(0, showMore ? logs.length : 10).map((log: RequestLog) => (
                     <tr key={log.log_id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 font-mono">
                         {log.time_stamp ? new Date(log.time_stamp).toLocaleString() : 'N/A'}
@@ -327,7 +444,7 @@ const Analytics = () => {
               </table>
             </div>
 
-            {filteredLogs.length === 0 && (
+            {logs.length === 0 && !loading && (
               <div className="text-center py-12">
                 <Activity className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-black dark:text-white mb-2">
@@ -342,6 +459,41 @@ const Analytics = () => {
               </div>
             )}
           </div>
+
+          {/* Show More / Load More Section */}
+          {logs.length > 0 && (
+            <div className="mt-6 text-center">
+              <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Showing {Math.min(showMore ? logs.length : 10, logs.length)} of {totalCount} logs
+              </div>
+              {!showMore && logs.length > 10 ? (
+                <Button
+                  onClick={() => setShowMore(true)}
+                  variant="outline"
+                  className="mr-4"
+                >
+                  Show More ({logs.length - 10} more)
+                </Button>
+              ) : null}
+              {hasMore && (
+                <Button
+                  onClick={loadMore}
+                  disabled={loadingMore}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  {loadingMore ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    'Load More'
+                  )}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

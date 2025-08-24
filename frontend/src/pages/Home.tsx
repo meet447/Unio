@@ -29,7 +29,7 @@ const Home = () => {
               </Link>
             </Button>
             <Button variant="outline" asChild className="border-gray-300 dark:border-gray-700 rounded-full px-8 sm:px-10 py-6 sm:py-7 text-base sm:text-lg font-medium">
-              <Link to="/login">dashboard</Link>
+              <Link to="/dashboard">View Dashboard</Link>
             </Button>
           </div>
 
@@ -209,7 +209,7 @@ const Home = () => {
               </Link>
             </Button>
             <Button variant="outline" asChild className="border-gray-300 dark:border-gray-700 rounded-full px-10 sm:px-12 py-6 sm:py-8 text-lg sm:text-xl font-medium">
-              <Link to="/help">
+              <Link to="/docs">
                 Read Docs
               </Link>
             </Button>

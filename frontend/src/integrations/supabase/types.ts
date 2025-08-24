@@ -106,6 +106,84 @@ export type Database = {
         }
         Relationships: []
       }
+      request_logs: {
+        Row: {
+          api_key_id: string | null
+          created_at: string
+          error_message: string | null
+          estimated_cost: number | null
+          input_tokens: number | null
+          ip_address: string | null
+          log_id: string
+          method: string | null
+          model: string | null
+          output_tokens: number | null
+          provider: string
+          request_path: string | null
+          response_time_ms: number | null
+          status: number | null
+          time_stamp: string
+          total_tokens: number | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          api_key_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          estimated_cost?: number | null
+          input_tokens?: number | null
+          ip_address?: string | null
+          log_id?: string
+          method?: string | null
+          model?: string | null
+          output_tokens?: number | null
+          provider: string
+          request_path?: string | null
+          response_time_ms?: number | null
+          status?: number | null
+          time_stamp?: string
+          total_tokens?: number | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          api_key_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          estimated_cost?: number | null
+          input_tokens?: number | null
+          ip_address?: string | null
+          log_id?: string
+          method?: string | null
+          model?: string | null
+          output_tokens?: number | null
+          provider?: string
+          request_path?: string | null
+          response_time_ms?: number | null
+          status?: number | null
+          time_stamp?: string
+          total_tokens?: number | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "request_logs_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "request_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       user_api_tokens: {
         Row: {
           created_at: string

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -86,7 +87,7 @@ const HelpCenter = () => {
 
         {/* Quick Links */}
         <div className="grid md:grid-cols-3 gap-6 mb-16">
-          <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer group">
+          <Link to="/docs" className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer group">
             <div className="w-12 h-12 bg-black dark:bg-white rounded-full flex items-center justify-center mb-4">
               <Book className="w-6 h-6 text-white dark:text-black" />
             </div>
@@ -94,13 +95,13 @@ const HelpCenter = () => {
               Documentation
             </h3>
             <p className="text-gray-600 dark:text-gray-400 font-light mb-4">
-              Comprehensive guides and API reference
+              Comprehensive API guides and code examples
             </p>
             <div className="flex items-center text-sm text-gray-600 dark:text-gray-400 group-hover:text-black dark:group-hover:text-white transition-colors">
               View Docs
               <ChevronRight className="w-4 h-4 ml-1" />
             </div>
-          </div>
+          </Link>
 
           <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl hover:border-gray-300 dark:hover:border-gray-700 transition-colors cursor-pointer group">
             <div className="w-12 h-12 bg-black dark:bg-white rounded-full flex items-center justify-center mb-4">

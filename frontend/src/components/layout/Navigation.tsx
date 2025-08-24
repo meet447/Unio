@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, BarChart, User, HelpCircle, LogOut } from "lucide-react";
+import { Menu, BarChart, User, HelpCircle, LogOut, BookOpen } from "lucide-react";
 
 const Navigation = () => {
   const location = useLocation();
@@ -10,8 +10,10 @@ const Navigation = () => {
 
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: <BarChart className="h-5 w-5" /> },
+    { path: "/analytics", label: "Analytics", icon: <BarChart className="h-5 w-5" /> },
     { path: "/profile", label: "Profile", icon: <User className="h-5 w-5" /> },
-    { path: "/help", label: "Docs", icon: <HelpCircle className="h-5 w-5" /> },
+    { path: "/docs", label: "Documentation", icon: <BookOpen className="h-5 w-5" /> },
+    { path: "/help", label: "Help Center", icon: <HelpCircle className="h-5 w-5" /> },
   ];
 
   return (
