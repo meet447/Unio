@@ -5,7 +5,7 @@ client = OpenAI(api_key="rk_f112c370d4b0f82940d9a4274e9b0b78e547a904af65e933577b
 try:
     chat_completion = client.chat.completions.create(
         messages=[{"role": "user", "content": "hey who are you what all can you do?"}],
-        model="openrouter:openrouter/auto",
+        model="google:gemini-2.0-flash-lite",
         stream=True
     )
     for chunk in chat_completion:
