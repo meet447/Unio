@@ -7,6 +7,7 @@ from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIEr
 from auth.log import log_request
 import time
 import asyncio
+import json
 
 router = APIRouter()
 
@@ -55,33 +56,67 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
         )
 
     start_time = time.time()
-    status_code = 200
     request_payload = req.model_dump()
+    status_code = 200
+    response_data = None
+    error_content = None
 
     try:
         if req.stream:
-            # Wrap the generator to log after streaming finishes (fire-and-forget)
+            # For streaming, we need special handling of errors
             async def generator_wrapper():
-                async for chunk in client.stream_chat_completions(req=req):
-                    yield chunk
-                asyncio.create_task(
-                    fire_and_forget_log(
-                        user_id=user_id,
-                        api_key=api_key,
-                        provider=req.model,
-                        model=req.model,
-                        status=status_code,
-                        request_payload=request_payload,
-                        response_payload={},  # streaming, no full payload
-                        start_time=start_time
+                try:
+                    async for chunk in client.stream_chat_completions(req=req):
+                        yield chunk
+                    # Log successful streaming
+                    asyncio.create_task(
+                        fire_and_forget_log(
+                            user_id=user_id,
+                            api_key=api_key,
+                            provider=req.model,
+                            model=req.model,
+                            status=200,
+                            request_payload=request_payload,
+                            response_payload={},  # streaming, no full payload
+                            start_time=start_time
+                        )
                     )
-                )
+                except Exception as e:
+                    # For streaming errors, we yield the error in SSE format
+                    if isinstance(e, RateLimitExceededError):
+                        error_status = 429
+                        error_content = {"error": {"message": str(e), "type": "rate_limit_exceeded", "code": "rate_limit_exceeded"}}
+                    elif isinstance(e, ProviderAPIError):
+                        error_status = e.status_code
+                        error_content = {"error": {"message": str(e), "type": "api_error", "code": "provider_error"}}
+                    else:
+                        error_status = 500
+                        error_content = {"error": {"message": f"An unexpected error occurred: {e}", "type": "internal_error", "code": "server_error"}}
+                    
+                    # Log error for streaming
+                    asyncio.create_task(
+                        fire_and_forget_log(
+                            user_id=user_id,
+                            api_key=api_key,
+                            provider=req.model,
+                            model=req.model,
+                            status=error_status,
+                            request_payload=request_payload,
+                            response_payload=error_content,
+                            start_time=start_time
+                        )
+                    )
+                    
+                    # Yield error in SSE format
+                    yield f"data: {json.dumps(error_content)}\n\n"
 
             return StreamingResponse(generator_wrapper(), media_type="text/event-stream")
         else:
+            # Non-streaming response
             response_data = await client.chat_completions(req=req)
             status_code = 200
-            # Fire-and-forget logging for non-streaming
+            
+            # Fire-and-forget logging for successful non-streaming
             asyncio.create_task(
                 fire_and_forget_log(
                     user_id=user_id,
@@ -98,19 +133,67 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
 
     except RateLimitExceededError as e:
         status_code = 429
+        error_content = {"error": {"message": str(e), "type": "rate_limit_exceeded", "code": "rate_limit_exceeded"}}
+        
+        # Log error
+        asyncio.create_task(
+            fire_and_forget_log(
+                user_id=user_id,
+                api_key=api_key,
+                provider=req.model,
+                model=req.model,
+                status=status_code,
+                request_payload=request_payload,
+                response_payload=error_content,
+                start_time=start_time
+            )
+        )
+        
         return JSONResponse(
             status_code=status_code,
-            content={"error": {"message": str(e), "type": "rate_limit_exceeded", "code": "rate_limit_exceeded"}}
+            content=error_content
         )
     except ProviderAPIError as e:
         status_code = e.status_code
+        error_content = {"error": {"message": str(e), "type": "api_error", "code": "provider_error"}}
+        
+        # Log error
+        asyncio.create_task(
+            fire_and_forget_log(
+                user_id=user_id,
+                api_key=api_key,
+                provider=req.model,
+                model=req.model,
+                status=status_code,
+                request_payload=request_payload,
+                response_payload=error_content,
+                start_time=start_time
+            )
+        )
+        
         return JSONResponse(
             status_code=status_code,
-            content={"error": {"message": str(e), "type": "api_error", "code": "provider_error"}}
+            content=error_content
         )
     except Exception as e:
         status_code = 500
+        error_content = {"error": {"message": f"An unexpected error occurred: {e}", "type": "internal_error", "code": "server_error"}}
+        
+        # Log error
+        asyncio.create_task(
+            fire_and_forget_log(
+                user_id=user_id,
+                api_key=api_key,
+                provider=req.model,
+                model=req.model,
+                status=status_code,
+                request_payload=request_payload,
+                response_payload=error_content,
+                start_time=start_time
+            )
+        )
+        
         return JSONResponse(
             status_code=status_code,
-            content={"error": {"message": f"An unexpected error occurred: {e}", "type": "internal_error", "code": "server_error"}}
+            content=error_content
         )
