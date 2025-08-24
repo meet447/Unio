@@ -63,6 +63,7 @@ class ChatResponse(BaseModel):
     created: int
     model: str
     choices: List[Choice]
+    key_name: str
     usage: Optional[dict]
 
 
@@ -72,3 +73,5 @@ class ChatCompletionChunk(BaseModel):
     created: int
     model: str
     choices: List[ChoiceChunk]
+    key_name: str
+

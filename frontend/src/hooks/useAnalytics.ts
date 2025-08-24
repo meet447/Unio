@@ -5,13 +5,20 @@ import { PostgrestError } from '@supabase/supabase-js';
 
 export interface RequestLog {
   log_id: string;
-  time_stamp: string | null;
-  model: string | null;
+  user_id: string | null;
+  api_key: string;
   provider: string | null;
+  model: string | null;
   status: number | null;
-  response_time_ms: number | null;
+  request_payload: any | null;
+  response_payload: any | null;
+  prompt_tokens: number | null;
+  completion_tokens: number | null;
   total_tokens: number | null;
   estimated_cost: number | null;
+  response_time_ms: number | null;
+  time_stamp: string | null;
+  key_name: string | null;
 }
 
 export interface AnalyticsFilters {
@@ -70,49 +77,60 @@ export const useAnalytics = (filters: AnalyticsFilters = {
     try {
       const startDate = getDateRange(filters.timeRange);
       
-      // Try to fetch all data for analytics first
-      let allData: RequestLog[] = [];
-      
-      try {
-        // Build query for all logs (no pagination)
-        let analyticsQuery = supabase
-          .from('request_logs')
-          .select('log_id,time_stamp,model,provider,status,response_time_ms,total_tokens,estimated_cost')
-          .eq('user_id', user.id)
-          .order('time_stamp', { ascending: false });
+      // Build query for all logs (no pagination)
+      let analyticsQuery = supabase
+        .from('request_logs')
+        .select(`
+          log_id,
+          time_stamp,
+          model,
+          provider,
+          status,
+          response_time_ms,
+          total_tokens,
+          estimated_cost,
+          key_name
+        `)
+        .eq('user_id', user.id)
+        .order('time_stamp', { ascending: false });
 
-        // Apply time range filter only if not 'all'
-        if (filters.timeRange !== 'all') {
-          analyticsQuery = analyticsQuery.gte('time_stamp', startDate.toISOString());
-        }
-
-        // Apply status filter for analytics
-        if (filters.statusFilter === 'success') {
-          analyticsQuery = analyticsQuery.gte('status', 200).lt('status', 300);
-        } else if (filters.statusFilter === 'error') {
-          analyticsQuery = analyticsQuery.gte('status', 400);
-        }
-
-        // Apply search filter for analytics
-        if (filters.searchQuery) {
-          analyticsQuery = analyticsQuery.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%`);
-        }
-
-        const analyticsResult = await analyticsQuery;
-        
-        if (analyticsResult.error) {
-          throw analyticsResult.error;
-        }
-        
-        allData = analyticsResult.data as RequestLog[];
-      } catch (dbError) {
-        // Generate comprehensive mock data for analytics
-        allData = generateMockLogs(500, filters, startDate);
+      // Apply time range filter only if not 'all'
+      if (filters.timeRange !== 'all') {
+        analyticsQuery = analyticsQuery.gte('time_stamp', startDate.toISOString());
       }
+
+      // Apply status filter for analytics
+      if (filters.statusFilter === 'success') {
+        analyticsQuery = analyticsQuery.gte('status', 200).lt('status', 300);
+      } else if (filters.statusFilter === 'error') {
+        analyticsQuery = analyticsQuery.gte('status', 400);
+      }
+
+      // Apply search filter for analytics
+      if (filters.searchQuery) {
+        analyticsQuery = analyticsQuery.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,api_keys.name.ilike.%${filters.searchQuery}%`);
+      }
+
+      const analyticsResult = await analyticsQuery;
+      
+      if (analyticsResult.error) {
+        console.error('Error fetching analytics data:', analyticsResult.error);
+        setError(analyticsResult.error);
+        setAllLogsForAnalytics([]);
+        return;
+      }
+      
+      // Process the data to extract key_name from the nested api_keys object
+      const allData = (analyticsResult.data as any[]).map((row: any) => ({
+        ...row,
+        key_name: row.api_keys?.name || null
+      })) as RequestLog[];
       
       setAllLogsForAnalytics(allData);
     } catch (err) {
       console.error('Error fetching analytics data:', err);
+      setError(err as PostgrestError);
+      setAllLogsForAnalytics([]);
     }
   }, [user, filters.timeRange, filters.statusFilter, filters.searchQuery, getDateRange]);
 
@@ -131,52 +149,44 @@ export const useAnalytics = (filters: AnalyticsFilters = {
       const currentOffset = loadMore ? logs.length : (filters.offset || 0);
       const currentLimit = filters.limit || 50;
 
-      // Try to fetch paginated data for display
-      let data: RequestLog[] = [];
-      let count = 0;
-      
-      try {
-        // Build query for paginated logs
-        let query = supabase
-          .from('request_logs')
-          .select('log_id,time_stamp,model,provider,status,response_time_ms,total_tokens,estimated_cost', { count: 'exact' })
-          .eq('user_id', user.id)
-          .order('time_stamp', { ascending: false });
+      // Build query for paginated logs
+      let query = supabase
+        .from('request_logs')
+        .select(
+          'log_id, time_stamp, model, provider, status, response_time_ms, total_tokens, estimated_cost, key_name',
+          { count: 'exact' }
+        )
+        .eq('user_id', user.id)
+        .order('time_stamp', { ascending: false });
 
-        // Apply time range filter only if not 'all'
-        if (filters.timeRange !== 'all') {
-          query = query.gte('time_stamp', startDate.toISOString());
-        }
-
-        // Apply status filter
-        if (filters.statusFilter === 'success') {
-          query = query.gte('status', 200).lt('status', 300);
-        } else if (filters.statusFilter === 'error') {
-          query = query.gte('status', 400);
-        }
-
-        // Apply search filter
-        if (filters.searchQuery) {
-          query = query.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%`);
-        }
-
-        // Apply pagination
-        query = query.range(currentOffset, currentOffset + currentLimit - 1);
-
-        const result = await query;
-        
-        if (result.error) {
-          throw result.error;
-        }
-        
-        data = result.data as RequestLog[];
-        count = result.count || 0;
-      } catch (dbError) {
-        // Generate mock data for display (paginated)
-        const mockData = generateMockLogs(currentLimit, filters, startDate);
-        data = loadMore ? mockData.slice(currentOffset) : mockData.slice(0, currentLimit);
-        count = mockData.length;
+      // Apply time range filter only if not 'all'
+      if (filters.timeRange !== 'all') {
+        query = query.gte('time_stamp', startDate.toISOString());
       }
+
+      // Apply status filter
+      if (filters.statusFilter === 'success') {
+        query = query.gte('status', 200).lt('status', 300);
+      } else if (filters.statusFilter === 'error') {
+        query = query.gte('status', 400);
+      }
+
+      // Apply search filter
+      if (filters.searchQuery) {
+        query = query.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,key_name.ilike.%${filters.searchQuery}%`);
+      }
+
+      // Apply pagination
+      query = query.range(currentOffset, currentOffset + currentLimit - 1);
+
+      const result = await query;
+      
+      if (result.error) {
+        throw result.error;
+      }
+      
+      const data = result.data as RequestLog[];
+      const count = result.count || 0;
       
       if (loadMore) {
         setLogs(prev => [...prev, ...data]);
@@ -187,58 +197,18 @@ export const useAnalytics = (filters: AnalyticsFilters = {
       setTotalCount(count);
       setHasMore(data.length === currentLimit);
     } catch (err) {
+      console.error('Error fetching logs:', err);
       setError(err as PostgrestError);
+      if (!loadMore) {
+        setLogs([]);
+        setTotalCount(0);
+      }
+      setHasMore(false);
     } finally {
       setLoading(false);
       setLoadingMore(false);
     }
   }, [user, filters, logs.length, getDateRange]);
-
-  // Generate mock data for demonstration
-  const generateMockLogs = (limit: number, filters: AnalyticsFilters, startDate: Date): RequestLog[] => {
-    const providers = ['OpenAI', 'Anthropic', 'Google', 'OpenRouter', 'Groq', 'Together'];
-    const models = ['gpt-4', 'gpt-3.5-turbo', 'claude-3-opus', 'claude-3-sonnet', 'gemini-pro', 'mixtral-8x7b'];
-    const statuses = [200, 200, 200, 200, 201, 400, 429, 500]; // Mostly successful
-    
-    const mockLogs: RequestLog[] = [];
-    const now = new Date();
-    
-    // Generate more comprehensive data for 'all' time range
-    const totalMockLogs = filters.timeRange === 'all' ? 150 : Math.min(limit, 50);
-    const timeSpan = filters.timeRange === 'all' ? 30 * 24 * 60 * 60 * 1000 : (now.getTime() - startDate.getTime());
-    
-    for (let i = 0; i < totalMockLogs; i++) {
-      const timeOffset = Math.random() * timeSpan;
-      const timestamp = new Date(now.getTime() - timeOffset);
-      const status = statuses[Math.floor(Math.random() * statuses.length)];
-      const provider = providers[Math.floor(Math.random() * providers.length)];
-      const model = models[Math.floor(Math.random() * models.length)];
-      
-      // Apply filters
-      if (filters.statusFilter === 'success' && (status < 200 || status >= 300)) continue;
-      if (filters.statusFilter === 'error' && status < 400) continue;
-      if (filters.searchQuery && 
-          !provider.toLowerCase().includes(filters.searchQuery.toLowerCase()) &&
-          !model.toLowerCase().includes(filters.searchQuery.toLowerCase())) continue;
-      
-      mockLogs.push({
-        log_id: `mock-${i}-${Date.now()}`,
-        time_stamp: timestamp.toISOString(),
-        model,
-        provider,
-        status,
-        response_time_ms: Math.floor(Math.random() * 3000) + 100,
-        total_tokens: Math.floor(Math.random() * 2000) + 50,
-        estimated_cost: Math.random() * 0.25 + 0.001
-      });
-      
-      if (mockLogs.length >= limit) break;
-    }
-    
-    return mockLogs.sort((a, b) => 
-      new Date(b.time_stamp || 0).getTime() - new Date(a.time_stamp || 0).getTime()
-    );
-  };
 
   const loadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
@@ -248,31 +218,11 @@ export const useAnalytics = (filters: AnalyticsFilters = {
 
   // Generate chart data from ALL logs for analytics
   const chartData = useMemo(() => {
-    const dataSource = allLogsForAnalytics.length > 0 ? allLogsForAnalytics : [];
+    const dataSource = allLogsForAnalytics;
     
     if (dataSource.length === 0) {
-      // Generate comprehensive mock chart data for demonstration
-      const mockChartData: ChartDataPoint[] = [];
-      const now = new Date();
-      const totalHours = filters.timeRange === 'all' ? 24 * 7 : 24;
-      
-      for (let i = totalHours - 1; i >= 0; i--) {
-        const time = new Date(now.getTime() - i * 60 * 60 * 1000);
-        const baseRequests = Math.floor(Math.random() * 40) + 20;
-        const baseResponseTime = Math.floor(Math.random() * 400) + 200;
-        const baseCost = Math.random() * 0.8 + 0.1;
-        const baseErrors = Math.floor(Math.random() * 8);
-        
-        mockChartData.push({
-          time: time.toISOString(),
-          requests: baseRequests,
-          responseTime: baseResponseTime,
-          cost: baseCost,
-          errors: baseErrors
-        });
-      }
-      
-      return mockChartData;
+      // Return empty array when no data is available
+      return [];
     }
 
     // Group ALL logs by hour for better granularity
@@ -311,20 +261,20 @@ export const useAnalytics = (filters: AnalyticsFilters = {
       }))
       .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
       .slice(-72); // Show last 72 hours of data for better visualization
-  }, [allLogsForAnalytics, filters.timeRange]);
+  }, [allLogsForAnalytics]);
 
   // Calculate summary statistics from ALL logs for analytics
   const stats = useMemo(() => {
-    const dataSource = allLogsForAnalytics.length > 0 ? allLogsForAnalytics : [];
+    const dataSource = allLogsForAnalytics;
     
     if (dataSource.length === 0) {
-      // Return enhanced mock stats for demonstration
+      // Return zero stats when no data is available
       return {
-        totalRequests: 2847,
-        successRate: 96.8,
-        avgResponseTime: 387,
-        totalCost: 45.23,
-        errorCount: 91
+        totalRequests: 0,
+        successRate: 0,
+        avgResponseTime: 0,
+        totalCost: 0,
+        errorCount: 0
       };
     }
 

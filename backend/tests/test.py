@@ -6,9 +6,10 @@ try:
     chat_completion = client.chat.completions.create(
         messages=[{"role": "user", "content": "hey who are you what all can you do?"}],
         model="google:gemini-2.0-flash-lite",
-        stream=False
+        stream=True
     )
-    print(chat_completion.choices[0].message.content)
+    for chunk in chat_completion:
+        print(chunk.choices[0].delta.content)  
     
 except APIError as e:
     print(f"Error: {e}`")

@@ -11,7 +11,7 @@ import json
 
 router = APIRouter()
 
-async def fire_and_forget_log(user_id, api_key, provider, model, status, request_payload, response_payload, start_time, tokens):
+async def fire_and_forget_log(user_id, api_key, provider, model, status, request_payload, response_payload, start_time, tokens, key_name):
     """Fire-and-forget logging for both streaming and non-streaming requests"""
     end_time = time.time()
     await log_request(
@@ -26,7 +26,8 @@ async def fire_and_forget_log(user_id, api_key, provider, model, status, request
         completion_tokens=0,
         total_tokens=tokens,
         estimated_cost=0.0,
-        response_time_ms=int((end_time - start_time) * 1000)
+        response_time_ms=int((end_time - start_time) * 1000),
+        key_name=key_name
     )
 
 @router.post("/chat/completions")
@@ -63,12 +64,18 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
 
     try:
         if req.stream:
-            # For streaming, we need special handling of errors
             async def generator_wrapper():
                 try:
                     total_tokens = 0
+                    extracted_key = None  # store key_name
                     async for chunk in client.stream_chat_completions(req=req):
                         total_tokens += 1
+                        if chunk.startswith('data: ') and extracted_key == None:
+                            key_chunk = chunk[len("data: "):].strip()
+                            data = json.loads(key_chunk)
+                            extracted_key = data['key_name']
+                            yield chunk
+
                         yield chunk
                     # Log successful streaming
                     asyncio.create_task(
@@ -81,7 +88,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                             request_payload=request_payload,
                             response_payload={},  # streaming, no full payload
                             start_time=start_time,
-                            tokens=total_tokens
+                            tokens=total_tokens,
+                            key_name=extracted_key
                         )
                     )
                 except Exception as e:
@@ -107,7 +115,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                             request_payload=request_payload,
                             response_payload=error_content,
                             start_time=start_time,
-                            tokens=0
+                            tokens=0,
+                            key_name=''
                         )
                     )
                     
@@ -131,7 +140,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                     request_payload=request_payload,
                     response_payload=[],
                     start_time=start_time,
-                    tokens=tokens['total_tokens']
+                    tokens=tokens['total_tokens'],
+                    key_name=response_data.key_name
                 )
             )
             return response_data
@@ -151,7 +161,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                 request_payload=request_payload,
                 response_payload=error_content,
                 start_time=start_time,
-                tokens=0
+                tokens=0,
+                key_name=''
             )
         )
         
@@ -174,7 +185,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                 request_payload=request_payload,
                 response_payload=error_content,
                 start_time=start_time,
-                tokens=0
+                tokens=0,
+                key_name=''
             )
         )
         
@@ -197,7 +209,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                 request_payload=request_payload,
                 response_payload=error_content,
                 start_time=start_time,
-                tokens=0
+                tokens=0,
+                key_name=''
             )
         )
         

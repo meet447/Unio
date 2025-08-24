@@ -62,6 +62,7 @@ class BaseLLMClient:
                             "finish_reason": "stop",
                         }
                     ],
+                    key_name=key_data["name"],
                     usage={
                         "prompt_tokens": 0,
                         "completion_tokens": 0,
@@ -116,7 +117,8 @@ class BaseLLMClient:
                         created=int(time.time()),
                         model=req.model,
                         choices=[{"index": 0, "delta": delta}],
-                        
+                        key_name=key_data["name"]
+                
                     ).model_dump_json()
 
                     yield f"data: {event}\n\n"

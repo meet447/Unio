@@ -13,7 +13,8 @@ async def log_request(
     completion_tokens: int = 0,
     total_tokens: int = 0,
     estimated_cost: float = 0.0,
-    response_time_ms: float = 0.0
+    response_time_ms: float = 0.0,
+    key_name: str = ""
 ):
     """
     Insert a log into the request_logs table.
@@ -37,7 +38,8 @@ async def log_request(
         "total_tokens": total_tokens,
         "estimated_cost": estimated_cost,
         "response_time_ms": response_time_ms,
-        "time_stamp": timestamp  # now JSON-serializable
+        "time_stamp": timestamp,  # now JSON-serializable
+        "key_name": key_name
     }
 
     try:
