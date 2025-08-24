@@ -11,7 +11,7 @@ import json
 
 router = APIRouter()
 
-async def fire_and_forget_log(user_id, api_key, provider, model, status, request_payload, response_payload, start_time):
+async def fire_and_forget_log(user_id, api_key, provider, model, status, request_payload, response_payload, start_time, tokens):
     """Fire-and-forget logging for both streaming and non-streaming requests"""
     end_time = time.time()
     await log_request(
@@ -24,7 +24,7 @@ async def fire_and_forget_log(user_id, api_key, provider, model, status, request
         response_payload=response_payload,
         prompt_tokens=0,
         completion_tokens=0,
-        total_tokens=0,
+        total_tokens=tokens,
         estimated_cost=0.0,
         response_time_ms=int((end_time - start_time) * 1000)
     )
@@ -66,7 +66,9 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
             # For streaming, we need special handling of errors
             async def generator_wrapper():
                 try:
+                    total_tokens = 0
                     async for chunk in client.stream_chat_completions(req=req):
+                        total_tokens += 1
                         yield chunk
                     # Log successful streaming
                     asyncio.create_task(
@@ -78,7 +80,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                             status=200,
                             request_payload=request_payload,
                             response_payload={},  # streaming, no full payload
-                            start_time=start_time
+                            start_time=start_time,
+                            tokens=total_tokens
                         )
                     )
                 except Exception as e:
@@ -103,7 +106,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                             status=error_status,
                             request_payload=request_payload,
                             response_payload=error_content,
-                            start_time=start_time
+                            start_time=start_time,
+                            tokens=0
                         )
                     )
                     
@@ -112,9 +116,9 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
 
             return StreamingResponse(generator_wrapper(), media_type="text/event-stream")
         else:
-            # Non-streaming response
             response_data = await client.chat_completions(req=req)
             status_code = 200
+            tokens = response_data.usage
             
             # Fire-and-forget logging for successful non-streaming
             asyncio.create_task(
@@ -125,8 +129,9 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                     model=req.model,
                     status=status_code,
                     request_payload=request_payload,
-                    response_payload=response_data,
-                    start_time=start_time
+                    response_payload=[],
+                    start_time=start_time,
+                    tokens=tokens['total_tokens']
                 )
             )
             return response_data
@@ -145,7 +150,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                 status=status_code,
                 request_payload=request_payload,
                 response_payload=error_content,
-                start_time=start_time
+                start_time=start_time,
+                tokens=0
             )
         )
         
@@ -167,7 +173,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                 status=status_code,
                 request_payload=request_payload,
                 response_payload=error_content,
-                start_time=start_time
+                start_time=start_time,
+                tokens=0
             )
         )
         
@@ -189,7 +196,8 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                 status=status_code,
                 request_payload=request_payload,
                 response_payload=error_content,
-                start_time=start_time
+                start_time=start_time,
+                tokens=0
             )
         )
         

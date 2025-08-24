@@ -4,6 +4,7 @@ from auth.check_key import increment_usage_count, increment_rate_limit_count
 from exceptions import RateLimitExceededError, ProviderAPIError
 import json, time, uuid
 
+
 class BaseLLMClient:
     def __init__(self, api_keys, base_url: str):
         self.api_keys = api_keys
@@ -14,7 +15,10 @@ class BaseLLMClient:
         return parts[1] if len(parts) > 1 else model
 
     async def chat_completions(self, req: ChatRequest) -> ChatResponse:
-        """Non-streaming chat completion"""
+        """
+        Non-streaming chat completion built on top of streaming API.
+        Collects streamed chunks and returns a final ChatResponse object.
+        """
         model = self._extract_model(req.model)
         last_error = None
 
@@ -24,30 +28,45 @@ class BaseLLMClient:
 
             try:
                 client = AsyncOpenAI(api_key=api_key, base_url=self.base_url)
+                # Always request streaming
                 response = await client.chat.completions.create(
                     model=model,
                     messages=req.messages,
-                    temperature=req.temperature
+                    temperature=req.temperature,
+                    stream=True,
                 )
 
                 increment_usage_count(api_key_id)
 
+                # Collect streamed response
+                role = None
+                content_parts = []
+                total_tokens = 0
+                async for chunk in response:
+                    choice = chunk.choices[0]
+                    if choice.delta.role:
+                        role = choice.delta.role
+                    if choice.delta.content:
+                        content_parts.append(choice.delta.content)
+                    total_tokens += 1
+
                 return ChatResponse(
-                    id=response.id,
-                    object=response.object,
-                    created=response.created,
-                    model=response.model,
+                    id=str(uuid.uuid4()),
+                    object="chat.completion",
+                    created=int(time.time()),
+                    model=req.model,
                     choices=[
                         {
-                            "index": i,
-                            "message": {
-                                "role": c.message.role,
-                                "content": c.message.content,
-                            },
-                            "finish_reason": c.finish_reason,
+                            "index": 0,
+                            "message": {"role": role or "assistant", "content": "".join(content_parts)},
+                            "finish_reason": "stop",
                         }
-                        for i, c in enumerate(response.choices)
                     ],
+                    usage={
+                        "prompt_tokens": 0,
+                        "completion_tokens": 0,
+                        "total_tokens": total_tokens
+                    }
                 )
 
             except RateLimitError as e:
@@ -62,7 +81,10 @@ class BaseLLMClient:
             raise last_error
 
     async def stream_chat_completions(self, req: ChatRequest):
-        """Streaming chat completion (SSE)"""
+        """
+        Streaming chat completion (SSE style).
+        Yields individual chunks as they arrive.
+        """
         model = self._extract_model(req.model)
         last_error = None
 
@@ -94,6 +116,7 @@ class BaseLLMClient:
                         created=int(time.time()),
                         model=req.model,
                         choices=[{"index": 0, "delta": delta}],
+                        
                     ).model_dump_json()
 
                     yield f"data: {event}\n\n"
