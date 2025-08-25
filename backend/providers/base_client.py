@@ -34,6 +34,7 @@ class BaseLLMClient:
                     messages=req.messages,
                     temperature=req.temperature,
                     stream=True,
+                    reasoning_effort=req.reasoning_effort
                 )
 
                 increment_usage_count(api_key_id)
@@ -100,6 +101,7 @@ class BaseLLMClient:
                     messages=req.messages,
                     temperature=req.temperature,
                     stream=True,
+                    reasoning_effort=req.reasoning_effort
                 )
 
                 increment_usage_count(api_key_id)

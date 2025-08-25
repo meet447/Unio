@@ -1,14 +1,21 @@
-import openai
 from openai import OpenAI
 
-unio = OpenAI(
-    base_url="https://unio.onrender.com/v1/api",
-    api_key="rk_f112c370d4b0f82940d9a4274e9b0b78e547a904af65e933577b825a7b8f3ebd"
-)
+client = OpenAI(api_key='AIzaSyBK43VRHXieQ3Uq8AFtqEtL99JzQPSmJTw', base_url='https://generativelanguage.googleapis.com/v1beta/openai/')
 
-response = unio.responses.create(
+prompt = """
+Write a bash script that takes a matrix represented as a string with 
+format '[1,2],[3,4],[5,6]' and prints the transpose in the same format.
+"""
+
+response = client.responses.create(
     model="gpt-5",
-    input="Write a one-sentence bedtime story about a unicorn."
+    reasoning={"effort": "medium"},
+    input=[
+        {
+            "role": "user", 
+            "content": prompt
+        }
+    ]
 )
 
 print(response.output_text)
