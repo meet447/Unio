@@ -72,7 +72,6 @@ class BaseLLMClient:
                 )
 
             except RateLimitError as e:
-                increment_rate_limit_count(api_key_id)
                 last_error = RateLimitExceededError(str(e))
             except APIError as e:
                 last_error = ProviderAPIError(str(e), status_code=e.status_code)
@@ -129,7 +128,6 @@ class BaseLLMClient:
                 return
 
             except RateLimitError as e:
-                increment_rate_limit_count(api_key_id)
                 last_error = RateLimitExceededError(str(e))
             except APIError as e:
                 last_error = ProviderAPIError(str(e), status_code=e.status_code)

@@ -55,7 +55,7 @@ class ChatRequest(BaseModel):
     messages: List[Message]
     temperature: float = 0.7
     stream: Optional[bool] = False
-    reasoning_effort: Optional[str] = 'low'
+    reasoning_effort: Optional[str] = 'medium'
 
 
 class ChatResponse(BaseModel):

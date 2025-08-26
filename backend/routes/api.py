@@ -39,7 +39,7 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
         )
         
     api_key = authorization.split(" ")[1]
-
+    
     try:
         user_id = fetch_userid(api_key)
     except InvalidAPIKeyError as e:
@@ -74,8 +74,7 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                             key_chunk = chunk[len("data: "):].strip()
                             data = json.loads(key_chunk)
                             extracted_key = data['key_name']
-                            yield chunk
-
+                        
                         yield chunk
                     # Log successful streaming
                     asyncio.create_task(
