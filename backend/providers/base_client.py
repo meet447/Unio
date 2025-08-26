@@ -155,32 +155,38 @@ class BaseLLMClient:
 
                 async for chunk in response:
                     delta = {}
+                    current_finish_reason = None
+                    
                     if chunk.choices[0].delta.role:
                         delta["role"] = chunk.choices[0].delta.role
                     if chunk.choices[0].delta.content:
                         delta["content"] = chunk.choices[0].delta.content
                         completion_content += chunk.choices[0].delta.content
                     
-                    # Capture finish reason
+                    # Capture finish reason but only include it in chunks with content
                     if chunk.choices[0].finish_reason:
                         finish_reason = chunk.choices[0].finish_reason
-                        delta = {}  # Empty delta for final chunk
+                        # Only include finish_reason if this chunk has content or role
+                        if delta:
+                            current_finish_reason = finish_reason
+                    
+                    # Only yield chunks that have meaningful delta content
+                    if delta:
+                        event = ChatCompletionChunk(
+                            id=str(uuid.uuid4()),
+                            object="chat.completion.chunk",
+                            created=int(time.time()),
+                            model=req.model,
+                            choices=[ChoiceChunk(
+                                index=0, 
+                                delta=Delta(**delta),
+                                finish_reason=current_finish_reason
+                            )],
+                            key_name=key_data["name"],
+                            system_fingerprint=f"fp_{int(time.time())}"
+                        ).model_dump_json()
 
-                    event = ChatCompletionChunk(
-                        id=str(uuid.uuid4()),
-                        object="chat.completion.chunk",
-                        created=int(time.time()),
-                        model=req.model,
-                        choices=[ChoiceChunk(
-                            index=0, 
-                            delta=Delta(**delta),
-                            finish_reason=finish_reason
-                        )],
-                        key_name=key_data["name"],
-                        system_fingerprint=f"fp_{int(time.time())}"
-                    ).model_dump_json()
-
-                    yield f"data: {event}\n\n"
+                        yield f"data: {event}\n\n"
 
                 # Send usage information in final chunk before [DONE]
                 completion_tokens = estimate_completion_tokens(completion_content, req.model)
@@ -193,9 +199,9 @@ class BaseLLMClient:
                     model=req.model,
                     choices=[ChoiceChunk(
                         index=0,
-                        delta=Delta(content=None),
+                        delta=Delta(content=None),  # Explicitly set content to None for usage chunks
                         finish_reason=None
-                    )],  # Include choice with None content for usage chunk
+                    )],
                     key_name=key_data["name"],
                     usage=Usage(
                         prompt_tokens=prompt_tokens,
