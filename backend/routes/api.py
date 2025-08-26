@@ -57,6 +57,33 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
             content={"error": {"message": str(e), "type": "invalid_request_error", "param": "model", "code": "model_not_found"}}
         )
 
+    # Early validation: check if client has API keys before proceeding
+    if not hasattr(client, 'api_keys') or not client.api_keys:
+        error_content = {"error": {"message": f"No API keys configured for provider: {req.model.split(':')[0]}", "type": "invalid_request_error", "code": "no_api_keys"}}
+        
+        # Log error for no API keys
+        asyncio.create_task(
+            fire_and_forget_log(
+                user_id=user_id,
+                api_key=api_key,
+                provider=req.model,
+                model=req.model,
+                status=400,
+                request_payload=req.model_dump(),
+                response_payload=error_content,
+                start_time=time.time(),
+                prompt_tokens=0,
+                completion_tokens=0,
+                total_tokens=0,
+                key_name=''
+            )
+        )
+        
+        return JSONResponse(
+            status_code=400,
+            content=error_content
+        )
+
     start_time = time.time()
     request_payload = req.model_dump()
     status_code = 200
@@ -72,48 +99,84 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
                 completion_content = ""
                 extracted_key = None  # store key_name
                 completion_tokens = 0
+                error_occurred = False
                 
-                async for chunk in client.stream_chat_completions(req=req):
-                    # Extract completion content for token counting
-                    if chunk.startswith('data: ') and not chunk.strip().endswith('[DONE]'):
-                        try:
-                            key_chunk = chunk[len("data: "):].strip()
-                            if key_chunk and key_chunk != '[DONE]':
-                                data = json.loads(key_chunk)
-                                if extracted_key is None and 'key_name' in data:
-                                    extracted_key = data['key_name']
-                                
-                                # Extract content from delta for token counting
-                                if 'choices' in data and data['choices']:
-                                    choice = data['choices'][0]
-                                    if 'delta' in choice and 'content' in choice['delta'] and choice['delta']['content']:
-                                        completion_content += choice['delta']['content']
-                        except (json.JSONDecodeError, KeyError, IndexError):
-                            pass  # Skip malformed chunks
+                try:
+                    async for chunk in client.stream_chat_completions(req=req):
+                        # Extract completion content for token counting
+                        if chunk.startswith('data: ') and not chunk.strip().endswith('[DONE]'):
+                            try:
+                                key_chunk = chunk[len("data: "):].strip()
+                                if key_chunk and key_chunk != '[DONE]':
+                                    data = json.loads(key_chunk)
+                                    if extracted_key is None and 'key_name' in data:
+                                        extracted_key = data['key_name']
+                                    
+                                    # Extract content from delta for token counting
+                                    if 'choices' in data and data['choices']:
+                                        choice = data['choices'][0]
+                                        if 'delta' in choice and 'content' in choice['delta'] and choice['delta']['content']:
+                                            completion_content += choice['delta']['content']
+                            except (json.JSONDecodeError, KeyError, IndexError):
+                                pass  # Skip malformed chunks
+                        
+                        yield chunk
+                        
+                except Exception as e:
+                    error_occurred = True
+                    # Send error as SSE event
+                    error_data = {
+                        "error": {
+                            "message": str(e),
+                            "type": "provider_error", 
+                            "code": "streaming_error"
+                        }
+                    }
+                    yield f"data: {json.dumps(error_data)}\n\n"
+                    yield "data: [DONE]\n\n"
                     
-                    yield chunk
-                
-                # Calculate completion tokens using tiktoken
-                completion_tokens = estimate_completion_tokens(completion_content, req.model)
-                total_tokens = prompt_tokens + completion_tokens
-                
-                # Log successful streaming
-                asyncio.create_task(
-                    fire_and_forget_log(
-                        user_id=user_id,
-                        api_key=api_key,
-                        provider=req.model,
-                        model=req.model,
-                        status=200,
-                        request_payload=request_payload,
-                        response_payload={},  # streaming, no full payload
-                        start_time=start_time,
-                        prompt_tokens=prompt_tokens,
-                        completion_tokens=completion_tokens,
-                        total_tokens=total_tokens,
-                        key_name=extracted_key
+                    # Log error
+                    asyncio.create_task(
+                        fire_and_forget_log(
+                            user_id=user_id,
+                            api_key=api_key,
+                            provider=req.model,
+                            model=req.model,
+                            status=500,
+                            request_payload=request_payload,
+                            response_payload=error_data,
+                            start_time=start_time,
+                            prompt_tokens=0,
+                            completion_tokens=0,
+                            total_tokens=0,
+                            key_name=''
+                        )
                     )
-                )
+                    return
+                
+                # Only log success if no error occurred
+                if not error_occurred:
+                    # Calculate completion tokens using tiktoken
+                    completion_tokens = estimate_completion_tokens(completion_content, req.model)
+                    total_tokens = prompt_tokens + completion_tokens
+                    
+                    # Log successful streaming
+                    asyncio.create_task(
+                        fire_and_forget_log(
+                            user_id=user_id,
+                            api_key=api_key,
+                            provider=req.model,
+                            model=req.model,
+                            status=200,
+                            request_payload=request_payload,
+                            response_payload={},  # streaming, no full payload
+                            start_time=start_time,
+                            prompt_tokens=prompt_tokens,
+                            completion_tokens=completion_tokens,
+                            total_tokens=total_tokens,
+                            key_name=extracted_key
+                        )
+                    )
 
             return StreamingResponse(generator_wrapper(), media_type="text/event-stream")
         else:

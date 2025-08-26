@@ -24,6 +24,10 @@ def get_provider(model, user_id):
     api_key_list = []
     for key in keys:
         api_key_list.append(key)
+    
+    # Check if there are any API keys available for this provider
+    if not api_key_list:
+        raise ValueError(f"No API keys configured for provider: {provider}")
         
     if provider == "google":
         return GoogleClient(api_keys=api_key_list)
