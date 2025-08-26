@@ -36,6 +36,7 @@ class Choice(BaseModel):
     index: int
     message: ChoiceMessage
     finish_reason: Optional[str] = None
+    logprobs: Optional[dict] = None
 
 
 class Delta(BaseModel):
@@ -47,6 +48,13 @@ class ChoiceChunk(BaseModel):
     index: int
     delta: Delta
     finish_reason: Optional[str] = None
+    logprobs: Optional[dict] = None
+
+
+class Usage(BaseModel):
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
 
 
 # ---- Request / Response ----
@@ -65,7 +73,8 @@ class ChatResponse(BaseModel):
     model: str
     choices: List[Choice]
     key_name: str
-    usage: Optional[dict]
+    usage: Optional[Usage] = None
+    system_fingerprint: Optional[str] = None
 
 
 class ChatCompletionChunk(BaseModel):
@@ -75,4 +84,6 @@ class ChatCompletionChunk(BaseModel):
     model: str
     choices: List[ChoiceChunk]
     key_name: str
+    usage: Optional[Usage] = None
+    system_fingerprint: Optional[str] = None
 

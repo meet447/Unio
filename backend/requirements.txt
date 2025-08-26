@@ -4,3 +4,4 @@ fastapi
 pydantic
 supabase
 dotenv
+tiktoken
