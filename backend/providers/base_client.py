@@ -95,6 +95,7 @@ class BaseLLMClient:
                 )
 
             except RateLimitError as e:
+                increment_rate_limit_count(api_key_id)
                 last_error = RateLimitExceededError(str(e))
             except APIError as e:
                 status_code = getattr(e, 'status_code', 500)
@@ -147,13 +148,17 @@ class BaseLLMClient:
                 
                 response = await client.chat.completions.create(**create_params)
 
-                increment_usage_count(api_key_id)
-
                 # Track completion content for token counting
                 completion_content = ""
                 finish_reason = None
+                usage_incremented = False
 
                 async for chunk in response:
+                    # Increment usage count only after first successful chunk
+                    if not usage_incremented:
+                        increment_usage_count(api_key_id)
+                        usage_incremented = True
+                    
                     delta = {}
                     current_finish_reason = None
                     
@@ -216,6 +221,7 @@ class BaseLLMClient:
                 return
 
             except RateLimitError as e:
+                increment_rate_limit_count(api_key_id)
                 last_error = RateLimitExceededError(str(e))
             except APIError as e:
                 status_code = getattr(e, 'status_code', 500)
