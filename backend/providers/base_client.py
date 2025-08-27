@@ -106,10 +106,7 @@ class BaseLLMClient:
             raise last_error
         
         # This should not happen if api_keys is not empty
-        raise ProviderAPIError("No API keys available", status_code=400)
-        
-        # This should not happen if api_keys is not empty
-        raise ProviderAPIError("No API keys available", status_code=400)
+        raise ProviderAPIError("No API keys available")
 
     async def stream_chat_completions(self, req: ChatRequest):
         """
