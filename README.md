@@ -15,6 +15,7 @@ Unify your AI providers with intelligent key management, automatic failover, and
 
 Unio is a unified AI gateway that simplifies working with multiple LLM providers through a single, OpenAI-compatible API. Instead of managing separate integrations for OpenAI, Anthropic, Google, Groq, and others, Unio provides one interface with intelligent key rotation, automatic failover, and detailed analytics.
 
+
 **Key Benefits:**
 - 🔑 **Bring Your Own Keys** - Use your existing API keys across all providers
 - 🔄 **Automatic Key Rotation** - Intelligent load balancing and failover
@@ -25,11 +26,15 @@ Unio is a unified AI gateway that simplifies working with multiple LLM providers
 
 ---
 
+## Projects that use Unio
+- [axiom](https://axiom-ivory.vercel.app/) - a opensource ai search engine like perplexity ai
+- [chipling](https://chipling.xyz) - opensouce ai rabbithole research tool
+
 ## 🚀 Quick Start
 
 ### Using the Hosted Version
 
-1. **Sign up** at [unio.dev](https://unio.chipling.xyz)
+1. **Sign up** at [unio.chipling.xyz](https://unio.chipling.xyz)
 2. **Add your API keys** for your preferred providers
 3. **Get your Unio API token**
 4. **Start making requests!**
@@ -309,7 +314,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 💬 Community & Support
 
-- 📧 **Email**: support@unio.dev
+- 📧 **Email**: meet.sonawane2015@gmail.com
 - 💻 **GitHub Issues**: [Report bugs or request features](https://github.com/maoucodes/Unio/issues)
 - 📖 **Documentation**: [Full API Documentation](https://unio.chipling.xyz/docs)
 - 🐦 **Twitter**: 
