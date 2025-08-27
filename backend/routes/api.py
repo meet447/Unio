@@ -31,8 +31,106 @@ async def fire_and_forget_log(user_id, api_key, provider, model, status, request
         key_name=key_name
     )
 
+async def attempt_fallback(req: ChatRequest, user_id: str, api_key: str, request_payload: dict, start_time: float):
+    """Attempt to use fallback model when primary model fails"""
+    if not req.fallback_model:
+        return None
+        
+    try:
+        fallback_client = get_provider(model=req.fallback_model, user_id=user_id)
+        
+        # Create new request with fallback model
+        fallback_req = ChatRequest(
+            model=req.fallback_model,
+            messages=req.messages,
+            temperature=req.temperature,
+            stream=req.stream,
+            reasoning_effort=req.reasoning_effort
+        )
+        
+        if req.stream:
+            async def fallback_generator_wrapper():
+                completion_content = ""
+                extracted_key = None
+                completion_tokens = 0
+                
+                async for chunk in fallback_client.stream_chat_completions(req=fallback_req):
+                    if chunk.startswith('data: ') and not chunk.strip().endswith('[DONE]'):
+                        try:
+                            key_chunk = chunk[len("data: "):].strip()
+                            if key_chunk and key_chunk != '[DONE]':
+                                data = json.loads(key_chunk)
+                                if extracted_key is None and 'key_name' in data:
+                                    extracted_key = data['key_name']
+                                
+                                if 'choices' in data and data['choices']:
+                                    choice = data['choices'][0]
+                                    if 'delta' in choice and 'content' in choice['delta'] and choice['delta']['content']:
+                                        completion_content += choice['delta']['content']
+                        except (json.JSONDecodeError, KeyError, IndexError):
+                            pass
+                    yield chunk
+                
+                # Log fallback usage
+                fallback_model_safe = req.fallback_model or "unknown"
+                completion_tokens = estimate_completion_tokens(completion_content, fallback_model_safe)
+                total_tokens = count_tokens_in_messages(req.messages, fallback_model_safe) + completion_tokens
+                
+                asyncio.create_task(
+                    fire_and_forget_log(
+                        user_id=user_id,
+                        api_key=api_key,
+                        provider=f"fallback:{req.fallback_model}",
+                        model=fallback_model_safe,
+                        status=200,
+                        request_payload=request_payload,
+                        response_payload={},
+                        start_time=start_time,
+                        prompt_tokens=count_tokens_in_messages(req.messages, fallback_model_safe),
+                        completion_tokens=completion_tokens,
+                        total_tokens=total_tokens,
+                        key_name=f"fallback:{extracted_key}"
+                    )
+                )
+            
+            return StreamingResponse(fallback_generator_wrapper(), media_type="text/event-stream")
+        else:
+            fallback_response = await fallback_client.chat_completions(req=fallback_req)
+            
+            # Log fallback usage
+            prompt_tokens = fallback_response.usage.prompt_tokens if fallback_response.usage else 0
+            completion_tokens = fallback_response.usage.completion_tokens if fallback_response.usage else 0
+            total_tokens = fallback_response.usage.total_tokens if fallback_response.usage else 0
+            
+            asyncio.create_task(
+                fire_and_forget_log(
+                    user_id=user_id,
+                    api_key=api_key,
+                    provider=f"fallback:{req.fallback_model}",
+                    model=req.fallback_model or "unknown",
+                    status=200,
+                    request_payload=request_payload,
+                    response_payload=[],
+                    start_time=start_time,
+                    prompt_tokens=prompt_tokens,
+                    completion_tokens=completion_tokens,
+                    total_tokens=total_tokens,
+                    key_name=f"fallback:{fallback_response.key_name}"
+                )
+            )
+            
+            return fallback_response
+            
+    except Exception:
+        # Fallback failed, return None to use original error handling
+        return None
+
 @router.post("/chat/completions")
-async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
+async def chat_completions(
+    req: ChatRequest, 
+    authorization: str = Header(None),
+    x_fallback_model: str = Header(None, alias="X-Fallback-Model")
+):
     if not authorization or not authorization.startswith("Bearer "):
         return JSONResponse(
             status_code=401,
@@ -48,6 +146,10 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
             status_code=e.status_code,
             content={"error": {"message": str(e), "type": e.error_type, "code": e.error_code}}
         )
+    
+    # Add fallback model to request if provided in headers
+    if x_fallback_model:
+        req.fallback_model = x_fallback_model
     
     try:
         client = get_provider(model=req.model, user_id=user_id)
@@ -144,6 +246,11 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
             return response_data
 
     except RateLimitExceededError as e:
+        # Try fallback model if available
+        fallback_response = await attempt_fallback(req, user_id, api_key, request_payload, start_time)
+        if fallback_response:
+            return fallback_response
+        
         error_content = {"error": {"message": str(e), "type": e.error_type, "code": e.error_code}}
         
         # Log error
@@ -169,6 +276,11 @@ async def chat_completions(req: ChatRequest, authorization: str = Header(None)):
             content=error_content
         )
     except ProviderAPIError as e:
+        # Try fallback model if available
+        fallback_response = await attempt_fallback(req, user_id, api_key, request_payload, start_time)
+        if fallback_response:
+            return fallback_response
+        
         error_content = {"error": {"message": str(e), "type": e.error_type, "code": e.error_code}}
         
         # Log error
