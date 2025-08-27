@@ -8,7 +8,7 @@ client = OpenAI(
 try:
     chat_completion = client.chat.completions.create(
         messages=[{"role": "user", "content": "hey who are you what all can you do?"}],
-        model="google:gemini-2.5-flash",
+        model="google:gemini-2.5-flash-lite",
         stream=True,
     )
 

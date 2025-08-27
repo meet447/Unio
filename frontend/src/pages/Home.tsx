@@ -10,7 +10,7 @@ const Home = () => {
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="mb-6 sm:mb-8">
             <div className="inline-block p-2 border border-gray-200 dark:border-gray-800 rounded-full mb-4 sm:mb-6">
-              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 px-3 sm:px-4 py-1">✨ LLM API Management</span>
+              <span className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 px-3 sm:px-4 py-1">✨ Looking for testers</span>
             </div>
           </div>
           <h1 className="text-4xl sm:text-6xl md:text-8xl font-medium text-black dark:text-white mb-6 sm:mb-8 tracking-tight leading-none">
