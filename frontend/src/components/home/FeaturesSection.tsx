@@ -87,7 +87,7 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 const FeaturesOverview: React.FC = () => {
   return (
     <section className="py-20 bg-background">
-      <div className="container mx-auto px-4">
+      <div className="container mx-auto px-12 md:px-20 lg:px-32 xl:px-40">
         <div className="flex flex-col gap-12">
           {/* Header */}
           <div className="flex flex-col items-start text-left gap-4 max-w-3xl">

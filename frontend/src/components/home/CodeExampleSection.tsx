@@ -1,8 +1,7 @@
-import React from 'react';
-import { Code } from 'lucide-react';
+import React from "react";
+import { Code } from "lucide-react";
 
-const CodeExampleSection = () => {
-  const codeExample = `from openai import OpenAI
+const codeExample = `from openai import OpenAI
 
 # Use Unio as a drop-in replacement
 client = OpenAI(
@@ -19,31 +18,39 @@ response = client.chat.completions.create(
 
 print(response.choices[0].message.content)`;
 
+const CodeExampleSection: React.FC = () => {
   return (
-    <section className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8 bg-gray-50">
+    <section className="py-20 bg-background px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+        {/* Heading */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl lg:text-4xl font-bold tracking-tight text-text-primary">
             Drop-in replacement for OpenAI
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600">
+          <p className="mt-4 text-lg text-muted-foreground">
             Use your existing code with any provider. Just change the base URL.
           </p>
         </div>
 
-        <div className="bg-gray-900 rounded-lg sm:rounded-xl p-4 sm:p-6 lg:p-8 overflow-x-auto">
+        {/* Code block */}
+        <div className="bg-gray-900 rounded-xl p-6 lg:p-8 shadow-lg overflow-x-auto">
           <div className="flex items-center justify-between mb-4">
+            {/* Traffic lights */}
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-red-400 rounded-full"></div>
-              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-yellow-400 rounded-full"></div>
-              <div className="w-2 h-2 sm:w-3 sm:h-3 bg-green-400 rounded-full"></div>
+              <span className="w-3 h-3 bg-red-400 rounded-full" />
+              <span className="w-3 h-3 bg-yellow-400 rounded-full" />
+              <span className="w-3 h-3 bg-green-400 rounded-full" />
             </div>
+
+            {/* Code language */}
             <div className="flex items-center space-x-2">
               <Code className="h-4 w-4 text-gray-400" />
-              <span className="text-xs sm:text-sm text-gray-400">Python</span>
+              <span className="text-sm text-gray-400">Python</span>
             </div>
           </div>
-          <pre className="text-xs sm:text-sm text-gray-300 overflow-x-auto">
+
+          {/* Code content */}
+          <pre className="text-sm text-gray-300 whitespace-pre overflow-x-auto">
             <code>{codeExample}</code>
           </pre>
         </div>

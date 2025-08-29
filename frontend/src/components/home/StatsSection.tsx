@@ -11,7 +11,7 @@ const StatsSection = () => {
       label: "Latency"
     },
     {
-      value: "10K+",
+      value: "80+",
       label: "Developers"
     }
   ];

@@ -20,7 +20,7 @@ const CTASection = () => {
         data-umami-event="get-started-banner-button"
         className="inline-flex h-auto items-center justify-center rounded-md bg-primary py-3 px-6 text-base font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
       >
-        Try 14-day free trial
+        Get Started
       </a>
     </div>
   );
