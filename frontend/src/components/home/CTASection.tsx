@@ -18,7 +18,7 @@ const CTASection = () => {
       <a
         href="/register"
         data-umami-event="get-started-banner-button"
-        className="inline-flex h-auto items-center justify-center rounded-md bg-primary py-3 px-6 text-base font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="inline-flex h-auto items-center justify-center rounded-md bg-black py-3 px-6 text-base font-medium text-white shadow-sm transition-colors hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
       >
         Get Started
       </a>

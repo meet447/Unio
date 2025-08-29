@@ -35,7 +35,7 @@ const HowItWorksSection: React.FC = () => {
         <div className="flex flex-col items-center text-center gap-12">
           {/* Header */}
           <div className="flex flex-col items-center gap-4 max-w-2xl">
-            <span className="text-sm font-semibold uppercase text-primary tracking-wider">
+            <span className="text-sm font-semibold uppercase text-black tracking-wider">
               Quick Start
             </span>
             <h2 className="text-[2.5rem] leading-[1.2] font-bold tracking-tighter text-text-primary">
@@ -54,7 +54,7 @@ const HowItWorksSection: React.FC = () => {
                 key={index}
                 className="flex flex-col items-center text-center gap-4"
               >
-                <div className="w-12 h-12 rounded-full bg-primary text-white flex items-center justify-center text-lg font-bold">
+                <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center text-lg font-bold">
                   {step.number}
                 </div>
                 <div className="space-y-2">
@@ -73,7 +73,7 @@ const HowItWorksSection: React.FC = () => {
           <div className="mt-8">
             <a
               href="/register"
-              className="inline-flex h-auto items-center justify-center rounded-md bg-primary px-8 py-4 text-base font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex h-auto items-center justify-center rounded-md bg-black px-8 py-4 text-base font-medium text-white shadow-sm transition-colors hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
             >
               Get started for free
             </a>

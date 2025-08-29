@@ -71,8 +71,8 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
 }) => (
   <div className="flex flex-col gap-4">
     <div className="overflow-hidden rounded-lg border border-border shadow-card p-8 bg-white">
-      <div className="w-full h-32 flex items-center justify-center bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg">
-        <Icon className="h-12 w-12 text-primary" />
+      <div className="w-full h-32 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50 rounded-lg">
+        <Icon className="h-12 w-12 text-black" />
       </div>
     </div>
     <div className="flex flex-col gap-2 pt-2">
@@ -91,7 +91,7 @@ const FeaturesOverview: React.FC = () => {
         <div className="flex flex-col gap-12">
           {/* Header */}
           <div className="flex flex-col items-start text-left gap-4 max-w-3xl">
-            <span className="text-sm font-semibold uppercase text-primary tracking-wider">
+            <span className="text-sm font-semibold uppercase text-black tracking-wider">
               AI Gateway
             </span>
             <h2 className="text-[2.5rem] leading-[1.2] font-bold tracking-tighter text-text-primary">
@@ -114,7 +114,7 @@ const FeaturesOverview: React.FC = () => {
           <div className="flex justify-center mt-4">
             <a
               href="/features"
-              className="inline-flex items-center gap-2 text-base font-medium text-text-primary hover:text-primary transition-colors duration-200"
+              className="inline-flex items-center gap-2 text-base font-medium text-text-primary hover:text-black transition-colors duration-200"
             >
               Explore more features
               <ArrowRight className="h-4 w-4" />

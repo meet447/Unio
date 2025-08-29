@@ -33,24 +33,24 @@ const CodeExampleSection: React.FC = () => {
         </div>
 
         {/* Code block */}
-        <div className="bg-gray-900 rounded-xl p-6 lg:p-8 shadow-lg overflow-x-auto">
+        <div className="bg-black rounded-xl p-6 lg:p-8 shadow-lg overflow-x-auto border border-gray-800">
           <div className="flex items-center justify-between mb-4">
             {/* Traffic lights */}
             <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 bg-red-400 rounded-full" />
-              <span className="w-3 h-3 bg-yellow-400 rounded-full" />
-              <span className="w-3 h-3 bg-green-400 rounded-full" />
+              <span className="w-3 h-3 bg-gray-400 rounded-full" />
+              <span className="w-3 h-3 bg-gray-500 rounded-full" />
+              <span className="w-3 h-3 bg-gray-600 rounded-full" />
             </div>
 
             {/* Code language */}
             <div className="flex items-center space-x-2">
-              <Code className="h-4 w-4 text-gray-400" />
-              <span className="text-sm text-gray-400">Python</span>
+              <Code className="h-4 w-4 text-gray-300" />
+              <span className="text-sm text-gray-300">Python</span>
             </div>
           </div>
 
           {/* Code content */}
-          <pre className="text-sm text-gray-300 whitespace-pre overflow-x-auto">
+          <pre className="text-sm text-gray-100 whitespace-pre overflow-x-auto">
             <code>{codeExample}</code>
           </pre>
         </div>

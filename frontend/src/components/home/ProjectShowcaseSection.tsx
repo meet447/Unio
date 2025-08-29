@@ -8,16 +8,16 @@ const ProjectShowcaseSection = () => {
       name: "Axiom",
       description: "An open-source AI search engine like Perplexity AI, powered by multiple LLM providers through Unio.",
       url: "https://axiom-ivory.vercel.app/",
-      iconColor: "text-blue-600",
-      bgColor: "bg-blue-100"
+      iconColor: "text-black",
+      bgColor: "bg-gray-100"
     },
     {
       icon: TrendingUp,
       name: "Chipling",
       description: "An open-source AI rabbithole research tool that helps users dive deep into topics using AI.",
       url: "https://chipling.xyz",
-      iconColor: "text-purple-600",
-      bgColor: "bg-purple-100"
+      iconColor: "text-black",
+      bgColor: "bg-gray-100"
     }
   ];
 
@@ -53,7 +53,7 @@ const ProjectShowcaseSection = () => {
                       href={project.url}
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                      className="text-black hover:text-gray-700 text-sm font-medium"
                     >
                       Visit {project.name} →
                     </a>

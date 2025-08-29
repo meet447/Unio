@@ -17,7 +17,7 @@ const HeroSection = () => {
           <div className="mt-8 flex flex-row justify-center gap-4">
             <a
               href="/dashboard"
-              className="inline-flex h-auto items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="inline-flex h-auto items-center justify-center rounded-md bg-black px-6 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
             >
               Get started
             </a>

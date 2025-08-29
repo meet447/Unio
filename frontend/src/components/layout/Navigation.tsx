@@ -56,13 +56,6 @@ const Navigation = () => {
           <div className="flex items-center space-x-3 sm:space-x-4">
             {!user && (
               <>
-                {/* GitHub Star Counter - Hidden on small screens */}
-                <div className="hidden md:flex items-center space-x-1 bg-gray-50 border border-gray-200 rounded-md px-2 sm:px-3 py-1 hover:bg-gray-100 transition-colors">
-                  <Github className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
-                  <Star className="h-3 w-3 sm:h-4 sm:w-4 text-gray-600" />
-                  <span className="text-xs sm:text-sm font-medium text-gray-900">30K</span>
-                </div>
-                
                 <Link
                   to="/login"
                   className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors hidden sm:block"
@@ -90,11 +83,7 @@ const Navigation = () => {
                 <SheetContent side="right" className="w-64 sm:w-80">
                   <div className="flex flex-col space-y-4 mt-6">
                     {/* Mobile GitHub stats */}
-                    <div className="flex items-center justify-center space-x-2 bg-gray-50 border border-gray-200 rounded-lg p-3 mb-4">
-                      <Github className="h-5 w-5 text-gray-600" />
-                      <Star className="h-5 w-5 text-gray-600" />
-                      <span className="text-sm font-medium text-gray-900">30K stars</span>
-                    </div>
+
                     
                     {/* Mobile navigation links */}
                     {publicNavItems.map((item) => (
