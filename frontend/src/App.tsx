@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "./hooks/useAuth";
 import Layout from "./components/layout/Layout";
 import Home from "./pages/Home";
+import Features from "./pages/Features";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import HelpCenter from "./pages/HelpCenter";
@@ -28,6 +29,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
+              <Route path="features" element={<Features />} />
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="profile" element={<Profile />} />
               <Route path="analytics" element={<Analytics />} />
