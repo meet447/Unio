@@ -129,20 +129,57 @@ class ResponseRequest(BaseModel):
     model: str
     input: Union[str, List[Message]]  # Can be a simple string or conversation messages
     temperature: float = 0.7
+    stream: Optional[bool] = False  # Enable streaming responses
     reasoning_effort: Optional[str] = None
     fallback_model: Optional[str] = None  # For automatic fallback when primary provider fails
     tools: Optional[List[Tool]] = None  # Tool definitions for function calling
     tool_choice: Optional[Union[str, dict]] = None  # Controls tool usage: "none", "auto", or specific tool
 
 
-class ResponseOutput(BaseModel):
+# Response content structure
+class ResponseContent(BaseModel):
+    type: str = "output_text"
+    text: str
+    annotations: List[dict] = []  # Empty list by default
+
+
+# Response message structure that matches OpenAI's responses API format
+class ResponseMessage(BaseModel):
+    id: str
+    type: str = "message"
+    role: str = "assistant"
+    content: List[ResponseContent]
+
+
+class ResponseData(BaseModel):
     id: str
     object: str = "response"
     created: int
     model: str
-    output_text: str  # The main generated response text
+    output: List[ResponseMessage]  # Array of message objects as expected by OpenAI client
     key_name: str
     usage: Optional[Usage] = None
     system_fingerprint: Optional[str] = None
-    tool_calls: Optional[List[ToolCall]] = None  # For responses that include tool calls
+
+
+class ResponseDelta(BaseModel):
+    content: Optional[str] = None
+    tool_calls: Optional[List[ToolCall]] = None
+
+
+class ResponseChoiceChunk(BaseModel):
+    index: int
+    delta: ResponseDelta
+    finish_reason: Optional[str] = None
+
+
+class ResponseCompletionChunk(BaseModel):
+    id: str
+    object: str = "response.chunk"
+    created: int
+    model: str
+    choices: List[ResponseChoiceChunk]
+    key_name: str
+    usage: Optional[Usage] = None
+    system_fingerprint: Optional[str] = None
 
