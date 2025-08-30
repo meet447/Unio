@@ -123,3 +123,26 @@ class ChatCompletionChunk(BaseModel):
     usage: Optional[Usage] = None
     system_fingerprint: Optional[str] = None
 
+
+# ---- Response generation models (OpenAI responses API) ----
+class ResponseRequest(BaseModel):
+    model: str
+    input: Union[str, List[Message]]  # Can be a simple string or conversation messages
+    temperature: float = 0.7
+    reasoning_effort: Optional[str] = None
+    fallback_model: Optional[str] = None  # For automatic fallback when primary provider fails
+    tools: Optional[List[Tool]] = None  # Tool definitions for function calling
+    tool_choice: Optional[Union[str, dict]] = None  # Controls tool usage: "none", "auto", or specific tool
+
+
+class ResponseOutput(BaseModel):
+    id: str
+    object: str = "response"
+    created: int
+    model: str
+    output_text: str  # The main generated response text
+    key_name: str
+    usage: Optional[Usage] = None
+    system_fingerprint: Optional[str] = None
+    tool_calls: Optional[List[ToolCall]] = None  # For responses that include tool calls
+

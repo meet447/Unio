@@ -21,7 +21,7 @@ Unio now supports OpenAI-compatible tool calling and function calling! You can u
 | Google   | ✅ Yes                 |
 | OpenRouter| ✅ Yes                |
 | Together | ❌ No                  |
-| Groq     | ❌ No                  |
+| Groq     | ✅ Yes                 |
 
 ## Usage Examples
 
