@@ -8,14 +8,13 @@ client = OpenAI(
     base_url="http://127.0.0.1:8000/v1/api"
 )
 
-model = "groq:deepseek-r1-distill-llama-70b"
 
 # ---- 1. Define Multiple Tools ----
 tools = [
     {
         "type": "function",
         "function": {
-            "name": "get_weather", 
+            "name": "get_weather",
             "description": "Get the current weather for a given city",
             "parameters": {
                 "type": "object",
@@ -86,7 +85,7 @@ messages = [
 
 # ---- 4. Send Initial Request to Model ----
 response = client.chat.completions.create(
-    model=model,
+    model="openrouter:x-ai/grok-code-fast-1",
     messages=messages,
     tools=tools
 )
@@ -117,7 +116,7 @@ if tool_calls:
 
     # ---- 6. Send Results Back to Model ----
     followup = client.chat.completions.create(
-        model=model,
+        model="openrouter:x-ai/grok-code-fast-1",
         messages=messages + [assistant_msg] + tool_messages,
         tools=tools
     )

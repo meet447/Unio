@@ -1,4 +1,5 @@
 import tiktoken
+import json
 from typing import List, Dict, Any
 from models.chat import Message, TextContent
 
@@ -60,6 +61,24 @@ def count_tokens_in_messages(messages: List[Message], model: str) -> int:
                         elif content_item.type == 'image_url':
                             # Approximate token count for images (varies by size)
                             num_tokens += 85  # Base cost for image processing
+        
+        # Add tokens for tool calls
+        if hasattr(message, 'tool_calls') and message.tool_calls:
+            for tool_call in message.tool_calls:
+                # Add tokens for tool call structure
+                num_tokens += 3  # Base overhead for tool call
+                
+                # Add tokens for function name
+                if tool_call.function and tool_call.function.name:
+                    num_tokens += len(encoding.encode(tool_call.function.name))
+                
+                # Add tokens for function arguments (JSON string)
+                if tool_call.function and tool_call.function.arguments:
+                    num_tokens += len(encoding.encode(tool_call.function.arguments))
+        
+        # Add tokens for tool_call_id (for tool messages)
+        if hasattr(message, 'tool_call_id') and message.tool_call_id:
+            num_tokens += len(encoding.encode(message.tool_call_id))
     
     num_tokens += 3  # every reply is primed with <|start|>assistant<|message|>
     return num_tokens
@@ -68,6 +87,21 @@ def count_tokens_in_text(text: str, model: str) -> int:
     """Count tokens in a text string"""
     encoding = get_encoding_for_model(model)
     return len(encoding.encode(text))
+
+def count_tokens_in_tools(tools: List[dict], model: str) -> int:
+    """Count tokens in tool definitions"""
+    encoding = get_encoding_for_model(model)
+    
+    num_tokens = 0
+    for tool in tools:
+        # Convert tool to JSON string and count tokens
+        tool_json = json.dumps(tool, separators=(',', ':'))
+        num_tokens += len(encoding.encode(tool_json))
+        
+        # Add overhead for tool definition structure
+        num_tokens += 3
+    
+    return num_tokens
 
 def estimate_completion_tokens(content: str, model: str) -> int:
     """Estimate completion tokens from response content"""
