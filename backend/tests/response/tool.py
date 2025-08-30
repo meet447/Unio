@@ -21,7 +21,7 @@ import json
 # -----------------------------
 # 1️⃣ Initialize client
 # -----------------------------
-MODEL = "groq:openai/gpt-oss-120b"
+MODEL = "groq:llama3-70b-8192"
 
 client = OpenAI(
     base_url="http://127.0.0.1:8000/v1/api",
@@ -117,39 +117,63 @@ print()
 print("🔄 Making streaming request with tool definitions...")
 
 try:
+    # Test non-streaming version
+    print("🔄 Making non-streaming request with tool definitions...")
+    
     response = client.responses.create(
         model=MODEL,
-        input=input_messages,  # Use message array instead of string
+        input=input_messages,
         tools=tools,
         tool_choice="auto",
-        stream=True
+        stream=False
     )
     
-    print("🌊 Streaming response:")
+    print(f"📝 Response ID: {response.id}")
     
-    # Collect the streaming response
-    full_content = ""
-    tool_calls_found = []
-    
-    for chunk in response:
-        # Print the chunk type for debugging
-        chunk_type = getattr(chunk, 'type', 'unknown')
-        print(f"📦 Received chunk: {chunk_type}")
+    # Check if we have output messages
+    if response.output and len(response.output) > 0:
+        message = response.output[0]
         
-        # Handle different event types
-        if hasattr(chunk, 'type'):
-            if chunk.type == 'response.output_text.delta':
-                if hasattr(chunk, 'delta'):
-                    full_content += chunk.delta
-                    print(chunk)
-                    print(f"📝 Delta: {chunk.delta}")
-            elif chunk.type == 'response.completed':
-                print(f"✅ Response completed")
-                if hasattr(chunk, 'response'):
-                    print(f"📋 Final response usage: {getattr(chunk.response, 'usage', None)}")
-                break
-    
-    print(f"\n📜 Complete content: {full_content}")
+        # Check for text content and tool calls
+        text_content = None
+        tool_calls = []
+        
+        print(f"📋 Message content items: {len(message.content)}")
+        
+        for i, content_item in enumerate(message.content):
+            print(f"  Content {i}: type={getattr(content_item, 'type', type(content_item))}")
+            
+            if hasattr(content_item, 'type'):
+                if content_item.type == "text":
+                    text_content = content_item.text
+                    print(f"📝 Assistant response: {text_content}")
+                elif content_item.type == "tool_calls":
+                    # For Pydantic objects, access the tool_calls directly
+                    tool_calls = content_item.tool_calls
+                    print(f"🛠️  Tool calls found: {len(tool_calls)}")
+                    for j, tc in enumerate(tool_calls):
+                        print(f"    Tool {j+1}: {tc}")
+                        
+        # Execute tool calls if found
+        if tool_calls:
+            print("\n🔧 Executing tool calls...")
+            for tc in tool_calls:
+                if hasattr(tc, 'function'):
+                    function_name = tc.function.name
+                    arguments = json.loads(tc.function.arguments)
+                else:
+                    function_name = tc['function']['name']
+                    arguments = json.loads(tc['function']['arguments'])
+                
+                if function_name in TOOL_MAPPING:
+                    print(f"🛠️  Calling {function_name} with {arguments}")
+                    result = TOOL_MAPPING[function_name](**arguments)
+                    print(f"✅ Non-streaming result: {len(result)} books found")
+                    for book in result[:2]:  # Show first 2
+                        print(f"    - {book['title']} by {', '.join(book['authors'])}")
+        
+    else:
+        print("❌ No output received from the model")
     
 except Exception as e:
     print(f"❌ Streaming failed: {e}")
@@ -175,24 +199,30 @@ except Exception as e:
         text_content = None
         tool_calls = []
         
-        for content_item in message.content:
-            if content_item.type == "output_text":
-                text_content = content_item.text
-                print(f"📝 Assistant response: {text_content}")
+        print(f"📋 Message content items: {len(message.content)}")
         
-        # Check if there are any tool calls (they might be in a different structure)
-        print("\n🔍 Checking for tool calls...")
+        for i, content_item in enumerate(message.content):
+            print(f"  Content {i}: type={getattr(content_item, 'type', type(content_item))}")
+            
+            if hasattr(content_item, 'type'):
+                if content_item.type == "text":
+                    text_content = content_item.text
+                    print(f"📝 Assistant response: {text_content}")
+                elif content_item.type == "tool_calls":
+                    # For Pydantic objects, access the tool_calls directly
+                    tool_calls = content_item.tool_calls
+                    print(f"🛠️  Tool calls found: {len(tool_calls)}")
+                    for j, tc in enumerate(tool_calls):
+                        print(f"    Tool {j+1}: {tc}")
+            elif isinstance(content_item, dict) and content_item.get('type') == 'tool_calls':
+                tool_calls = content_item.get('tool_calls', [])
+                print(f"🛠️  Tool calls found: {len(tool_calls)}")
+                for j, tc in enumerate(tool_calls):
+                    print(f"    Tool {j+1}: {tc}")
         
-        # The tool calls might be embedded in the message structure differently
-        # Let's check the full message structure
-        print(f"📋 Message structure: {json.dumps(message.model_dump(), indent=2)}")
-        
-        # Check if the response itself contains tool call information
-        print(f"\n📋 Full response structure:")
-        response_dict = response.model_dump()
-        # Remove large nested objects for cleaner output
-        clean_response = {k: v for k, v in response_dict.items() if k not in ['output']}
-        print(json.dumps(clean_response, indent=2))
+        if not text_content and not tool_calls:
+            print("❌ No text content or tool calls found")
+            print(f"📋 Raw message structure: {message.model_dump()}")
         
     else:
         print("❌ No output received from the model")

@@ -1,7 +1,7 @@
 from fastapi import Header, APIRouter, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from models.chat import (
-    ResponseRequest, ResponseContent, ResponseMessage, ResponseData, ResponseDelta, ResponseChoiceChunk, 
+    ResponseRequest, OutputTextContentPart, ToolCallsContentPart, ResponseMessage, ResponseData, ResponseDelta, ResponseChoiceChunk, 
     ResponseCompletionChunk, Message, Usage, ToolCall, FunctionCall
 )
 from services.provider import get_provider
@@ -47,7 +47,7 @@ async def attempt_response_fallback(req: ResponseRequest, user_id: str, api_key:
         fallback_req = ResponseRequest(
             model=req.fallback_model,
             input=req.input,
-            temperature=req.temperature,
+            temperature=req.temperature or 0.7,
             stream=req.stream,  # Preserve streaming preference
             reasoning_effort=req.reasoning_effort,
             tools=req.tools,
@@ -105,7 +105,7 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
     chat_req = ChatRequest(
         model=req.model,
         messages=messages,
-        temperature=req.temperature,
+        temperature=req.temperature or 0.7,
         stream=True,  # Force streaming for this function
         reasoning_effort=req.reasoning_effort,
         tools=req.tools,
@@ -121,10 +121,13 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
         completion_content = ""
         completion_tokens = 0
         extracted_key = None
-        tool_calls_streaming = []
+        tool_calls_streaming = []  # Track tool calls as they come in
         response_id = f"resp_{uuid.uuid4().hex}"
         message_id = f"msg_{uuid.uuid4().hex}"
         created_time = int(time.time())
+        has_content = False  # Track if we have text content
+        has_tool_calls = False  # Track if we have tool calls
+        content_part_index = 0  # Track content parts
         
         # Create base response object
         base_response = {
@@ -140,14 +143,15 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
             "output": [],
             "parallel_tool_calls": True,
             "previous_response_id": None,
-            "reasoning": {"effort": None, "summary": None},
+            "reasoning": {"effort": req.reasoning_effort, "summary": None},
+            "response_format": None,
             "store": True,
             "temperature": req.temperature,
             "text": {"format": {"type": "text"}},
             "tool_choice": req.tool_choice or "auto",
             "tools": [tool.model_dump() for tool in req.tools] if req.tools else [],
             "top_p": 1.0,
-            "truncation": "disabled",
+            "truncation": {"type": "auto", "last_messages": None},
             "usage": None,
             "user": None,
             "metadata": {}
@@ -173,15 +177,6 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
             yield f"event: response.output_item.added\n"
             yield f"data: {{\"type\":\"response.output_item.added\",\"output_index\":0,\"item\":{json.dumps(output_item)}}}\n\n"
             
-            # Send response.content_part.added event
-            content_part = {
-                "type": "output_text",
-                "text": "",
-                "annotations": []
-            }
-            yield f"event: response.content_part.added\n"
-            yield f"data: {{\"type\":\"response.content_part.added\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":0,\"part\":{json.dumps(content_part)}}}\n\n"
-            
             # Stream content deltas
             async for chunk in client.stream_chat_completions(req=chat_req):
                 # Parse SSE chunk from chat completions
@@ -201,13 +196,47 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
                                 
                                 if 'delta' in choice:
                                     delta = choice['delta']
+                                    
+                                    # Handle text content
                                     if 'content' in delta and delta['content']:
+                                        # Add text content part if this is the first content
+                                        if not has_content:
+                                            content_part = OutputTextContentPart(type="text", text="")
+                                            yield f"event: response.content_part.added\n"
+                                            yield f"data: {{\"type\":\"response.content_part.added\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(content_part.model_dump())}}}\n\n"
+                                            has_content = True
+                                        
                                         delta_content = delta['content']
                                         completion_content += delta['content']
                                         
                                         # Send response.output_text.delta event
                                         yield f"event: response.output_text.delta\n"
-                                        yield f"data: {{\"type\":\"response.output_text.delta\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":0,\"delta\":{json.dumps(delta_content)}}}\n\n"
+                                        yield f"data: {{\"type\":\"response.output_text.delta\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"delta\":{json.dumps(delta_content)}}}\n\n"
+                                    
+                                    # Handle tool calls
+                                    if 'tool_calls' in delta and delta['tool_calls']:
+                                        for tc in delta['tool_calls']:
+                                            # Handle case where index might be None (for single tool call)
+                                            tc_index = tc.get('index') if tc.get('index') is not None else 0
+                                            
+                                            # Extend tool_calls_streaming list if needed
+                                            while len(tool_calls_streaming) <= tc_index:
+                                                tool_calls_streaming.append({
+                                                    "id": "",
+                                                    "type": "function",
+                                                    "function": {"name": "", "arguments": ""}
+                                                })
+                                            
+                                            # Update the tool call at the specified index
+                                            if 'id' in tc and tc['id']:
+                                                tool_calls_streaming[tc_index]['id'] = tc['id']
+                                            if 'function' in tc and tc['function']:
+                                                if tc['function'].get('name'):
+                                                    tool_calls_streaming[tc_index]['function']['name'] = tc['function']['name']
+                                                if tc['function'].get('arguments'):
+                                                    tool_calls_streaming[tc_index]['function']['arguments'] += tc['function']['arguments']
+                                            
+                                            has_tool_calls = True
                     
                     except (json.JSONDecodeError, KeyError, IndexError) as e:
                         # Skip malformed chunks
@@ -218,35 +247,62 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
                     completion_tokens = estimate_completion_tokens(completion_content, req.model)
                     total_tokens = prompt_tokens + completion_tokens
                     
-                    # Send response.output_text.done event
-                    yield f"event: response.output_text.done\n"
-                    yield f"data: {{\"type\":\"response.output_text.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":0,\"text\":{json.dumps(completion_content)}}}\n\n"
+                    # Build final content array
+                    final_content = []
                     
-                    # Send response.content_part.done event
-                    final_part = {
-                        "type": "output_text",
-                        "text": completion_content,
-                        "annotations": []
-                    }
-                    yield f"event: response.content_part.done\n"
-                    yield f"data: {{\"type\":\"response.content_part.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":0,\"part\":{json.dumps(final_part)}}}\n\n"
+                    # Add text content if present
+                    if has_content:
+                        # Send response.output_text.done event
+                        yield f"event: response.output_text.done\n"
+                        yield f"data: {{\"type\":\"response.output_text.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"text\":{json.dumps(completion_content)}}}\n\n"
+                        
+                        # Send response.content_part.done event for text
+                        final_part = OutputTextContentPart(type="text", text=completion_content)
+                        yield f"event: response.content_part.done\n"
+                        yield f"data: {{\"type\":\"response.content_part.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(final_part.model_dump())}}}\n\n"
+                        
+                        final_content.append(final_part)
+                        content_part_index += 1
+                    
+                    # Add tool calls if present
+                    if has_tool_calls and tool_calls_streaming:
+                        # Filter out incomplete tool calls
+                        complete_tool_calls = [
+                            tc for tc in tool_calls_streaming 
+                            if tc['id'] and tc['function']['name']
+                        ]
+                        
+                        if complete_tool_calls:
+                            # Add tool calls content part
+                            tool_calls_part = ToolCallsContentPart(
+                                type="tool_calls",
+                                tool_calls=complete_tool_calls
+                            )
+                            
+                            yield f"event: response.content_part.added\n"
+                            yield f"data: {{\"type\":\"response.content_part.added\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(tool_calls_part.model_dump())}}}\n\n"
+                            
+                            yield f"event: response.content_part.done\n"
+                            yield f"data: {{\"type\":\"response.content_part.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(tool_calls_part.model_dump())}}}\n\n"
+                            
+                            final_content.append(tool_calls_part)
                     
                     # Send response.output_item.done event
-                    final_item = {
-                        "id": message_id,
-                        "type": "message",
-                        "status": "completed",
-                        "role": "assistant",
-                        "content": [final_part]
-                    }
+                    final_item = ResponseMessage(
+                        id=message_id,
+                        type="message",
+                        role="assistant",
+                        content=final_content,
+                        status="completed"
+                    )
                     yield f"event: response.output_item.done\n"
-                    yield f"data: {{\"type\":\"response.output_item.done\",\"output_index\":0,\"item\":{json.dumps(final_item)}}}\n\n"
+                    yield f"data: {{\"type\":\"response.output_item.done\",\"output_index\":0,\"item\":{json.dumps(final_item.model_dump())}}}\n\n"
                     
                     # Send response.completed event
                     final_response = base_response.copy()
                     final_response.update({
                         "status": "completed",
-                        "output": [final_item],
+                        "output": [final_item.model_dump()],
                         "usage": {
                             "input_tokens": prompt_tokens,
                             "output_tokens": completion_tokens,
@@ -288,7 +344,7 @@ async def generate_response_with_provider(client, req: ResponseRequest) -> Respo
     chat_req = ChatRequest(
         model=req.model,
         messages=messages,
-        temperature=req.temperature,
+        temperature=req.temperature or 0.7,
         stream=False,  # Response generation is always non-streaming
         reasoning_effort=req.reasoning_effort,
         tools=req.tools,
@@ -309,21 +365,39 @@ async def generate_response_with_provider(client, req: ResponseRequest) -> Respo
         if choice.message.tool_calls:
             tool_calls = choice.message.tool_calls
     
+    # Build content array based on what we have
+    content_parts = []
+    
+    # Add text content if present
+    if output_text:
+        content_parts.append(OutputTextContentPart(type="text", text=output_text))
+    
+    # Add tool calls if present
+    if tool_calls:
+        content_parts.append(ToolCallsContentPart(type="tool_calls", tool_calls=tool_calls))
+    
     # Create the response output in the format expected by OpenAI client
     response_data = ResponseData(
         id=str(uuid.uuid4()),
         object="response",
         created=int(time.time()),
         model=req.model,
+        status="completed",
         output=[ResponseMessage(
             id=f"msg_{uuid.uuid4().hex}",
             type="message",
             role="assistant",
-            content=[ResponseContent(type="output_text", text=output_text, annotations=[])]
-        )],  # Array of message objects
-        key_name=chat_response.key_name,
+            content=content_parts,
+            status="completed"
+        )],
         usage=chat_response.usage,
-        system_fingerprint=chat_response.system_fingerprint
+        key_name=chat_response.key_name,
+        system_fingerprint=chat_response.system_fingerprint,
+        instructions="You are a helpful assistant.",
+        temperature=req.temperature or 0.7,
+        tools=req.tools,
+        tool_choice=req.tool_choice,
+        parallel_tool_calls=True
     )
     
     return response_data

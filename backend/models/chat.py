@@ -124,44 +124,85 @@ class ChatCompletionChunk(BaseModel):
     system_fingerprint: Optional[str] = None
 
 
-# ---- Response generation models (OpenAI responses API) ----
+# ---- OpenAI Response API Models (Official Types) ----
 class ResponseRequest(BaseModel):
     model: str
     input: Union[str, List[Message]]  # Can be a simple string or conversation messages
-    temperature: float = 0.7
+    temperature: Optional[float] = 0.7
     stream: Optional[bool] = False  # Enable streaming responses
     reasoning_effort: Optional[str] = None
     fallback_model: Optional[str] = None  # For automatic fallback when primary provider fails
     tools: Optional[List[Tool]] = None  # Tool definitions for function calling
     tool_choice: Optional[Union[str, dict]] = None  # Controls tool usage: "none", "auto", or specific tool
+    max_output_tokens: Optional[int] = None
+    instructions: Optional[str] = None
+    metadata: Optional[dict] = None
+    parallel_tool_calls: Optional[bool] = True
+    response_format: Optional[dict] = None
+    top_p: Optional[float] = None
+    truncation: Optional[dict] = None
+    user: Optional[str] = None
 
 
-# Response content structure
-class ResponseContent(BaseModel):
-    type: str = "output_text"
+# Response content part structures (matching OpenAI official types)
+class OutputTextContentPart(BaseModel):
+    type: Literal["text"] = "text"
     text: str
-    annotations: List[dict] = []  # Empty list by default
 
 
-# Response message structure that matches OpenAI's responses API format
+class ToolCallsContentPart(BaseModel):
+    type: Literal["tool_calls"] = "tool_calls"
+    tool_calls: List[ToolCall]
+
+
+# Union type for all content parts
+ResponseContentPart = Union[OutputTextContentPart, ToolCallsContentPart]
+
+
+# Response message structure (official OpenAI format)
 class ResponseMessage(BaseModel):
     id: str
-    type: str = "message"
-    role: str = "assistant"
-    content: List[ResponseContent]
+    type: Literal["message"] = "message"
+    role: Literal["assistant"] = "assistant"
+    content: List[ResponseContentPart]
+    status: Literal["in_progress", "completed"] = "completed"
 
 
+# Main response object (official OpenAI format)
 class ResponseData(BaseModel):
     id: str
-    object: str = "response"
+    object: Literal["response"] = "response"
     created: int
     model: str
-    output: List[ResponseMessage]  # Array of message objects as expected by OpenAI client
-    key_name: str
+    output: List[ResponseMessage]
+    status: Literal["in_progress", "completed", "failed", "cancelled"] = "completed"
+    
+    # Optional fields
+    error: Optional[dict] = None
+    incomplete_details: Optional[dict] = None
+    instructions: Optional[str] = "You are a helpful assistant."
+    max_output_tokens: Optional[int] = None
+    parallel_tool_calls: Optional[bool] = True
+    previous_response_id: Optional[str] = None
+    reasoning: Optional[dict] = None
+    response_format: Optional[dict] = None
+    store: Optional[bool] = None
+    temperature: Optional[float] = None
+    text: Optional[dict] = None
+    tool_choice: Optional[Union[str, dict]] = None
+    tools: Optional[List[Tool]] = None
+    top_p: Optional[float] = None
+    truncation: Optional[dict] = None
     usage: Optional[Usage] = None
+    user: Optional[str] = None
+    metadata: Optional[dict] = None
+    
+    # Custom fields for compatibility
+    key_name: Optional[str] = None
     system_fingerprint: Optional[str] = None
 
 
+# Streaming response structures
 class ResponseDelta(BaseModel):
     content: Optional[str] = None
     tool_calls: Optional[List[ToolCall]] = None
