@@ -4,12 +4,11 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { Key, Copy, Trash2, Eye, EyeOff, Plus } from "lucide-react";
+import { Key, Copy, Trash2, Eye, EyeOff, Plus, Pencil, Check, X } from "lucide-react";
 
 interface ApiToken {
   id: string;
   name: string;
-  token_hash: string;
   last_used_at: string | null;
   created_at: string;
   is_active: boolean;
@@ -21,6 +20,8 @@ const Profile = () => {
   const [generating, setGenerating] = useState(false);
   const [newToken, setNewToken] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
+  const [editingTokenId, setEditingTokenId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>("");
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -34,7 +35,7 @@ const Profile = () => {
     try {
       const { data, error } = await supabase
         .from('user_api_tokens')
-        .select('*')
+        .select('id, name, last_used_at, created_at, is_active')
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -113,11 +114,15 @@ const Profile = () => {
     }
   };
 
-  const revokeToken = async (tokenId: string) => {
+  const deleteToken = async (tokenId: string) => {
+    if (!confirm('Are you sure you want to delete this API token? This action cannot be undone.')) {
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('user_api_tokens')
-        .update({ is_active: false })
+        .delete()
         .eq('id', tokenId);
 
       if (error) throw error;
@@ -125,13 +130,57 @@ const Profile = () => {
       await fetchTokens();
       toast({
         title: "Success",
-        description: "Token revoked successfully",
+        description: "Token deleted successfully",
       });
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to revoke token",
+        description: "Failed to delete token",
+      });
+    }
+  };
+
+  const startEditing = (tokenId: string, currentName: string) => {
+    setEditingTokenId(tokenId);
+    setEditingName(currentName);
+  };
+
+  const cancelEditing = () => {
+    setEditingTokenId(null);
+    setEditingName("");
+  };
+
+  const saveTokenName = async (tokenId: string) => {
+    if (!editingName.trim()) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Token name cannot be empty",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('user_api_tokens')
+        .update({ name: editingName.trim() })
+        .eq('id', tokenId);
+
+      if (error) throw error;
+      
+      await fetchTokens();
+      setEditingTokenId(null);
+      setEditingName("");
+      toast({
+        title: "Success",
+        description: "Token name updated successfully",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update token name",
       });
     }
   };
@@ -252,9 +301,54 @@ const Profile = () => {
                 <div key={token.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-6 border border-gray-200 dark:border-gray-800 rounded-2xl hover:border-gray-300 dark:hover:border-gray-700 transition-colors">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
-                      <h3 className="text-lg font-medium text-black dark:text-white">
-                        {token.name}
-                      </h3>
+                      {editingTokenId === token.id ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            value={editingName}
+                            onChange={(e) => setEditingName(e.target.value)}
+                            className="text-lg font-medium text-black dark:text-white"
+                            placeholder="Token name"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                saveTokenName(token.id);
+                              } else if (e.key === 'Escape') {
+                                cancelEditing();
+                              }
+                            }}
+                            autoFocus
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => saveTokenName(token.id)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                          >
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={cancelEditing}
+                            className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/20"
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-lg font-medium text-black dark:text-white">
+                            {token.name}
+                          </h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => startEditing(token.id, token.name)}
+                            className="text-gray-600 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/20"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
                       <div className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                         Active
@@ -278,7 +372,7 @@ const Profile = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => revokeToken(token.id)}
+                      onClick={() => deleteToken(token.id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -288,58 +382,7 @@ const Profile = () => {
               ))}
             </div>
           )}
-        </div>
-
-        {/* API Usage Information */}
-        <div className="grid md:grid-cols-2 gap-8">
-          <div className="p-6 border border-gray-200 dark:border-gray-800 rounded-2xl">
-            <h3 className="text-lg font-medium text-black dark:text-white mb-4">
-              Authentication
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 font-light mb-4">
-              Include your token in the Authorization header:
-            </p>
-            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-xl font-mono text-sm text-black dark:text-white">
-              Authorization: Bearer your_token_here
-            </div>
-          </div>
-
-          <div className="p-6 border border-gray-200 dark:border-gray-800 rounded-2xl">
-            <h3 className="text-lg font-medium text-black dark:text-white mb-4">
-              Base URL
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 font-light mb-4">
-              All API requests should be made to:
-            </p>
-            <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-xl font-mono text-sm text-black dark:text-white">
-              https://api.Unio.com/v1
-            </div>
-          </div>
-
-          <div className="p-6 border border-gray-200 dark:border-gray-800 rounded-2xl">
-            <h3 className="text-lg font-medium text-black dark:text-white mb-4">
-              Rate Limits
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 font-light mb-2">
-              1,000 requests per hour per token
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500">
-              Rate limits reset every hour
-            </p>
-          </div>
-
-          <div className="p-6 border border-gray-200 dark:border-gray-800 rounded-2xl">
-            <h3 className="text-lg font-medium text-black dark:text-white mb-4">
-              Security
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 font-light mb-2">
-              Keep your tokens secure and never share them publicly
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500">
-              Tokens are only shown once when generated
-            </p>
-          </div>
-        </div>
+        </div>       
       </div>
     </div>
   );

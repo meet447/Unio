@@ -22,37 +22,37 @@ import {
 const Features = () => {
   const coreFeatures = [
     {
-      icon: <Key className="h-8 w-8 text-blue-600" />,
+      icon: <Key className="h-8 w-8 text-gray-600" />,
       title: "Bring Your Own Keys",
       description: "Use your existing API keys across all providers. Secure AES-256 encryption with per-provider organization and usage tracking.",
       benefits: ["Secure storage", "Usage tracking", "Key health monitoring", "Per-provider organization"]
     },
     {
-      icon: <RotateCcw className="h-8 w-8 text-green-600" />,
+      icon: <RotateCcw className="h-8 w-8 text-gray-600" />,
       title: "Automatic Key Rotation",
       description: "Intelligent load balancing and failover with automatic key rotation within providers and smart rate limit handling.",
       benefits: ["Load balancing", "High availability", "Rate limit handling", "Automatic failover"]
     },
     {
-      icon: <RefreshCw className="h-8 w-8 text-purple-600" />,
+      icon: <RefreshCw className="h-8 w-8 text-gray-600" />,
       title: "Smart Fallback System", 
       description: "Automatic provider switching on failures. Never face downtime with intelligent multi-provider redundancy.",
       benefits: ["Provider switching", "Zero downtime", "Multi-provider redundancy", "Intelligent routing"]
     },
     {
-      icon: <Zap className="h-8 w-8 text-orange-600" />,
+      icon: <Zap className="h-8 w-8 text-gray-600" />,
       title: "OpenAI SDK Compatibility",
       description: "Drop-in replacement for existing OpenAI integrations. Use the same code with any provider through our unified interface.",
       benefits: ["Drop-in replacement", "Unified interface", "Easy migration", "Standard SDK support"]
     },
     {
-      icon: <BarChart3 className="h-8 w-8 text-red-600" />,
+      icon: <BarChart3 className="h-8 w-8 text-gray-600" />,
       title: "Advanced Analytics",
       description: "Track usage, costs, and performance across providers with real-time metrics and comprehensive insights.",
       benefits: ["Real-time metrics", "Cost tracking", "Performance analytics", "Error monitoring"]
     },
     {
-      icon: <Database className="h-8 w-8 text-teal-600" />,
+      icon: <Database className="h-8 w-8 text-gray-600" />,
       title: "Semantic Caching",
       description: "Coming soon: Reduce costs with intelligent caching that understands context and meaning.",
       benefits: ["Cost reduction", "Intelligent caching", "Context awareness", "Performance boost"],
@@ -71,22 +71,22 @@ const Features = () => {
 
   const analyticsFeatures = [
     {
-      icon: <TrendingUp className="h-6 w-6 text-blue-600" />,
+      icon: <TrendingUp className="h-6 w-6 text-gray-600" />,
       title: "Real-time Usage Metrics",
       description: "Monitor API calls, tokens, and costs as they happen"
     },
     {
-      icon: <Gauge className="h-6 w-6 text-green-600" />,
+      icon: <Gauge className="h-6 w-6 text-gray-600" />,
       title: "Performance Analytics", 
       description: "Track response times, success rates, and error patterns"
     },
     {
-      icon: <Server className="h-6 w-6 text-purple-600" />,
+      icon: <Server className="h-6 w-6 text-gray-600" />,
       title: "Provider Insights",
       description: "Compare performance and costs across different AI providers"
     },
     {
-      icon: <Clock className="h-6 w-6 text-orange-600" />,
+      icon: <Clock className="h-6 w-6 text-gray-600" />,
       title: "Historical Data",
       description: "Analyze trends and patterns over time for optimization"
     }
@@ -100,7 +100,7 @@ const Features = () => {
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 tracking-tight">
             Everything you need for
             <br />
-            <span className="text-blue-600">AI integration</span>
+            <span className="text-black">AI integration</span>
           </h1>
           <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto leading-relaxed">
             Unio provides a complete platform for managing multiple AI providers with intelligent 
@@ -108,7 +108,7 @@ const Features = () => {
           </p>
           <Button
             asChild
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-medium rounded-md"
+            className="bg-black hover:bg-gray-800 text-white px-8 py-3 text-lg font-medium rounded-md"
           >
             <Link to="/register" className="flex items-center gap-2">
               Get started free
@@ -134,7 +134,7 @@ const Features = () => {
             {coreFeatures.map((feature, index) => (
               <div key={index} className="bg-white rounded-lg p-8 shadow-sm border border-gray-200 relative">
                 {feature.comingSoon && (
-                  <div className="absolute top-4 right-4 bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded">
+                  <div className="absolute top-4 right-4 bg-gray-100 text-gray-800 text-xs font-semibold px-2 py-1 rounded">
                     Coming Soon
                   </div>
                 )}
@@ -254,8 +254,8 @@ const Features = () => {
               
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Lock className="h-5 w-5 text-blue-600" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Lock className="h-5 w-5 text-gray-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">AES-256 Encryption</h3>
@@ -264,8 +264,8 @@ const Features = () => {
                 </div>
                 
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Shield className="h-5 w-5 text-green-600" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Shield className="h-5 w-5 text-gray-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">Error Handling</h3>
@@ -274,8 +274,8 @@ const Features = () => {
                 </div>
                 
                 <div className="flex items-start space-x-4">
-                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Globe className="h-5 w-5 text-purple-600" />
+                  <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Globe className="h-5 w-5 text-gray-600" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-1">High Availability</h3>
@@ -324,18 +324,18 @@ const Features = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-blue-600">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-black">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-6">
             Ready to unify your AI stack?
           </h2>
-          <p className="text-xl text-blue-100 mb-10">
+          <p className="text-xl text-gray-300 mb-10">
             Join thousands of developers building with Unio's unified AI platform.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
               asChild
-              className="bg-white text-blue-600 hover:bg-gray-50 px-8 py-3 text-lg font-medium rounded-md"
+              className="bg-white text-black hover:bg-gray-100 px-8 py-3 text-lg font-medium rounded-md"
             >
               <Link to="/register" className="flex items-center gap-2">
                 Start building free
@@ -345,7 +345,7 @@ const Features = () => {
             <Button
               variant="outline"
               asChild
-              className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg font-medium rounded-md"
+              className="border-white text-white hover:bg-white hover:text-black px-8 py-3 text-lg font-medium rounded-md"
             >
               <Link to="/docs">View documentation</Link>
             </Button>

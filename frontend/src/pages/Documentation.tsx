@@ -353,7 +353,7 @@ data: [DONE]`;
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full text-blue-600 dark:text-blue-400 text-sm font-medium mb-6">
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 dark:bg-gray-900/20 rounded-full text-gray-600 dark:text-gray-400 text-sm font-medium mb-6">
             <BookOpen className="w-4 h-4" />
             Developer Documentation
           </div>
@@ -370,8 +370,8 @@ data: [DONE]`;
         <div className="grid md:grid-cols-4 gap-6 mb-16">
           <Card className="border-gray-200 dark:border-gray-800">
             <CardHeader>
-              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mb-2">
-                <Zap className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900/20 rounded-full flex items-center justify-center mb-2">
+                <Zap className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </div>
               <CardTitle className="text-black dark:text-white text-base">OpenAI Compatible</CardTitle>
             </CardHeader>
@@ -384,8 +384,8 @@ data: [DONE]`;
 
           <Card className="border-gray-200 dark:border-gray-800">
             <CardHeader>
-              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-2">
-                <Globe className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900/20 rounded-full flex items-center justify-center mb-2">
+                <Globe className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </div>
               <CardTitle className="text-black dark:text-white text-base">Multiple Providers</CardTitle>
             </CardHeader>
@@ -398,8 +398,8 @@ data: [DONE]`;
 
           <Card className="border-gray-200 dark:border-gray-800">
             <CardHeader>
-              <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mb-2">
-                <Shield className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900/20 rounded-full flex items-center justify-center mb-2">
+                <Shield className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </div>
               <CardTitle className="text-black dark:text-white text-base">Smart Fallbacks</CardTitle>
             </CardHeader>
@@ -412,8 +412,8 @@ data: [DONE]`;
 
           <Card className="border-gray-200 dark:border-gray-800">
             <CardHeader>
-              <div className="w-10 h-10 bg-orange-100 dark:bg-orange-900/20 rounded-full flex items-center justify-center mb-2">
-                <Activity className="w-5 h-5 text-orange-600 dark:text-orange-400" />
+              <div className="w-10 h-10 bg-gray-100 dark:bg-gray-900/20 rounded-full flex items-center justify-center mb-2">
+                <Activity className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               </div>
               <CardTitle className="text-black dark:text-white text-base">Real-time Analytics</CardTitle>
             </CardHeader>
@@ -431,7 +431,7 @@ data: [DONE]`;
           
           <div className="space-y-6">
             <div className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                 <span className="text-white font-medium text-sm">1</span>
               </div>
               <div>
@@ -449,7 +449,7 @@ data: [DONE]`;
             </div>
 
             <div className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                 <span className="text-white font-medium text-sm">2</span>
               </div>
               <div className="flex-1">
@@ -502,7 +502,7 @@ data: [DONE]`;
             </div>
 
             <div className="flex items-start gap-4 p-6 bg-gray-50 dark:bg-gray-900/50 rounded-2xl">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center flex-shrink-0 mt-1">
                 <span className="text-white font-medium text-sm">3</span>
               </div>
               <div>
@@ -533,7 +533,7 @@ data: [DONE]`;
               <CardContent className="space-y-4">
                 <div>
                   <h4 className="font-medium text-black dark:text-white mb-2">Base URL</h4>
-                  <code className="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded font-mono">
+                  <code className="text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 px-3 py-2 rounded font-mono">
                     {baseUrl}
                   </code>
                 </div>
@@ -580,37 +580,37 @@ data: [DONE]`;
                         </thead>
                         <tbody className="text-gray-600 dark:text-gray-400">
                           <tr className="border-b border-gray-100 dark:border-gray-800">
-                            <td className="py-2 font-mono text-blue-600 dark:text-blue-400">model</td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-400">model</td>
                             <td className="py-2">string</td>
                             <td className="py-2">✓</td>
                             <td className="py-2">Provider-prefixed model (e.g., "openai:gpt-4o")</td>
                           </tr>
                           <tr className="border-b border-gray-100 dark:border-gray-800">
-                            <td className="py-2 font-mono text-blue-600 dark:text-blue-400">messages</td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-400">messages</td>
                             <td className="py-2">array</td>
                             <td className="py-2">✓</td>
                             <td className="py-2">Array of message objects</td>
                           </tr>
                           <tr className="border-b border-gray-100 dark:border-gray-800">
-                            <td className="py-2 font-mono text-blue-600 dark:text-blue-400">temperature</td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-400">temperature</td>
                             <td className="py-2">number</td>
                             <td className="py-2">-</td>
                             <td className="py-2">Sampling temperature (0-1, default: 0.7)</td>
                           </tr>
                           <tr className="border-b border-gray-100 dark:border-gray-800">
-                            <td className="py-2 font-mono text-blue-600 dark:text-blue-400">stream</td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-400">stream</td>
                             <td className="py-2">boolean</td>
                             <td className="py-2">-</td>
                             <td className="py-2">Enable streaming responses (default: false)</td>
                           </tr>
                           <tr className="border-b border-gray-100 dark:border-gray-800">
-                            <td className="py-2 font-mono text-blue-600 dark:text-blue-400">max_tokens</td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-400">max_tokens</td>
                             <td className="py-2">number</td>
                             <td className="py-2">-</td>
                             <td className="py-2">Maximum tokens to generate</td>
                           </tr>
                           <tr>
-                            <td className="py-2 font-mono text-blue-600 dark:text-blue-400">reasoning_effort</td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-400">reasoning_effort</td>
                             <td className="py-2">string</td>
                             <td className="py-2">-</td>
                             <td className="py-2">Reasoning effort level (low/medium/high)</td>
@@ -633,12 +633,12 @@ data: [DONE]`;
                         </thead>
                         <tbody className="text-gray-600 dark:text-gray-400">
                           <tr className="border-b border-gray-100 dark:border-gray-800">
-                            <td className="py-2 font-mono text-blue-600 dark:text-blue-400">Authorization</td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-400">Authorization</td>
                             <td className="py-2">✓</td>
                             <td className="py-2">Bearer token with your Unio API key</td>
                           </tr>
                           <tr>
-                            <td className="py-2 font-mono text-blue-600 dark:text-blue-400">X-Fallback-Model</td>
+                            <td className="py-2 font-mono text-gray-600 dark:text-gray-400">X-Fallback-Model</td>
                             <td className="py-2">-</td>
                             <td className="py-2">Fallback model for automatic failover</td>
                           </tr>
@@ -663,17 +663,17 @@ data: [DONE]`;
                     <CardTitle className="text-base text-black dark:text-white">{provider.name}</CardTitle>
                     <div className="flex gap-2">
                       {provider.streaming && (
-                        <span className="text-xs bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400 px-2 py-1 rounded">Streaming</span>
+                        <span className="text-xs bg-gray-100 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">Streaming</span>
                       )}
                       {provider.functionCalling && (
-                        <span className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 px-2 py-1 rounded">Functions</span>
+                        <span className="text-xs bg-gray-100 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">Functions</span>
                       )}
                       {provider.multimodal && (
-                        <span className="text-xs bg-purple-100 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 px-2 py-1 rounded">Vision</span>
+                        <span className="text-xs bg-gray-100 dark:bg-gray-900/20 text-gray-600 dark:text-gray-400 px-2 py-1 rounded">Vision</span>
                       )}
                     </div>
                   </div>
-                  <code className="text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">
+                  <code className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 px-2 py-1 rounded">
                     {provider.model}
                   </code>
                 </CardHeader>
@@ -1069,9 +1069,9 @@ data: [DONE]`;
           <h2 className="text-3xl font-medium text-black dark:text-white mb-8">Error Handling</h2>
           
           <div className="space-y-6">
-            <Alert className="border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20">
-              <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-              <AlertDescription className="text-orange-800 dark:text-orange-300">
+            <Alert className="border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/20">
+              <AlertTriangle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              <AlertDescription className="text-gray-800 dark:text-gray-300">
                 All error responses follow a consistent format with structured error objects containing message, type, and code fields.
               </AlertDescription>
             </Alert>
@@ -1084,23 +1084,23 @@ data: [DONE]`;
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <span className="px-2 py-1 bg-green-100 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-mono rounded">200</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 text-sm font-mono rounded">200</span>
                       <span className="text-gray-600 dark:text-gray-400">Success - Request completed</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="px-2 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm font-mono rounded">400</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 text-sm font-mono rounded">400</span>
                       <span className="text-gray-600 dark:text-gray-400">Bad Request - Invalid parameters</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="px-2 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm font-mono rounded">401</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 text-sm font-mono rounded">401</span>
                       <span className="text-gray-600 dark:text-gray-400">Unauthorized - Invalid API key</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="px-2 py-1 bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 text-sm font-mono rounded">429</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 text-sm font-mono rounded">429</span>
                       <span className="text-gray-600 dark:text-gray-400">Rate Limited - Too many requests</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="px-2 py-1 bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-400 text-sm font-mono rounded">500</span>
+                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-900/20 text-gray-700 dark:text-gray-400 text-sm font-mono rounded">500</span>
                       <span className="text-gray-600 dark:text-gray-400">Server Error - Internal error</span>
                     </div>
                   </div>
@@ -1140,31 +1140,31 @@ data: [DONE]`;
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="border-l-4 border-red-500 pl-4">
+                  <div className="border-l-4 border-gray-500 pl-4">
                     <h4 className="font-medium text-black dark:text-white">invalid_request_error</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       Invalid parameters in request (missing model, malformed messages, etc.)
                     </p>
                   </div>
-                  <div className="border-l-4 border-red-500 pl-4">
+                  <div className="border-l-4 border-gray-500 pl-4">
                     <h4 className="font-medium text-black dark:text-white">authentication_error</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       Invalid or missing API key in Authorization header
                     </p>
                   </div>
-                  <div className="border-l-4 border-yellow-500 pl-4">
+                  <div className="border-l-4 border-gray-500 pl-4">
                     <h4 className="font-medium text-black dark:text-white">rate_limit_error</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       Request rate limits exceeded, automatic fallback may be triggered
                     </p>
                   </div>
-                  <div className="border-l-4 border-red-500 pl-4">
+                  <div className="border-l-4 border-gray-500 pl-4">
                     <h4 className="font-medium text-black dark:text-white">provider_error</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       Upstream provider API errors, fallback models may be used
                     </p>
                   </div>
-                  <div className="border-l-4 border-red-500 pl-4">
+                  <div className="border-l-4 border-gray-500 pl-4">
                     <h4 className="font-medium text-black dark:text-white">server_error</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                       Internal server errors, retry with exponential backoff recommended
@@ -1196,8 +1196,8 @@ data: [DONE]`;
                   Use the <code className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">X-Fallback-Model</code> header 
                   to specify a backup model that will be used automatically if the primary model fails.
                 </p>
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                  <p className="text-sm text-blue-800 dark:text-blue-300">
+                <div className="bg-gray-50 dark:bg-gray-900/20 p-3 rounded-lg">
+                  <p className="text-sm text-gray-800 dark:text-gray-300">
                     <strong>Two-layer resilience:</strong> First attempts key rotation within the same provider, 
                     then switches to fallback model if all primary keys are exhausted.
                   </p>
@@ -1219,8 +1219,8 @@ data: [DONE]`;
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   All responses include detailed token usage information with prompt, completion, and total token counts.
                 </p>
-                <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
-                  <p className="text-sm text-green-800 dark:text-green-300">
+                <div className="bg-gray-50 dark:bg-gray-900/20 p-3 rounded-lg">
+                  <p className="text-sm text-gray-800 dark:text-gray-300">
                     <strong>Real-time analytics:</strong> Track usage patterns, costs, and performance 
                     metrics in your dashboard.
                   </p>
@@ -1243,8 +1243,8 @@ data: [DONE]`;
                   Vision-capable models (OpenAI GPT-4V, Google Gemini, Anthropic Claude) support image inputs 
                   alongside text for multimodal conversations.
                 </p>
-                <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
-                  <p className="text-sm text-purple-800 dark:text-purple-300">
+                <div className="bg-gray-50 dark:bg-gray-900/20 p-3 rounded-lg">
+                  <p className="text-sm text-gray-800 dark:text-gray-300">
                     <strong>Structured content:</strong> Use content arrays with type-specific objects 
                     for rich multimedia interactions.
                   </p>
@@ -1267,8 +1267,8 @@ data: [DONE]`;
                   Unio automatically manages your API keys with intelligent routing, load balancing, 
                   and health monitoring across all providers.
                 </p>
-                <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg">
-                  <p className="text-sm text-orange-800 dark:text-orange-300">
+                <div className="bg-gray-50 dark:bg-gray-900/20 p-3 rounded-lg">
+                  <p className="text-sm text-gray-800 dark:text-gray-300">
                     <strong>Zero downtime:</strong> Automatic key rotation and health checks 
                     ensure maximum uptime for your applications.
                   </p>
@@ -1294,13 +1294,13 @@ data: [DONE]`;
                 <div className="space-y-3">
                   <h4 className="font-medium text-black dark:text-white">Popular Models</h4>
                   <div className="space-y-2">
-                    <code className="block text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded">
+                    <code className="block text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 px-3 py-2 rounded">
                       openai:gpt-4o
                     </code>
-                    <code className="block text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded">
+                    <code className="block text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 px-3 py-2 rounded">
                       anthropic:claude-3-5-sonnet-20241022
                     </code>
-                    <code className="block text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded">
+                    <code className="block text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 px-3 py-2 rounded">
                       google:gemini-2.0-flash-exp
                     </code>
                   </div>
@@ -1309,13 +1309,13 @@ data: [DONE]`;
                 <div className="space-y-3">
                   <h4 className="font-medium text-black dark:text-white">Open Source Models</h4>
                   <div className="space-y-2">
-                    <code className="block text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded">
+                    <code className="block text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 px-3 py-2 rounded">
                       groq:llama-3.1-70b-versatile
                     </code>
-                    <code className="block text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded">
+                    <code className="block text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 px-3 py-2 rounded">
                       together:meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo
                     </code>
-                    <code className="block text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-3 py-2 rounded">
+                    <code className="block text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-900/20 px-3 py-2 rounded">
                       openrouter:meta-llama/llama-3.2-3b-instruct
                     </code>
                   </div>

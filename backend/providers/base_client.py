@@ -20,9 +20,6 @@ class BaseLLMClient:
         if ":" in model:
             parts = model.split(":", 1)
             return parts[1] if len(parts) > 1 else model
-        elif "/" in model:
-            parts = model.split("/", 1)
-            return parts[1] if len(parts) > 1 else model
         else:
             return model
 
