@@ -6,6 +6,10 @@ from providers.together.client import TogetherClient
 from providers.openai.client import OpenaiClient
 
 from auth.check_key import fetch_api_keys
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 models = {
     'google':'5c696eb8-43ce-4d2b-8f4a-46a29a577104',
@@ -17,8 +21,25 @@ models = {
 }
 
 def get_provider(model, user_id):
-    provider = model.split(":")[0]    
+    logger.debug(f"Getting provider for model: {model}")
+    
+    # Handle both : and / separators for provider:model format
+    if ":" in model:
+        provider = model.split(":")[0]
+    elif "/" in model:
+        provider = model.split("/")[0]
+    else:
+        provider = model
+    
+    logger.debug(f"Extracted provider: {provider}")
+    
+    # Check if provider exists in our models mapping
+    if provider not in models:
+        logger.error(f"Unsupported provider '{provider}' from model '{model}'. Supported providers: {list(models.keys())}")
+        raise ValueError(f"Unsupported provider: {provider}. Supported providers: {', '.join(models.keys())}")
+        
     provider_id = models[provider]
+    logger.debug(f"Using provider_id: {provider_id}")
     keys = fetch_api_keys(user_id, provider_id=provider_id)
     
     api_key_list = []

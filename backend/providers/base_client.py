@@ -4,6 +4,10 @@ from auth.check_key import increment_usage_count, increment_rate_limit_count
 from exceptions import RateLimitExceededError, ProviderAPIError
 from utils.token_counter import count_tokens_in_messages, estimate_completion_tokens, count_tokens_in_tools
 import json, time, uuid
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class BaseLLMClient:
@@ -12,8 +16,15 @@ class BaseLLMClient:
         self.base_url = base_url
 
     def _extract_model(self, model: str) -> str:
-        parts = model.split(":", 1)
-        return parts[1] if len(parts) > 1 else model
+        """Extract the actual model name from provider:model or provider/model format"""
+        if ":" in model:
+            parts = model.split(":", 1)
+            return parts[1] if len(parts) > 1 else model
+        elif "/" in model:
+            parts = model.split("/", 1)
+            return parts[1] if len(parts) > 1 else model
+        else:
+            return model
 
     async def chat_completions(self, req: ChatRequest) -> ChatResponse:
         """
@@ -153,19 +164,26 @@ class BaseLLMClient:
                 )
 
             except RateLimitError as e:
+                logger.warning(f"Rate limit error with key {key_data['name']}: {str(e)}")
                 increment_rate_limit_count(api_key_id)
-                last_error = RateLimitExceededError(str(e))
+                last_error = RateLimitExceededError(f"Rate limit exceeded: {str(e)}")
             except APIError as e:
                 status_code = getattr(e, 'status_code', 500)
-                last_error = ProviderAPIError(str(e), status_code=status_code)
+                logger.warning(f"API error with key {key_data['name']}: {str(e)} (status: {status_code})")
+                last_error = ProviderAPIError(f"Provider API error: {str(e)}", status_code=status_code)
             except Exception as e:
-                last_error = ProviderAPIError(f"Unexpected error: {e}")
+                logger.error(f"Unexpected error with key {key_data['name']}: {str(e)}")
+                last_error = ProviderAPIError(f"Unexpected error: {str(e)}")
 
+        # Log final error state
         if last_error:
+            logger.error(f"All API keys exhausted. Final error: {str(last_error)} (Type: {type(last_error).__name__})")
             raise last_error
         
         # This should not happen if api_keys is not empty
-        raise ProviderAPIError("No API keys available")
+        error_msg = "No API keys available"
+        logger.error(error_msg)
+        raise ProviderAPIError(error_msg)
 
     async def stream_chat_completions(self, req: ChatRequest):
         """
@@ -335,13 +353,23 @@ class BaseLLMClient:
                 return
 
             except RateLimitError as e:
+                logger.warning(f"Rate limit error in streaming with key {key_data['name']}: {str(e)}")
                 increment_rate_limit_count(api_key_id)
-                last_error = RateLimitExceededError(str(e))
+                last_error = RateLimitExceededError(f"Rate limit exceeded: {str(e)}")
             except APIError as e:
                 status_code = getattr(e, 'status_code', 500)
-                last_error = ProviderAPIError(str(e), status_code=status_code)
+                logger.warning(f"API error in streaming with key {key_data['name']}: {str(e)} (status: {status_code})")
+                last_error = ProviderAPIError(f"Provider API error: {str(e)}", status_code=status_code)
             except Exception as e:
-                last_error = ProviderAPIError(f"Unexpected error: {e}")
+                logger.error(f"Unexpected error in streaming with key {key_data['name']}: {str(e)}")
+                last_error = ProviderAPIError(f"Unexpected error: {str(e)}")
 
+        # Log final error state
         if last_error:
+            logger.error(f"All API keys exhausted in streaming. Final error: {str(last_error)} (Type: {type(last_error).__name__})")
             raise last_error
+        
+        # This should not happen if api_keys is not empty
+        error_msg = "No API keys available for streaming"
+        logger.error(error_msg)
+        raise ProviderAPIError(error_msg)

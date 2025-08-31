@@ -9,8 +9,67 @@ from utils.token_counter import count_tokens_in_messages, estimate_completion_to
 import time
 import asyncio
 import json
+import logging
+import traceback
 
 router = APIRouter()
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+async def log_and_return_error(error: Exception, user_id: str, api_key: str, provider: str, model: str, 
+                               request_payload: dict, start_time: float, key_name: str = ""):
+    """Log error details and return standardized error response"""
+    
+    # Log the error details for debugging
+    logger.error(f"Error in chat completion - Provider: {provider}, Model: {model}, Error: {str(error)}, Type: {type(error).__name__}")
+    logger.error(f"Error traceback: {traceback.format_exc()}")
+    
+    # Determine error details based on exception type
+    if isinstance(error, (RateLimitExceededError, ProviderAPIError, InvalidAPIKeyError, ModelNotFoundError)):
+        status_code = error.status_code
+        error_content = {
+            "error": {
+                "message": str(error),
+                "type": error.error_type,
+                "code": error.error_code
+            }
+        }
+    else:
+        # For unexpected errors, log the full details but return a safe message
+        logger.error(f"Unexpected error details: {repr(error)}")
+        status_code = 500
+        error_content = {
+            "error": {
+                "message": f"An unexpected error occurred: {str(error)}",
+                "type": "internal_error",
+                "code": "server_error"
+            }
+        }
+    
+    # Log the error to database
+    asyncio.create_task(
+        fire_and_forget_log(
+            user_id=user_id,
+            api_key=api_key,
+            provider=provider,
+            model=model,
+            status=status_code,
+            request_payload=request_payload,
+            response_payload=error_content,
+            start_time=start_time,
+            prompt_tokens=0,
+            completion_tokens=0,
+            total_tokens=0,
+            key_name=key_name
+        )
+    )
+    
+    return JSONResponse(
+        status_code=status_code,
+        content=error_content
+    )
 
 async def fire_and_forget_log(user_id, api_key, provider, model, status, request_payload, response_payload, start_time, prompt_tokens, completion_tokens, total_tokens, key_name):
     """Fire-and-forget logging for both streaming and non-streaming requests"""
@@ -34,8 +93,11 @@ async def fire_and_forget_log(user_id, api_key, provider, model, status, request
 async def attempt_fallback(req: ChatRequest, user_id: str, api_key: str, request_payload: dict, start_time: float):
     """Attempt to use fallback model when primary model fails"""
     if not req.fallback_model:
+        logger.debug("No fallback model specified")
         return None
         
+    logger.info(f"Attempting fallback from {req.model} to {req.fallback_model}")
+    
     try:
         fallback_client = get_provider(model=req.fallback_model, user_id=user_id)
         
@@ -121,8 +183,9 @@ async def attempt_fallback(req: ChatRequest, user_id: str, api_key: str, request
             
             return fallback_response
             
-    except Exception:
-        # Fallback failed, return None to use original error handling
+    except Exception as e:
+        # Fallback failed, log the error and return None to use original error handling
+        logger.error(f"Fallback model {req.fallback_model} also failed: {str(e)}")
         return None
 
 @router.post("/chat/completions")
@@ -153,10 +216,17 @@ async def chat_completions(
     
     try:
         client = get_provider(model=req.model, user_id=user_id)
-    except ValueError as e:
+    except (ValueError, KeyError) as e:
+        logger.error(f"Invalid model or provider for {req.model}: {str(e)}")
         return JSONResponse(
             status_code=400,
             content={"error": {"message": str(e), "type": "invalid_request_error", "param": "model", "code": "model_not_found"}}
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error getting provider for {req.model}: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"error": {"message": f"Failed to initialize provider: {str(e)}", "type": "internal_error", "code": "provider_initialization_error"}}
         )
 
     start_time = time.time()
@@ -175,47 +245,181 @@ async def chat_completions(
                 extracted_key = None  # store key_name
                 completion_tokens = 0
                 
-                async for chunk in client.stream_chat_completions(req=req):
-                    # Extract completion content for token counting
-                    if chunk.startswith('data: ') and not chunk.strip().endswith('[DONE]'):
-                        try:
-                            key_chunk = chunk[len("data: "):].strip()
-                            if key_chunk and key_chunk != '[DONE]':
-                                data = json.loads(key_chunk)
-                                if extracted_key is None and 'key_name' in data:
-                                    extracted_key = data['key_name']
-                                
-                                # Extract content from delta for token counting
-                                if 'choices' in data and data['choices']:
-                                    choice = data['choices'][0]
-                                    if 'delta' in choice and 'content' in choice['delta'] and choice['delta']['content']:
-                                        completion_content += choice['delta']['content']
-                        except (json.JSONDecodeError, KeyError, IndexError):
-                            pass  # Skip malformed chunks
+                try:
+                    async for chunk in client.stream_chat_completions(req=req):
+                        # Extract completion content for token counting
+                        if chunk.startswith('data: ') and not chunk.strip().endswith('[DONE]'):
+                            try:
+                                key_chunk = chunk[len("data: "):].strip()
+                                if key_chunk and key_chunk != '[DONE]':
+                                    data = json.loads(key_chunk)
+                                    if extracted_key is None and 'key_name' in data:
+                                        extracted_key = data['key_name']
+                                    
+                                    # Extract content from delta for token counting
+                                    if 'choices' in data and data['choices']:
+                                        choice = data['choices'][0]
+                                        if 'delta' in choice and 'content' in choice['delta'] and choice['delta']['content']:
+                                            completion_content += choice['delta']['content']
+                            except (json.JSONDecodeError, KeyError, IndexError):
+                                pass  # Skip malformed chunks
+                        
+                        yield chunk
                     
-                    yield chunk
-                
-                # Calculate completion tokens using tiktoken
-                completion_tokens = estimate_completion_tokens(completion_content, req.model)
-                total_tokens = prompt_tokens + completion_tokens
-                
-                # Log successful streaming
-                asyncio.create_task(
-                    fire_and_forget_log(
-                        user_id=user_id,
-                        api_key=api_key,
-                        provider=req.model,
-                        model=req.model,
-                        status=200,
-                        request_payload=request_payload,
-                        response_payload={},  # streaming, no full payload
-                        start_time=start_time,
-                        prompt_tokens=prompt_tokens,
-                        completion_tokens=completion_tokens,
-                        total_tokens=total_tokens,
-                        key_name=extracted_key
+                    # Calculate completion tokens using tiktoken
+                    completion_tokens = estimate_completion_tokens(completion_content, req.model)
+                    total_tokens = prompt_tokens + completion_tokens
+                    
+                    # Log successful streaming
+                    asyncio.create_task(
+                        fire_and_forget_log(
+                            user_id=user_id,
+                            api_key=api_key,
+                            provider=req.model,
+                            model=req.model,
+                            status=200,
+                            request_payload=request_payload,
+                            response_payload={},  # streaming, no full payload
+                            start_time=start_time,
+                            prompt_tokens=prompt_tokens,
+                            completion_tokens=completion_tokens,
+                            total_tokens=total_tokens,
+                            key_name=extracted_key
+                        )
                     )
-                )
+                    
+                except RateLimitExceededError as e:
+                    logger.warning(f"Rate limit exceeded for model {req.model} during streaming - trying fallback")
+                    # Try fallback model if available
+                    fallback_response = await attempt_fallback(req, user_id, api_key, request_payload, start_time)
+                    if fallback_response:
+                        logger.info(f"Fallback successful for streaming model {req.model}")
+                        # Note: fallback response will be handled by attempt_fallback function
+                        return
+                    else:
+                        logger.error(f"Rate limit exceeded and no fallback available for streaming model {req.model}")
+                        # Yield error in SSE format
+                        error_data = {
+                            "error": {
+                                "message": str(e),
+                                "type": e.error_type,
+                                "code": e.error_code
+                            }
+                        }
+                        yield f"data: {json.dumps(error_data)}\n\n"
+                        # Log error
+                        asyncio.create_task(
+                            fire_and_forget_log(
+                                user_id=user_id,
+                                api_key=api_key,
+                                provider=req.model,
+                                model=req.model,
+                                status=e.status_code,
+                                request_payload=request_payload,
+                                response_payload=error_data,
+                                start_time=start_time,
+                                prompt_tokens=prompt_tokens,
+                                completion_tokens=0,
+                                total_tokens=prompt_tokens,
+                                key_name=extracted_key
+                            )
+                        )
+                        
+                except ProviderAPIError as e:
+                    logger.warning(f"Provider API error for streaming model {req.model}: {str(e)} - trying fallback")
+                    # Try fallback model if available
+                    fallback_response = await attempt_fallback(req, user_id, api_key, request_payload, start_time)
+                    if fallback_response:
+                        logger.info(f"Fallback successful after provider error for streaming model {req.model}")
+                        # Note: fallback response will be handled by attempt_fallback function
+                        return
+                    else:
+                        logger.error(f"Provider API error and no fallback available for streaming model {req.model}: {str(e)}")
+                        # Yield error in SSE format
+                        error_data = {
+                            "error": {
+                                "message": str(e),
+                                "type": e.error_type,
+                                "code": e.error_code
+                            }
+                        }
+                        yield f"data: {json.dumps(error_data)}\n\n"
+                        # Log error
+                        asyncio.create_task(
+                            fire_and_forget_log(
+                                user_id=user_id,
+                                api_key=api_key,
+                                provider=req.model,
+                                model=req.model,
+                                status=e.status_code,
+                                request_payload=request_payload,
+                                response_payload=error_data,
+                                start_time=start_time,
+                                prompt_tokens=prompt_tokens,
+                                completion_tokens=0,
+                                total_tokens=prompt_tokens,
+                                key_name=extracted_key
+                            )
+                        )
+                        
+                except (InvalidAPIKeyError, ModelNotFoundError) as e:
+                    logger.error(f"Client error for streaming model {req.model}: {str(e)}")
+                    # Yield error in SSE format
+                    error_data = {
+                        "error": {
+                            "message": str(e),
+                            "type": e.error_type,
+                            "code": e.error_code
+                        }
+                    }
+                    yield f"data: {json.dumps(error_data)}\n\n"
+                    # Log error
+                    asyncio.create_task(
+                        fire_and_forget_log(
+                            user_id=user_id,
+                            api_key=api_key,
+                            provider=req.model,
+                            model=req.model,
+                            status=e.status_code,
+                            request_payload=request_payload,
+                            response_payload=error_data,
+                            start_time=start_time,
+                            prompt_tokens=prompt_tokens,
+                            completion_tokens=0,
+                            total_tokens=prompt_tokens,
+                            key_name=extracted_key
+                        )
+                    )
+                    
+                except Exception as e:
+                    logger.error(f"Unexpected error in streaming chat completion for model {req.model}: {str(e)}")
+                    logger.error(f"Unexpected streaming error traceback: {traceback.format_exc()}")
+                    # Yield error in SSE format
+                    error_data = {
+                        "error": {
+                            "message": f"An unexpected error occurred: {str(e)}",
+                            "type": "internal_error",
+                            "code": "server_error"
+                        }
+                    }
+                    yield f"data: {json.dumps(error_data)}\n\n"
+                    # Log error
+                    asyncio.create_task(
+                        fire_and_forget_log(
+                            user_id=user_id,
+                            api_key=api_key,
+                            provider=req.model,
+                            model=req.model,
+                            status=500,
+                            request_payload=request_payload,
+                            response_payload=error_data,
+                            start_time=start_time,
+                            prompt_tokens=prompt_tokens,
+                            completion_tokens=0,
+                            total_tokens=prompt_tokens,
+                            key_name=extracted_key
+                        )
+                    )
 
             return StreamingResponse(generator_wrapper(), media_type="text/event-stream")
         else:
@@ -246,88 +450,32 @@ async def chat_completions(
             return response_data
 
     except RateLimitExceededError as e:
+        logger.warning(f"Rate limit exceeded for model {req.model} - trying fallback")
         # Try fallback model if available
         fallback_response = await attempt_fallback(req, user_id, api_key, request_payload, start_time)
         if fallback_response:
+            logger.info(f"Fallback successful for model {req.model}")
             return fallback_response
         
-        error_content = {"error": {"message": str(e), "type": e.error_type, "code": e.error_code}}
+        logger.error(f"Rate limit exceeded and no fallback available for model {req.model}")
+        return await log_and_return_error(e, user_id, api_key, req.model, req.model, request_payload, start_time)
         
-        # Log error
-        asyncio.create_task(
-            fire_and_forget_log(
-                user_id=user_id,
-                api_key=api_key,
-                provider=req.model,
-                model=req.model,
-                status=e.status_code,
-                request_payload=request_payload,
-                response_payload=error_content,
-                start_time=start_time,
-                prompt_tokens=0,
-                completion_tokens=0,
-                total_tokens=0,
-                key_name=''
-            )
-        )
-        
-        return JSONResponse(
-            status_code=e.status_code,
-            content=error_content
-        )
     except ProviderAPIError as e:
+        logger.warning(f"Provider API error for model {req.model}: {str(e)} - trying fallback")
         # Try fallback model if available
         fallback_response = await attempt_fallback(req, user_id, api_key, request_payload, start_time)
         if fallback_response:
+            logger.info(f"Fallback successful after provider error for model {req.model}")
             return fallback_response
         
-        error_content = {"error": {"message": str(e), "type": e.error_type, "code": e.error_code}}
+        logger.error(f"Provider API error and no fallback available for model {req.model}: {str(e)}")
+        return await log_and_return_error(e, user_id, api_key, req.model, req.model, request_payload, start_time)
         
-        # Log error
-        asyncio.create_task(
-            fire_and_forget_log(
-                user_id=user_id,
-                api_key=api_key,
-                provider=req.model,
-                model=req.model,
-                status=e.status_code,
-                request_payload=request_payload,
-                response_payload=error_content,
-                start_time=start_time,
-                prompt_tokens=0,
-                completion_tokens=0,
-                total_tokens=0,
-                key_name=''
-            )
-        )
+    except (InvalidAPIKeyError, ModelNotFoundError) as e:
+        logger.error(f"Client error for model {req.model}: {str(e)}")
+        return await log_and_return_error(e, user_id, api_key, req.model, req.model, request_payload, start_time)
         
-        return JSONResponse(
-            status_code=e.status_code,
-            content=error_content
-        )
     except Exception as e:
-        status_code = 500
-        error_content = {"error": {"message": f"An unexpected error occurred: {e}", "type": "internal_error", "code": "server_error"}}
-        
-        # Log error
-        asyncio.create_task(
-            fire_and_forget_log(
-                user_id=user_id,
-                api_key=api_key,
-                provider=req.model,
-                model=req.model,
-                status=status_code,
-                request_payload=request_payload,
-                response_payload=error_content,
-                start_time=start_time,
-                prompt_tokens=0,
-                completion_tokens=0,
-                total_tokens=0,
-                key_name=''
-            )
-        )
-        
-        return JSONResponse(
-            status_code=status_code,
-            content=error_content
-        )
+        logger.error(f"Unexpected error in chat completion for model {req.model}: {str(e)}")
+        logger.error(f"Unexpected error traceback: {traceback.format_exc()}")
+        return await log_and_return_error(e, user_id, api_key, req.model, req.model, request_payload, start_time)

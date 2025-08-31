@@ -1,5 +1,9 @@
 from config import supabase
 from datetime import datetime, timezone
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 async def log_request(
     user_id: str,
@@ -44,5 +48,11 @@ async def log_request(
 
     try:
         supabase.table("request_logs").insert(log_data).execute()
+        # Log successful requests at debug level, errors at warning level
+        if status >= 400:
+            logger.warning(f"Request failed - User: {user_id}, Provider: {provider_name}, Model: {model_name}, Status: {status}, Key: {key_name}")
+        else:
+            logger.debug(f"Request successful - User: {user_id}, Provider: {provider_name}, Model: {model_name}, Tokens: {total_tokens}, Key: {key_name}")
     except Exception as e:
+        logger.error(f"Failed to log request to database: {e}")
         print(f"Failed to log request: {e}")
