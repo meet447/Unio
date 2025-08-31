@@ -26,15 +26,15 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50">
+    <nav className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-14 sm:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black rounded-sm flex items-center justify-center mr-2">
-              <span className="text-white font-bold text-sm sm:text-lg">U</span>
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black dark:bg-white rounded-sm flex items-center justify-center mr-2">
+              <span className="text-white dark:text-black font-bold text-sm sm:text-lg">U</span>
             </div>
-            <span className="text-lg sm:text-xl font-semibold text-gray-900">unio</span>
+            <span className="text-lg sm:text-xl font-semibold text-black dark:text-white">unio</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -43,8 +43,8 @@ const Navigation = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-gray-900 ${
-                  location.pathname === item.path ? 'text-gray-900' : 'text-gray-600'
+                className={`text-sm font-medium transition-colors hover:text-black dark:hover:text-white ${
+                  location.pathname === item.path ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'
                 }`}
               >
                 {item.label}
@@ -58,13 +58,13 @@ const Navigation = () => {
               <>
                 <Link
                   to="/login"
-                  className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors hidden sm:block"
+                  className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
                 >
                   Log in
                 </Link>
                 <Button
                   asChild
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-3 sm:px-4 py-2 text-sm font-medium rounded-md touch-manipulation min-h-[40px] sm:min-h-[44px]"
+                  className="bg-black hover:bg-gray-800 text-white px-3 sm:px-4 py-2 text-sm font-medium rounded-md touch-manipulation min-h-[40px] sm:min-h-[44px]"
                 >
                   <Link to="/register">Sign up</Link>
                 </Button>
@@ -80,7 +80,7 @@ const Navigation = () => {
                     <span className="sr-only">Open menu</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-64 sm:w-80">
+                <SheetContent side="right" className="w-64 sm:w-80 bg-white dark:bg-black border-gray-200 dark:border-gray-800">
                   <div className="flex flex-col space-y-4 mt-6">
                     {/* Mobile GitHub stats */}
 
@@ -92,8 +92,8 @@ const Navigation = () => {
                         to={item.path}
                         className={`text-base font-medium transition-colors p-2 rounded-md ${
                           location.pathname === item.path 
-                            ? 'text-blue-600 bg-blue-50' 
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            ? 'text-black dark:text-white bg-gray-100 dark:bg-gray-800' 
+                            : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900'
                         }`}
                         onClick={() => setIsMenuOpen(false)}
                       >
@@ -101,10 +101,10 @@ const Navigation = () => {
                       </Link>
                     ))}
                     
-                    <div className="border-t border-gray-200 pt-4">
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
                       <Link
                         to="/login"
-                        className="block text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 p-2 rounded-md transition-colors"
+                        className="block text-base font-medium text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900 p-2 rounded-md transition-colors"
                         onClick={() => setIsMenuOpen(false)}
                       >
                         Log in
@@ -124,7 +124,7 @@ const Navigation = () => {
                     <span className="sr-only">Open user menu</span>
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="right" className="w-64 sm:w-80">
+                <SheetContent side="right" className="w-64 sm:w-80 bg-white dark:bg-black border-gray-200 dark:border-gray-800">
                   <div className="flex flex-col space-y-3 mt-6">
                     {userNavItems.map((item) => (
                       <Link
@@ -132,19 +132,19 @@ const Navigation = () => {
                         to={item.path}
                         className={`flex items-center space-x-3 text-base font-medium transition-colors p-3 rounded-md ${
                           location.pathname === item.path
-                            ? 'text-blue-600 bg-blue-50'
-                            : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                            ? 'text-black dark:text-white bg-gray-100 dark:bg-gray-800'
+                            : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900'
                         }`}
                       >
                         {item.icon}
                         <span>{item.label}</span>
                       </Link>
                     ))}
-                    <div className="border-t border-gray-200 pt-3">
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                       <Button
                         variant="ghost"
                         onClick={signOut}
-                        className="flex items-center space-x-3 text-base font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 w-full justify-start p-3 rounded-md"
+                        className="flex items-center space-x-3 text-base font-medium text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900 w-full justify-start p-3 rounded-md"
                       >
                         <LogOut className="h-5 w-5" />
                         <span>Logout</span>
