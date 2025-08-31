@@ -32,10 +32,13 @@ const Profile = () => {
   }, [user]);
 
   const fetchTokens = async () => {
+    if (!user) return;
+    
     try {
       const { data, error } = await supabase
         .from('user_api_tokens')
         .select('id, name, last_used_at, created_at, is_active')
+        .eq('user_id', user.id)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
 
@@ -115,6 +118,8 @@ const Profile = () => {
   };
 
   const deleteToken = async (tokenId: string) => {
+    if (!user) return;
+    
     if (!confirm('Are you sure you want to delete this API token? This action cannot be undone.')) {
       return;
     }
@@ -123,7 +128,8 @@ const Profile = () => {
       const { error } = await supabase
         .from('user_api_tokens')
         .delete()
-        .eq('id', tokenId);
+        .eq('id', tokenId)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       
@@ -152,6 +158,8 @@ const Profile = () => {
   };
 
   const saveTokenName = async (tokenId: string) => {
+    if (!user) return;
+    
     if (!editingName.trim()) {
       toast({
         variant: "destructive",
@@ -165,7 +173,8 @@ const Profile = () => {
       const { error } = await supabase
         .from('user_api_tokens')
         .update({ name: editingName.trim() })
-        .eq('id', tokenId);
+        .eq('id', tokenId)
+        .eq('user_id', user.id);
 
       if (error) throw error;
       
@@ -201,6 +210,16 @@ const Profile = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600 dark:text-gray-400">Please log in to view your API tokens.</p>
         </div>
       </div>
     );
