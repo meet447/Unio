@@ -13,7 +13,6 @@ const Navigation = () => {
   const publicNavItems = [
     { path: "/features", label: "Features" },
     { path: "/docs", label: "Docs" },
-    { path: "/analytics", label: "Analytics" },
     { path: "/help", label: "Contact" },
   ];
 
@@ -22,7 +21,6 @@ const Navigation = () => {
     { path: "/analytics", label: "Analytics", icon: <BarChart className="h-5 w-5" /> },
     { path: "/profile", label: "Profile", icon: <User className="h-5 w-5" /> },
     { path: "/docs", label: "Documentation", icon: <BookOpen className="h-5 w-5" /> },
-    { path: "/help", label: "Help Center", icon: <HelpCircle className="h-5 w-5" /> },
   ];
 
   return (
