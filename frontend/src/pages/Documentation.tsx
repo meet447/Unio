@@ -47,7 +47,7 @@ const Documentation = () => {
   const providers = [
     { 
       name: "Google", 
-      model: "google:gemini-2.0-flash-exp", 
+      model: "google:gemini-2.5-flash", 
       description: "Google's latest Gemini model",
       streaming: true,
       functionCalling: true,
@@ -55,7 +55,7 @@ const Documentation = () => {
     },
     { 
       name: "Anthropic", 
-      model: "anthropic:claude-3-5-sonnet-20241022", 
+      model: "anthropic:claude-3-5-sonnet", 
       description: "Anthropic's Claude 3.5 Sonnet",
       streaming: true,
       functionCalling: true,
@@ -87,8 +87,8 @@ const Documentation = () => {
     },
     { 
       name: "Groq", 
-      model: "groq:llama-3.1-70b-versatile", 
-      description: "Llama on Groq's fast inference",
+      model: "groq:openai/gpt-oss-120b", 
+      description: "OpenAI's Open Source gpt model",
       streaming: true,
       functionCalling: false,
       multimodal: false

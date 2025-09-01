@@ -23,36 +23,44 @@ const HelpCenter = () => {
 
   const faqs = [
     {
-      question: "How do I add a new API key?",
-      answer: "To add a new API key, go to your Dashboard and click the 'Add API Key' button. Select your provider, enter your key details, and configure your preferences. Your key will be encrypted and securely stored."
+      question: "What is Unio and how does it work?",
+      answer: "Unio is an AI provider integration platform that simplifies managing multiple AI provider API keys through a unified interface. It abstracts away provider-specific authentication and request formatting, allowing you to integrate various LLMs (OpenAI, Anthropic, Google, Groq, Together, OpenRouter) through a consistent API."
     },
     {
-      question: "What happens when I reach my rate limit?",
-      answer: "When you approach your rate limit, Unio will automatically rotate to your backup keys (if available) and send you notifications. You can configure fallback behavior and alerts in your key settings."
+      question: "How do I add API keys for different AI providers?",
+      answer: "Go to your Dashboard and click 'Add API Key'. Select your AI provider (OpenAI, Anthropic, Google, etc.), enter your API key, and optionally add a description. Your keys are encrypted with AES-256 and securely stored. You can manage multiple keys per provider for redundancy."
     },
     {
-      question: "How often should I rotate my API keys?",
-      answer: "We recommend rotating API keys every 30-90 days for security best practices. Unio can remind you when it's time to rotate and can automate the process for supported providers."
+      question: "What happens if my API key hits a rate limit?",
+      answer: "Unio automatically handles rate limiting with a fallback mechanism. If one API key reaches its rate limit, the system automatically tries the next available key for the same provider. This ensures your applications continue running without interruption."
     },
     {
-      question: "Is my data secure with Unio?",
-      answer: "Yes, we use bank-level encryption (AES-256) to protect your API keys. Keys are encrypted at rest and in transit. We never log or store your actual API responses, only usage metadata."
+      question: "Which AI providers does Unio support?",
+      answer: "Unio currently supports OpenAI, Anthropic (Claude), Google (Gemini), Groq, Together AI, and OpenRouter. The system is designed to be extensible, so new providers can be added easily. Each provider maintains its own client implementation while using a unified interface."
     },
     {
-      question: "Can I use Unio with any API provider?",
-      answer: "Unio supports most popular API providers including OpenRouter, OpenAI, Google Cloud, AWS, and many more. If your provider isn't listed, you can still add custom API keys."
+      question: "How secure are my API keys in Unio?",
+      answer: "Your API keys are protected with enterprise-grade AES-256 encryption both at rest and in transit. Keys are encrypted before storage in the database, and the system follows security best practices. We never log or store your actual API responses, only usage metadata for analytics."
     },
     {
-      question: "How does automatic key rotation work?",
-      answer: "For supported providers, Unio can automatically generate new keys and update your applications seamlessly. For others, we'll guide you through the manual rotation process with notifications and documentation."
+      question: "Can I track usage and analytics for my API keys?",
+      answer: "Yes, Unio provides comprehensive usage tracking and analytics. You can monitor request counts, success rates, rate limit hits, and performance metrics for each API key. The dashboard shows real-time statistics and historical usage patterns."
     },
     {
-      question: "What's included in the free plan?",
-      answer: "The free plan includes up to 5 API keys, basic rate limiting, and standard support. Paid plans offer unlimited keys, advanced rotation features, team collaboration, and priority support."
+      question: "How do I integrate Unio with my existing applications?",
+      answer: "Unio provides a REST API that you can integrate into any application. Simply make requests to Unio's chat completions endpoint with your desired model, and Unio handles the routing to the appropriate provider. This allows you to switch between providers without changing your application code."
     },
     {
-      question: "How do I set up rate limit notifications?",
-      answer: "Go to your Profile settings and enable 'Rate Limit Alerts'. You can customize thresholds (e.g., notify at 80% usage) and choose your notification method (email, webhook, or dashboard)."
+      question: "Can I use streaming responses with Unio?",
+      answer: "Yes, Unio supports streaming responses for real-time applications like chatbots. The streaming implementation maintains compatibility with OpenAI's streaming format while working across all supported providers, ensuring consistent behavior regardless of the underlying AI service."
+    },
+    {
+      question: "How does Unio handle different model formats across providers?",
+      answer: "Unio normalizes responses from different providers into a consistent format. You can request models using provider-specific names (e.g., 'gpt-4', 'claude-3-opus', 'gemini-pro') and Unio automatically routes to the correct provider while standardizing the response format."
+    },
+    {
+      question: "What should I do if I encounter authentication errors?",
+      answer: "First, verify that your API key is correctly entered and still valid with the provider. Check that the key has the necessary permissions for the operations you're trying to perform. If issues persist, you can update or re-add the key in your dashboard, and Unio will re-encrypt and store the new credentials."
     }
   ];
 

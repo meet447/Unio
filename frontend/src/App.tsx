@@ -16,6 +16,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import CheckEmail from "./pages/CheckEmail";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import CookiePolicy from "./pages/CookiePolicy";
+import Security from "./pages/Security";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +42,10 @@ const App = () => (
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               <Route path="check-email" element={<CheckEmail />} />
+              <Route path="privacy" element={<PrivacyPolicy />} />
+              <Route path="terms" element={<TermsOfService />} />
+              <Route path="cookies" element={<CookiePolicy />} />
+              <Route path="security" element={<Security />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
