@@ -76,7 +76,7 @@ async def attempt_response_fallback(req: ResponseRequest, user_id: str, api_key:
                     model=req.fallback_model or "unknown",
                     status=200,
                     request_payload=request_payload,
-                    response_payload=fallback_response.model_dump(),
+                    response_payload=fallback_response.dict() if hasattr(fallback_response, 'dict') else fallback_response.model_dump(),
                     start_time=start_time,
                     prompt_tokens=prompt_tokens,
                     completion_tokens=completion_tokens,
@@ -115,7 +115,7 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
     # Calculate prompt tokens
     prompt_tokens = count_tokens_in_messages(messages, req.model)
     if req.tools:
-        prompt_tokens += count_tokens_in_tools([tool.model_dump() for tool in req.tools], req.model)
+        prompt_tokens += count_tokens_in_tools([tool.dict() if hasattr(tool, 'dict') else tool.model_dump() for tool in req.tools], req.model)
     
     async def response_stream_generator():
         completion_content = ""
@@ -149,7 +149,7 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
             "temperature": req.temperature,
             "text": {"format": {"type": "text"}},
             "tool_choice": req.tool_choice or "auto",
-            "tools": [tool.model_dump() for tool in req.tools] if req.tools else [],
+            "tools": [tool.dict() if hasattr(tool, 'dict') else tool.model_dump() for tool in req.tools] if req.tools else [],
             "top_p": 1.0,
             "truncation": {"type": "auto", "last_messages": None},
             "usage": None,
@@ -203,7 +203,8 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
                                         if not has_content:
                                             content_part = OutputTextContentPart(type="text", text="")
                                             yield f"event: response.content_part.added\n"
-                                            yield f"data: {{\"type\":\"response.content_part.added\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(content_part.model_dump())}}}\n\n"
+                                            part_dict = content_part.dict() if hasattr(content_part, 'dict') else content_part.model_dump()
+                                            yield f"data: {{\"type\":\"response.content_part.added\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(part_dict)}}}\n\n"
                                             has_content = True
                                         
                                         delta_content = delta['content']
@@ -259,7 +260,8 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
                         # Send response.content_part.done event for text
                         final_part = OutputTextContentPart(type="text", text=completion_content)
                         yield f"event: response.content_part.done\n"
-                        yield f"data: {{\"type\":\"response.content_part.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(final_part.model_dump())}}}\n\n"
+                        part_dict = final_part.dict() if hasattr(final_part, 'dict') else final_part.model_dump()
+                        yield f"data: {{\"type\":\"response.content_part.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(part_dict)}}}\n\n"
                         
                         final_content.append(final_part)
                         content_part_index += 1
@@ -280,10 +282,12 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
                             )
                             
                             yield f"event: response.content_part.added\n"
-                            yield f"data: {{\"type\":\"response.content_part.added\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(tool_calls_part.model_dump())}}}\n\n"
+                            part_dict_added = tool_calls_part.dict() if hasattr(tool_calls_part, 'dict') else tool_calls_part.model_dump()
+                            yield f"data: {{\"type\":\"response.content_part.added\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(part_dict_added)}}}\n\n"
                             
                             yield f"event: response.content_part.done\n"
-                            yield f"data: {{\"type\":\"response.content_part.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(tool_calls_part.model_dump())}}}\n\n"
+                            part_dict_done = tool_calls_part.dict() if hasattr(tool_calls_part, 'dict') else tool_calls_part.model_dump()
+                            yield f"data: {{\"type\":\"response.content_part.done\",\"item_id\":\"{message_id}\",\"output_index\":0,\"content_index\":{content_part_index},\"part\":{json.dumps(part_dict_done)}}}\n\n"
                             
                             final_content.append(tool_calls_part)
                     
@@ -296,13 +300,14 @@ async def generate_streaming_response_with_provider(client, req: ResponseRequest
                         status="completed"
                     )
                     yield f"event: response.output_item.done\n"
-                    yield f"data: {{\"type\":\"response.output_item.done\",\"output_index\":0,\"item\":{json.dumps(final_item.model_dump())}}}\n\n"
+                    item_dict = final_item.dict() if hasattr(final_item, 'dict') else final_item.model_dump()
+                    yield f"data: {{\"type\":\"response.output_item.done\",\"output_index\":0,\"item\":{json.dumps(item_dict)}}}\n\n"
                     
                     # Send response.completed event
                     final_response = base_response.copy()
                     final_response.update({
                         "status": "completed",
-                        "output": [final_item.model_dump()],
+                        "output": [final_item.dict() if hasattr(final_item, 'dict') else final_item.model_dump()],
                         "usage": {
                             "input_tokens": prompt_tokens,
                             "output_tokens": completion_tokens,
@@ -438,7 +443,8 @@ async def create_response(
         )
 
     start_time = time.time()
-    request_payload = req.model_dump()
+    # Use .dict() for Pydantic v1, .model_dump() for v2
+    request_payload = req.dict() if hasattr(req, 'dict') else req.model_dump()
     status_code = 200
     response_data = None
     error_content = None
@@ -472,7 +478,7 @@ async def create_response(
                     model=req.model,
                     status=status_code,
                     request_payload=request_payload,
-                    response_payload=response_data.model_dump(),
+                    response_payload=response_data.dict() if hasattr(response_data, 'dict') else response_data.model_dump(),
                     start_time=start_time,
                     prompt_tokens=prompt_tokens,
                     completion_tokens=completion_tokens,

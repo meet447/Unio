@@ -8,32 +8,61 @@ logger = logging.getLogger(__name__)
 
 def fetch_userid(api_key):
     try:
-        response = (
-            supabase.table("user_api_tokens")
-            .select("user_id")
-            .eq("token_hash", api_key)  # plain key, no hashing
-            .eq("is_active", True)
-        )
+        # PostgREST sometimes has issues parsing filters with certain token formats
+        # Try the direct query first, and if it fails, fall back to fetching and filtering
+        try:
+            response = (
+                supabase.table("user_api_tokens")
+                .select("user_id")
+                .eq("token_hash", api_key)  # plain key, no hashing
+                .eq("is_active", True)
+            )
+            
+            result = response.execute()
+            if result.data:
+                return result.data[0]['user_id']
+        except Exception as filter_error:
+            # If filter query fails (PostgREST parsing issue), try fetching all and filtering
+            logger.warning(f"Filter query failed, trying alternative method: {filter_error}")
+            all_tokens = supabase.table("user_api_tokens").select("user_id, token_hash, is_active").execute()
+            
+            # Filter in Python
+            matching = [t for t in all_tokens.data if t.get('token_hash') == api_key and t.get('is_active') == True]
+            if matching:
+                return matching[0]['user_id']
         
-        result = response.execute()
-        if not result.data:
-            raise InvalidAPIKeyError("Invalid API Key")
-        return result.data[0]['user_id']
+        # If we get here, no matching token was found
+        raise InvalidAPIKeyError("Invalid API Key")
+    except InvalidAPIKeyError:
+        raise
     except Exception as e:
+        logger.error(f"Error fetching user ID for API key: {e}")
         raise InvalidAPIKeyError("Invalid API Key") from e
 
 def fetch_api_keys(user_id, provider_id):
-    
-    response = (
-        supabase.table("api_keys")
-        .select("*")
-        .eq("user_id", user_id)
-        .eq("provider_id", provider_id)
-    )
-    
-    result = response.execute()
-    data = result.data
-    return data
+    try:
+        # Try direct query first
+        try:
+            response = (
+                supabase.table("api_keys")
+                .select("*")
+                .eq("user_id", user_id)
+                .eq("provider_id", provider_id)
+            )
+            
+            result = response.execute()
+            return result.data
+        except Exception as filter_error:
+            # If filter query fails (PostgREST parsing issue), try fetching and filtering
+            logger.warning(f"Filter query failed for api_keys, trying alternative method: {filter_error}")
+            all_keys = supabase.table("api_keys").select("*").execute()
+            
+            # Filter in Python
+            matching = [k for k in all_keys.data if k.get('user_id') == user_id and k.get('provider_id') == provider_id]
+            return matching
+    except Exception as e:
+        logger.error(f"Error fetching API keys: {e}")
+        return []
 
 def increment_usage_count(api_key_id):
     try:
