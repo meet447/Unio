@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import HelpCenter from "./pages/HelpCenter";
 import Documentation from "./pages/Documentation";
 import Analytics from "./pages/Analytics";
+import Playground from "./pages/Playground";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -38,6 +39,7 @@ const App = () => (
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="profile" element={<Profile />} />
               <Route path="analytics" element={<Analytics />} />
+              <Route path="playground" element={<Playground />} />
               <Route path="docs" element={<Documentation />} />
               <Route path="help" element={<HelpCenter />} />
               <Route path="login" element={<Login />} />
