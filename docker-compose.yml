@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  unio-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: unio-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+    env_file:
+      - app/.env
+    volumes:
+      # Mount .env file if you want to override from host
+      - ./app/.env:/app/.env:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+

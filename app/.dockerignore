@@ -1,0 +1,4 @@
+# Test files
+tests/
+*.pyc
+__pycache__/

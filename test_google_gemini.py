@@ -1,12 +1,30 @@
 """
 Test script to verify OpenAI SDK works with Unio Responses API using Google Gemini
+
+Usage:
+    Set UNIO_API_KEY environment variable:
+    export UNIO_API_KEY=your_api_key_here
+    
+    Set UNIO_BASE_URL (optional, defaults to localhost):
+    export UNIO_BASE_URL=http://127.0.0.1:8000/v1/api
+    
+    Then run:
+    python test_google_gemini.py
 """
+import os
 from openai import OpenAI
+
+# Get configuration from environment variables
+api_key = os.getenv("UNIO_API_KEY")
+base_url = os.getenv("UNIO_BASE_URL", "http://127.0.0.1:8000/v1/api")
+
+if not api_key:
+    raise ValueError("UNIO_API_KEY environment variable is required")
 
 # Initialize the OpenAI client with Unio's responses API
 client = OpenAI(
-    base_url="http://127.0.0.1:8000/v1/api",
-    api_key="rk_6113aec14161c546e0744864de2e30f972142a00b35bc0a51efb8253a6986d45"
+    base_url=base_url,
+    api_key=api_key
 )
 
 print("=" * 70)
