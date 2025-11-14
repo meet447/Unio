@@ -55,4 +55,3 @@ async def log_request(
             logger.debug(f"Request successful - User: {user_id}, Provider: {provider_name}, Model: {model_name}, Tokens: {total_tokens}, Key: {key_name}")
     except Exception as e:
         logger.error(f"Failed to log request to database: {e}")
-        print(f"Failed to log request: {e}")
