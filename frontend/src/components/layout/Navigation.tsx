@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, BarChart, User, HelpCircle, LogOut, BookOpen, Github, Star } from "lucide-react";
+import { Menu, BarChart, User, HelpCircle, LogOut, BookOpen, Github, Star, Sparkles } from "lucide-react";
 import { useState } from "react";
 
 const Navigation = () => {
@@ -16,7 +16,13 @@ const Navigation = () => {
     { path: "/help", label: "Contact" },
   ];
 
+  const publicNavItemsWithPlayground = [
+    { path: "/playground", label: "Playground", icon: <Sparkles className="h-4 w-4" /> },
+    ...publicNavItems,
+  ];
+
   const userNavItems = [
+    { path: "/playground", label: "Playground", icon: <Sparkles className="h-5 w-5" /> },
     { path: "/dashboard", label: "Dashboard", icon: <BarChart className="h-5 w-5" /> },
     { path: "/analytics", label: "Analytics", icon: <BarChart className="h-5 w-5" /> },
     { path: "/profile", label: "Profile", icon: <User className="h-5 w-5" /> },
@@ -37,14 +43,15 @@ const Navigation = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-            {!user && publicNavItems.map((item) => (
+            {!user && publicNavItemsWithPlayground.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-black dark:hover:text-white ${
+                className={`text-sm font-medium transition-colors hover:text-black dark:hover:text-white flex items-center gap-1.5 ${
                   location.pathname === item.path ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'
-                }`}
+                } ${item.path === '/playground' ? 'font-semibold' : ''}`}
               >
+                {'icon' in item && item.icon}
                 {item.label}
               </Link>
             ))}
@@ -84,17 +91,18 @@ const Navigation = () => {
 
                     
                     {/* Mobile navigation links */}
-                    {publicNavItems.map((item) => (
+                    {publicNavItemsWithPlayground.map((item) => (
                       <Link
                         key={item.path}
                         to={item.path}
-                        className={`text-base font-medium transition-colors p-2 rounded-md ${
+                        className={`text-base font-medium transition-colors p-2 rounded-md flex items-center gap-2 ${
                           location.pathname === item.path 
                             ? 'text-black dark:text-white bg-gray-100 dark:bg-gray-800' 
                             : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900'
-                        }`}
+                        } ${item.path === '/playground' ? 'font-semibold' : ''}`}
                         onClick={() => setIsMenuOpen(false)}
                       >
+                        {'icon' in item && item.icon}
                         {item.label}
                       </Link>
                     ))}

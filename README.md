@@ -81,7 +81,7 @@ docker build -t unio-backend .
 docker run -d -p 8000:8000 --env-file app/.env unio-backend
 ```
 
-See [DOCKER.md](DOCKER.md) for detailed Docker deployment instructions.
+See [docs/DOCKER.md](docs/DOCKER.md) for detailed Docker deployment instructions.
 
 **Option 2: Local Development**
 
@@ -287,7 +287,7 @@ Unio follows a modern microservices architecture:
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
 
 ### Development Setup
 

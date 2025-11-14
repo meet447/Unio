@@ -114,7 +114,6 @@ Add support for new provider endpoint
 ### Backend Tests
 
 ```bash
-cd app
 python -m pytest tests/
 ```
 
