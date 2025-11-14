@@ -1,8 +1,26 @@
+"""
+Basic response test for Unio Responses API
+
+Usage:
+    Set UNIO_API_KEY environment variable:
+    export UNIO_API_KEY=your_api_key_here
+    
+    Set UNIO_BASE_URL (optional, defaults to localhost):
+    export UNIO_BASE_URL=http://127.0.0.1:8000/v1/api
+"""
+import os
 from openai import OpenAI
 
+# Get configuration from environment variables
+api_key = os.getenv("UNIO_API_KEY")
+base_url = os.getenv("UNIO_BASE_URL", "http://127.0.0.1:8000/v1/api")
+
+if not api_key:
+    raise ValueError("UNIO_API_KEY environment variable is required")
+
 unio = OpenAI(
-    base_url = "http://127.0.0.1:8000/v1/api",
-    api_key = "rk_c5f43e7ec775b73228f1c42b07a8fe152bbbbec93a69713d0b7964c165a53d44"
+    base_url=base_url,
+    api_key=api_key
 )
 response = unio.responses.create(
     input='hello world',

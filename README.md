@@ -54,11 +54,36 @@ curl -X POST https://unio.onrender.com/v1/chat/completions \
 ### Self-Hosting
 
 #### Prerequisites
-- Python 3.8+
-- Node.js 16+
+- Python 3.8+ (for local development) OR Docker (for containerized deployment)
+- Node.js 16+ (for frontend)
 - Supabase account (for database)
 
 #### Backend Setup
+
+**Option 1: Using Docker (Recommended)**
+
+```bash
+# Clone the repository
+git clone https://github.com/maoucodes/Unio.git
+cd unio
+
+# Configure environment
+cd app
+cp .env.example .env
+# Edit .env with your Supabase credentials
+
+# Build and run with Docker
+cd ..
+docker-compose up -d
+
+# Or build and run manually
+docker build -t unio-backend .
+docker run -d -p 8000:8000 --env-file app/.env unio-backend
+```
+
+See [DOCKER.md](DOCKER.md) for detailed Docker deployment instructions.
+
+**Option 2: Local Development**
 
 ```bash
 # Clone the repository
