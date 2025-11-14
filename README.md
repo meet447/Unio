@@ -66,7 +66,7 @@ git clone https://github.com/maoucodes/Unio.git
 cd unio
 
 # Set up backend
-cd backend
+cd app
 pip install -r requirements.txt
 
 # Configure environment
@@ -276,12 +276,16 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 3. **Set up the development environment**
    ```bash
    # Backend
-   cd backend
+   cd app
    pip install -r requirements.txt
+   cp .env.example .env
+   # Edit .env with your Supabase credentials
    
    # Frontend
    cd ../frontend
    npm install
+   cp .env.example .env.local
+   # Edit .env.local with your configuration
    ```
 
 4. **Create a feature branch**
@@ -296,7 +300,7 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 ```bash
 # Backend tests
-cd backend
+cd app
 python -m pytest tests/
 
 # Frontend tests (when available)

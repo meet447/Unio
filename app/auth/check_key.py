@@ -1,6 +1,10 @@
 from config import supabase
 from exceptions import InvalidAPIKeyError
 from typing import Optional
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 def fetch_userid(api_key):
     try:
@@ -35,13 +39,13 @@ def increment_usage_count(api_key_id):
     try:
         supabase.rpc('increment_api_key_usage', {'key_id': api_key_id}).execute()
     except Exception as e:
-        print(f"Error incrementing usage count: {e}")
+        logger.error(f"Error incrementing usage count: {e}")
 
 def increment_rate_limit_count(api_key_id):
     try:
         supabase.rpc('increment_api_key_rate_limit', {'key_id': api_key_id}).execute()
     except Exception as e:
-        print(f"Error incrementing rate limit count: {e}")
+        logger.error(f"Error incrementing rate limit count: {e}")
 
 def log_request(
     user_id: str,
@@ -83,5 +87,5 @@ def log_request(
             response = supabase.table("request_logs").insert(insert_data).execute()
             return response.data[0]['id']
     except Exception as e:
-        print(f"Error logging request: {e}")
+        logger.error(f"Error logging request: {e}")
     return None
