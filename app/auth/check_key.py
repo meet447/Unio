@@ -10,15 +10,15 @@ def fetch_userid(api_key):
     try:
         # PostgREST sometimes has issues parsing filters with certain token formats
         # Try the direct query first, and if it fails, fall back to fetching and filtering
-        try:
-            response = (
-                supabase.table("user_api_tokens")
-                .select("user_id")
-                .eq("token_hash", api_key)  # plain key, no hashing
-                .eq("is_active", True)
-            )
-            
-            result = response.execute()
+    try:
+        response = (
+            supabase.table("user_api_tokens")
+            .select("user_id")
+            .eq("token_hash", api_key)  # plain key, no hashing
+            .eq("is_active", True)
+        )
+        
+        result = response.execute()
             if result.data:
                 return result.data[0]['user_id']
         except Exception as filter_error:
@@ -32,7 +32,7 @@ def fetch_userid(api_key):
                 return matching[0]['user_id']
         
         # If we get here, no matching token was found
-        raise InvalidAPIKeyError("Invalid API Key")
+            raise InvalidAPIKeyError("Invalid API Key")
     except InvalidAPIKeyError:
         raise
     except Exception as e:
@@ -48,6 +48,7 @@ def fetch_api_keys(user_id, provider_id):
                 .select("*")
                 .eq("user_id", user_id)
                 .eq("provider_id", provider_id)
+                .eq("is_active", True)
             )
             
             result = response.execute()
@@ -58,11 +59,42 @@ def fetch_api_keys(user_id, provider_id):
             all_keys = supabase.table("api_keys").select("*").execute()
             
             # Filter in Python
-            matching = [k for k in all_keys.data if k.get('user_id') == user_id and k.get('provider_id') == provider_id]
+            matching = [k for k in all_keys.data if k.get('user_id') == user_id and k.get('provider_id') == provider_id and k.get('is_active') == True]
             return matching
     except Exception as e:
         logger.error(f"Error fetching API keys: {e}")
         return []
+
+def fetch_all_providers_with_keys(user_id):
+    """Fetch all providers with their API keys for a user, grouped by provider"""
+    try:
+        try:
+            response = (
+                supabase.table("api_keys")
+                .select("*, providers(id, name)")
+                .eq("user_id", user_id)
+                .eq("is_active", True)
+            )
+            
+            result = response.execute()
+            keys = result.data if result.data else []
+        except Exception as filter_error:
+            logger.warning(f"Filter query failed for all providers, trying alternative method: {filter_error}")
+            all_keys = supabase.table("api_keys").select("*").execute()
+            keys = [k for k in all_keys.data if k.get('user_id') == user_id and k.get('is_active') == True]
+        
+        # Group keys by provider_id
+        providers_dict = {}
+        for key in keys:
+            provider_id = key.get('provider_id')
+            if provider_id not in providers_dict:
+                providers_dict[provider_id] = []
+            providers_dict[provider_id].append(key)
+        
+        return providers_dict
+    except Exception as e:
+        logger.error(f"Error fetching all providers with keys: {e}")
+        return {}
 
 def increment_usage_count(api_key_id):
     try:

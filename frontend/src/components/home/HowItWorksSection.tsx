@@ -1,5 +1,8 @@
 import React from "react";
-
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/kibo-ui/card";
+import { Button } from "@/components/kibo-ui/button";
+import { Badge } from "@/components/kibo-ui/badge";
+import { Link } from "react-router-dom";
 
 interface Step {
   number: string;
@@ -10,73 +13,70 @@ interface Step {
 const steps: Step[] = [
   {
     number: "1",
-    title: "Sign up",
+    title: "Sign up & Add API Keys",
     description:
-      "Create your Unio account and get access to the unified AI gateway dashboard.",
+      "Create your Unio account and securely store your existing API keys from OpenAI, Anthropic, Google, Groq, Together, and OpenRouter.",
   },
   {
     number: "2",
-    title: "Add your API keys",
+    title: "Get Your Unio Token",
     description:
-      "Securely store your existing API keys from OpenAI, Anthropic, Google, Groq, and other providers.",
+      "Generate your Unio API token. This single token gives you access to all your providers through one unified endpoint.",
   },
   {
     number: "3",
-    title: "Get your Unio token",
+    title: "Start Building",
     description:
-      "Generate your Unio API token and start making requests through our unified endpoint.",
+      "Use the OpenAI SDK with your Unio token. Automatic key rotation, failover, and analytics work behind the scenes.",
   },
 ];
 
 const HowItWorksSection: React.FC = () => {
   return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col items-center text-center gap-12">
+    <section className="py-20 bg-[#030303] border-y border-[#1b1b1b]">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col items-center text-center gap-12">
           {/* Header */}
           <div className="flex flex-col items-center gap-4 max-w-2xl">
-            <span className="text-sm font-semibold uppercase text-black tracking-wider">
+            <Badge variant="secondary" className="bg-[#0a0a0a] border-[#1d1d1d] text-[#9c9c9c] hover:bg-[#0f0f0f]">
               Quick Start
-            </span>
-            <h2 className="text-[2.5rem] leading-[1.2] font-bold tracking-tighter text-text-primary">
+            </Badge>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.2] font-bold tracking-tight text-white">
               Get up and running in minutes
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-lg sm:text-xl text-[#9c9c9c] leading-relaxed">
               Unio makes it incredibly easy to unify all your AI providers.
-              Start using the power of multiple LLMs through one simple API.
+              Start using the power of multiple LLMs through one simple, OpenAI-compatible API.
             </p>
           </div>
 
           {/* Steps */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-4xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl">
             {steps.map((step, index) => (
-              <div
+              <Card
                 key={index}
-                className="flex flex-col items-center text-center gap-4"
+                className="bg-[#0a0a0a] border-[#1d1d1d] hover:border-[#2a2a2a] transition-colors"
               >
-                <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center text-lg font-bold">
-                  {step.number}
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-xl font-semibold text-text-primary">
-                    {step.title}
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                <CardHeader className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-white text-black flex items-center justify-center text-lg font-bold mx-auto mb-4">
+                    {step.number}
+                  </div>
+                  <CardTitle className="text-white text-xl">{step.title}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-[#9c9c9c] leading-relaxed text-center">
                     {step.description}
                   </p>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
 
           {/* Call-to-action button */}
           <div className="mt-8">
-            <a
-              href="/register"
-              className="inline-flex h-auto items-center justify-center rounded-md bg-black px-8 py-4 text-base font-medium text-white shadow-sm transition-colors hover:bg-gray-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2"
-            >
-              Get started for free
-            </a>
+            <Button asChild size="lg" className="bg-white text-black hover:bg-[#e1e1e1]">
+              <Link to="/register">Get started for free</Link>
+            </Button>
           </div>
         </div>
       </div>

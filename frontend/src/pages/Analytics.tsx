@@ -1,19 +1,19 @@
 import { useState, useMemo } from "react";
 import { useAnalytics, RequestLog, AnalyticsFilters } from "@/hooks/useAnalytics";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/kibo-ui/input";
+import { Button } from "@/components/kibo-ui/button";
 import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/kibo-ui/select";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@/components/kibo-ui/chart";
 import {
   LineChart,
   Line,
@@ -172,18 +172,18 @@ const Analytics = () => {
     <div className="min-h-screen bg-white dark:bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-8 sm:mb-12">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-medium text-black dark:text-white mb-2">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-medium text-black dark:text-white mb-2">
               Analytics
             </h1>
-            <p className="text-gray-600 dark:text-gray-400 font-light">
+            <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 font-light">
               Monitor your API usage, performance, and costs
             </p>
           </div>
-          <div className="mt-4 sm:mt-0">
+          <div className="w-full sm:w-auto">
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-32 border-gray-300 dark:border-gray-700 rounded-full">
+              <SelectTrigger className="w-full sm:w-32 border-gray-300 dark:border-gray-700 rounded-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -198,12 +198,12 @@ const Analytics = () => {
         </div>
 
         {/* Header Actions */}
-        <div className="flex items-center gap-3 mb-8">
+        <div className="flex items-center gap-3 mb-6 sm:mb-8">
           <Button
             onClick={refetch}
             disabled={loading}
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full sm:w-auto"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -211,7 +211,7 @@ const Analytics = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid md:grid-cols-4 gap-6 sm:gap-8 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8 mb-8 sm:mb-12">
           {displayStats.map((stat, index) => (
             <div key={index} className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl">
               <div className="flex items-center justify-between mb-4">

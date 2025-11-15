@@ -1,4 +1,3 @@
-// FeaturesOverview.tsx
 import React from "react";
 import {
   ArrowRight,
@@ -9,6 +8,10 @@ import {
   Zap,
   Database,
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/kibo-ui/card";
+import { Button } from "@/components/kibo-ui/button";
+import { Badge } from "@/components/kibo-ui/badge";
+import { Link } from "react-router-dom";
 
 interface Feature {
   title: string;
@@ -69,42 +72,42 @@ const FeatureCard: React.FC<FeatureCardProps> = ({
   description,
   icon: Icon,
 }) => (
-  <div className="flex flex-col gap-4">
-    <div className="overflow-hidden rounded-lg border border-border shadow-card p-8 bg-white">
-      <div className="w-full h-32 flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-50 rounded-lg">
-        <Icon className="h-12 w-12 text-black" />
+  <Card className="bg-[#0a0a0a] border-[#1d1d1d] hover:border-[#2a2a2a] transition-colors h-full">
+    <CardHeader>
+      <div className="w-12 h-12 rounded-lg bg-[#0f0f0f] border border-[#1c1c1c] flex items-center justify-center mb-4">
+        <Icon className="h-6 w-6 text-white" />
       </div>
-    </div>
-    <div className="flex flex-col gap-2 pt-2">
-      <h3 className="text-xl font-semibold text-text-dark-gray">{title}</h3>
-      <p className="text-base text-muted-foreground leading-relaxed">
+      <CardTitle className="text-white text-xl">{title}</CardTitle>
+    </CardHeader>
+    <CardContent>
+      <CardDescription className="text-[#9c9c9c] leading-relaxed">
         {description}
-      </p>
-    </div>
-  </div>
+      </CardDescription>
+    </CardContent>
+  </Card>
 );
 
 const FeaturesOverview: React.FC = () => {
   return (
-    <section className="py-20 bg-background">
-      <div className="container mx-auto px-12 md:px-20 lg:px-32 xl:px-40">
-        <div className="flex flex-col gap-12">
+    <section className="py-20 bg-[#030303] border-y border-[#1b1b1b]">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto flex flex-col gap-12">
           {/* Header */}
           <div className="flex flex-col items-start text-left gap-4 max-w-3xl">
-            <span className="text-sm font-semibold uppercase text-black tracking-wider">
+            <Badge variant="secondary" className="bg-[#0a0a0a] border-[#1d1d1d] text-[#9c9c9c] hover:bg-[#0f0f0f]">
               AI Gateway
-            </span>
-            <h2 className="text-[2.5rem] leading-[1.2] font-bold tracking-tighter text-text-primary">
+            </Badge>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.2] font-bold tracking-tight text-white">
               A complete AI gateway solution with all the features you need.
             </h2>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-lg sm:text-xl text-[#9c9c9c] leading-relaxed">
               Unio is packed with powerful features that enable you to seamlessly
               manage multiple LLM providers through a single, unified interface.
             </p>
           </div>
 
           {/* Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FeaturesSection.map((feature, index) => (
               <FeatureCard key={index} {...feature} />
             ))}
@@ -112,13 +115,12 @@ const FeaturesOverview: React.FC = () => {
 
           {/* Call-to-action */}
           <div className="flex justify-center mt-4">
-            <a
-              href="/features"
-              className="inline-flex items-center gap-2 text-base font-medium text-text-primary hover:text-black transition-colors duration-200"
-            >
-              Explore more features
-              <ArrowRight className="h-4 w-4" />
-            </a>
+            <Button asChild variant="outline" className="border-[#1f1f1f] text-white hover:bg-[#0a0a0a]">
+              <Link to="/features" className="inline-flex items-center gap-2">
+                Explore more features
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
       </div>

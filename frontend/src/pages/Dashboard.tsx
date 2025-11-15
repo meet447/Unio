@@ -1,26 +1,24 @@
 import { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Plus, Key, Activity, BarChart3, MoreHorizontal, ChevronRight, ChevronDown, Power, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/kibo-ui/button";
 import { AddApiKeyDialog } from "@/components/AddApiKeyDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { useAnalytics, AnalyticsFilters } from "@/hooks/useAnalytics";
 import { supabase } from "@/integrations/supabase/client";
+import { Plus, TrendingUp, FileText, BarChart3, Zap, DollarSign, ChevronDown } from "lucide-react";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@/components/kibo-ui/chart";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
   YAxis,
   CartesianGrid,
 } from "recharts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/kibo-ui/select";
 
 interface ApiKey {
   id: string;
@@ -31,24 +29,16 @@ interface ApiKey {
   created_at: string;
 }
 
-interface Provider {
-  name: string;
-  keys: ApiKey[];
-  totalUsage: number;
-  activeKeys: number;
-}
-
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
-  const [providers, setProviders] = useState<Provider[]>([]);
-  const [expandedProviders, setExpandedProviders] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [timeRange, setTimeRange] = useState("7d");
 
   // Use analytics for dashboard insights
   const analyticsFilters: AnalyticsFilters = {
-    timeRange: 'all',
+    timeRange: timeRange as any,
     searchQuery: '',
     statusFilter: 'all',
     limit: 10
@@ -94,24 +84,6 @@ const Dashboard = () => {
       })) || [];
 
       setApiKeys(formattedKeys);
-
-      // Group keys by provider
-      const providerMap = new Map<string, ApiKey[]>();
-      formattedKeys.forEach(key => {
-        if (!providerMap.has(key.provider_name)) {
-          providerMap.set(key.provider_name, []);
-        }
-        providerMap.get(key.provider_name)!.push(key);
-      });
-
-      const providersData = Array.from(providerMap.entries()).map(([name, keys]) => ({
-        name,
-        keys,
-        totalUsage: keys.reduce((sum, key) => sum + key.usage_count, 0),
-        activeKeys: keys.filter(key => key.is_active).length,
-      }));
-
-      setProviders(providersData);
     } catch (error) {
       console.error('Error fetching API keys:', error);
     } finally {
@@ -119,87 +91,43 @@ const Dashboard = () => {
     }
   };
 
-  const toggleApiKeyStatus = async (keyId: string, currentStatus: boolean) => {
-    try {
-      const { error } = await supabase
-        .from('api_keys')
-        .update({ is_active: !currentStatus })
-        .eq('id', keyId);
-
-      if (error) throw error;
-
-      await fetchApiKeys(); // Refresh the data
-    } catch (error) {
-      console.error('Error toggling API key status:', error);
-    }
-  };
-
-  const deleteApiKey = async (keyId: string) => {
-    if (!confirm('Are you sure you want to delete this API key? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('api_keys')
-        .delete()
-        .eq('id', keyId);
-
-      if (error) throw error;
-
-      await fetchApiKeys(); // Refresh the data
-    } catch (error) {
-      console.error('Error deleting API key:', error);
-    }
-  };
-
-  const toggleProvider = (providerName: string) => {
-    const newExpanded = new Set(expandedProviders);
-    if (newExpanded.has(providerName)) {
-      newExpanded.delete(providerName);
-    } else {
-      newExpanded.add(providerName);
-    }
-    setExpandedProviders(newExpanded);
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-[#9c9c9c]">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const displayStats = [
     {
-      title: "API Keys",
-      value: apiKeys.length.toString(),
-      subtitle: `${apiKeys.filter(k => k.is_active).length} active`,
-    },
-    {
-      title: "Providers",
-      value: new Set(apiKeys.map(k => k.provider_name)).size.toString(),
-      subtitle: "Connected",
-    },
-    {
-      title: "Requests",
+      title: "Total Requests",
       value: stats.totalRequests.toLocaleString(),
-      subtitle: "All time",
+      change: `${stats.successRate.toFixed(1)}% success`,
+      icon: BarChart3,
     },
     {
       title: "Success Rate",
       value: `${stats.successRate.toFixed(1)}%`,
-      subtitle: "All time",
+      change: `${stats.errorCount} errors`,
+      icon: TrendingUp,
+    },
+    {
+      title: "Avg Response Time",
+      value: `${stats.avgResponseTime.toFixed(0)}ms`,
+      change: "Average",
+      icon: Zap,
+    },
+    {
+      title: "Total Cost",
+      value: `$${stats.totalCost.toFixed(2)}`,
+      change: "Estimated",
+      icon: DollarSign,
     }
   ];
-
-  // Chart configurations
-  const requestTrendConfig = {
-    requests: {
-      label: "Requests",
-      color: "hsl(var(--chart-1))",
-    },
-  };
-
-  const responseTimeConfig = {
-    responseTime: {
-      label: "Avg Response Time (ms)",
-      color: "hsl(var(--chart-2))",
-    },
-  };
 
   // Format chart data for display
   const formatChartData = (data: typeof chartData) => {
@@ -212,393 +140,189 @@ const Dashboard = () => {
     }));
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-black dark:border-white mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-white dark:bg-black">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-12">
-          <div>
-            <h1 className="text-3xl sm:text-4xl font-medium text-black dark:text-white mb-2">
-              Dashboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400 font-light">
-              Manage your API keys and monitor usage
-            </p>
+    <div className="min-h-screen bg-[#030303] text-white">
+
+      <div className="p-4 sm:p-6">
+        {/* Welcome Section */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-2">
+            Welcome back, {user?.email?.split('@')[0] || 'User'}
+          </h1>
+          <p className="text-sm sm:text-base text-[#b0b0b0] mb-1">
+            Here's an overview of your API usage and performance metrics
+          </p>
+          <p className="text-xs sm:text-sm text-[#7a7a7a]">
+            {apiKeys.length} API {apiKeys.length === 1 ? 'key' : 'keys'} • {new Set(apiKeys.map(k => k.provider_name)).size} {new Set(apiKeys.map(k => k.provider_name)).size === 1 ? 'provider' : 'providers'}
+          </p>
+        </div>
+
+        {/* Overview Statistics */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-white">Overview Statistics</h2>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-full sm:w-32 bg-[#0b0b0b] border-[#1f1f1f] text-white hover:bg-[#121212] focus:ring-[#2b2b2b]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#0b0b0b] border-[#1f1f1f] text-white [&>*]:text-white">
+                <SelectItem value="1d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 24 hours</SelectItem>
+                <SelectItem value="7d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 7 days</SelectItem>
+                <SelectItem value="30d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 30 days</SelectItem>
+                <SelectItem value="all" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">All time</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-          <div className="mt-4 sm:mt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            {displayStats.map((stat, index) => {
+              const Icon = stat.icon;
+              return (
+                <div key={index} className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-4 sm:p-6">
+                  <div className="flex items-center justify-between mb-3 sm:mb-4">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-[#bbbbbb]" />
+                  </div>
+                  <div className="text-xl sm:text-2xl font-semibold text-white mb-1">
+                    {stat.value}
+                  </div>
+                  <div className="text-xs sm:text-sm font-medium text-[#b5b5b5] mb-1">
+                    {stat.title}
+                  </div>
+                  <div className="text-xs text-[#7b7b7b]">
+                    {stat.change}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* API Usage Overview */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-white">API Usage Overview</h2>
+            <Select value={timeRange} onValueChange={setTimeRange}>
+              <SelectTrigger className="w-full sm:w-32 bg-[#0b0b0b] border-[#1f1f1f] text-white hover:bg-[#121212] focus:ring-[#2b2b2b]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-[#0b0b0b] border-[#1f1f1f] text-white [&>*]:text-white">
+                <SelectItem value="1d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 24 hours</SelectItem>
+                <SelectItem value="7d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 7 days</SelectItem>
+                <SelectItem value="30d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 30 days</SelectItem>
+                <SelectItem value="all" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">All time</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-3 sm:p-6 overflow-x-auto">
+            {chartData.length > 0 ? (
+              <ChartContainer config={{ requests: { label: "Requests", color: "hsl(0, 0%, 100%)" } }} className="h-48 sm:h-64 min-w-[400px]">
+                <AreaChart data={formatChartData(chartData)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
+                  <XAxis 
+                    dataKey="time" 
+                    axisLine={false}
+                    tickLine={false}
+                    fontSize={10}
+                    stroke="#8c8c8c"
+                  />
+                  <YAxis 
+                    axisLine={false}
+                    tickLine={false}
+                    fontSize={10}
+                    stroke="#8c8c8c"
+                  />
+                  <ChartTooltip 
+                    content={<ChartTooltipContent className="bg-[#111111] border-[#2a2a2a]" />} 
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="requests"
+                    stroke="#FFFFFF"
+                    fill="#FFFFFF"
+                    fillOpacity={0.2}
+                  />
+                </AreaChart>
+              </ChartContainer>
+            ) : (
+              <div className="h-48 sm:h-64 flex items-center justify-center text-[#6f6f6f] text-sm">
+                No usage data available
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* API Keys Overview */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-white">API Keys</h2>
             <AddApiKeyDialog onApiKeyAdded={fetchApiKeys}>
-              <Button className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-full px-6 py-3 font-medium">
+              <Button className="w-full sm:w-auto bg-white text-black hover:bg-[#e1e1e1]">
                 <Plus className="w-4 h-4 mr-2" />
                 Add API Key
               </Button>
             </AddApiKeyDialog>
           </div>
-        </div>
-
-        {/* Stats */}
-        <div className="grid md:grid-cols-4 gap-6 sm:gap-8 mb-12">
-          {displayStats.map((stat, index) => (
-            <div key={index} className="text-center p-6 sm:p-8">
-              <div className="text-4xl sm:text-5xl font-medium text-black dark:text-white mb-2">
-                {stat.value}
-              </div>
-              <div className="text-lg font-medium text-black dark:text-white mb-1">
-                {stat.title}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400 font-light">
-                {stat.subtitle}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Analytics Overview */}
-        {chartData.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-2xl font-medium text-black dark:text-white mb-6">
-              Usage Overview
-            </h2>
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Request Trend */}
-              <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center">
-                    <BarChart3 className="w-5 h-5 text-white dark:text-black" />
+          <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-4 sm:p-6">
+            {apiKeys.length > 0 ? (
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f] rounded-lg">
+                    <div>
+                      <div className="text-xs sm:text-sm text-[#b5b5b5]">Total Keys</div>
+                      <div className="text-xl sm:text-2xl font-semibold text-white">{apiKeys.length}</div>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-medium text-black dark:text-white">
-                    Request Trend
-                  </h3>
-                </div>
-                <ChartContainer config={requestTrendConfig} className="h-48">
-                  <AreaChart data={formatChartData(chartData)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="time" 
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={12}
-                    />
-                    <YAxis 
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={12}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Area
-                      type="monotone"
-                      dataKey="requests"
-                      stroke="var(--color-requests)"
-                      fill="var(--color-requests)"
-                      fillOpacity={0.6}
-                    />
-                  </AreaChart>
-                </ChartContainer>
-              </div>
-
-              {/* Response Time Trend */}
-              <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center">
-                    <Activity className="w-5 h-5 text-white dark:text-black" />
+                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f] rounded-lg">
+                    <div>
+                      <div className="text-xs sm:text-sm text-[#b5b5b5]">Active Keys</div>
+                      <div className="text-xl sm:text-2xl font-semibold text-white">
+                        {apiKeys.filter(k => k.is_active).length}
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-medium text-black dark:text-white">
-                    Performance
-                  </h3>
+                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f] rounded-lg">
+                    <div>
+                      <div className="text-xs sm:text-sm text-[#b5b5b5]">Total Usage</div>
+                      <div className="text-xl sm:text-2xl font-semibold text-white">
+                        {apiKeys.reduce((sum, k) => sum + (k.usage_count || 0), 0).toLocaleString()}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <ChartContainer config={responseTimeConfig} className="h-48">
-                  <LineChart data={formatChartData(chartData)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="time" 
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={12}
-                    />
-                    <YAxis 
-                      axisLine={false}
-                      tickLine={false}
-                      fontSize={12}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Line
-                      type="monotone"
-                      dataKey="responseTime"
-                      stroke="var(--color-responseTime)"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ChartContainer>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Recent Activity */}
-        {logs.length > 0 && (
-          <div className="mb-12">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-              <h2 className="text-2xl font-medium text-black dark:text-white mb-4 sm:mb-0">
-                Recent Activity
-              </h2>
-              <Button variant="outline" asChild className="border-gray-300 dark:border-gray-700 rounded-full">
-                <Link to="/analytics">View All Logs</Link>
-              </Button>
-            </div>
-            <div className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-900/50">
-                    <tr>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Time
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Provider
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Model
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                        Response Time
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white dark:bg-black divide-y divide-gray-200 dark:divide-gray-800">
-                    {logs.slice(0, 5).map((log) => (
-                      <tr key={log.log_id} className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 font-mono">
-                          {log.time_stamp ? new Date(log.time_stamp).toLocaleTimeString() : 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white font-medium">
-                          {log.provider || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white">
-                          {log.model || 'N/A'}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            {log.status && log.status >= 200 && log.status < 300 ? (
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            ) : log.status && log.status >= 400 ? (
-                              <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                            ) : (
-                              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
-                            )}
-                            <span className="text-sm text-black dark:text-white font-medium">
-                              {log.status || 'N/A'}
-                            </span>
+                <div className="pt-4 border-t border-[#1c1c1c]">
+                  <div className="text-xs sm:text-sm text-[#b5b5b5] mb-2">Recent Keys</div>
+                  <div className="space-y-2">
+                    {apiKeys.slice(0, 5).map((key) => (
+                      <div key={key.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 bg-[#0f0f0f] rounded-lg">
+                        <div>
+                          <div className="text-sm font-medium text-white">{key.name}</div>
+                          <div className="text-xs text-[#9d9d9d]">{key.provider_name}</div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-sm text-white">{key.usage_count || 0} requests</div>
+                            <div className="text-xs text-[#9d9d9d]">
+                              {key.is_active ? "Active" : "Inactive"}
+                            </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-black dark:text-white font-mono">
-                          {log.response_time_ms ? `${log.response_time_ms}ms` : 'N/A'}
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="mb-8">
-          <h2 className="text-2xl font-medium text-black dark:text-white mb-6">
-            Your Providers
-          </h2>
-          
-          {providers.length === 0 ? (
-            <div className="text-center py-16 sm:py-24">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 dark:bg-gray-900 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Key className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
-              </div>
-              <h3 className="text-xl font-medium text-black dark:text-white mb-2">
-                No API keys yet
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400 font-light mb-8 max-w-md mx-auto">
-                Add your first API key to start using Unio with your favorite LLM providers
-              </p>
-              <AddApiKeyDialog onApiKeyAdded={fetchApiKeys}>
-                <Button className="bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200 rounded-full px-8 py-4 font-medium">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Your First Key
-                </Button>
-              </AddApiKeyDialog>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {providers.map((provider) => (
-                <div key={provider.name} className="border border-gray-200 dark:border-gray-800 rounded-2xl overflow-hidden">
-                  {/* Provider Header */}
-                  <div
-                    className="flex items-center justify-between p-6 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors"
-                    onClick={() => toggleProvider(provider.name)}
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-3">
-                        {expandedProviders.has(provider.name) ? (
-                          <ChevronDown className="w-5 h-5 text-gray-400" />
-                        ) : (
-                          <ChevronRight className="w-5 h-5 text-gray-400" />
-                        )}
-                        <h3 className="text-lg font-medium text-black dark:text-white">
-                          {provider.name}
-                        </h3>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center gap-6 text-sm">
-                      <div className="text-center">
-                        <div className="text-black dark:text-white font-medium">
-                          {provider.keys.length}
-                        </div>
-                        <div className="text-gray-600 dark:text-gray-400">
-                          {provider.keys.length === 1 ? 'Key' : 'Keys'}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-black dark:text-white font-medium">
-                          {provider.activeKeys}
-                        </div>
-                        <div className="text-gray-600 dark:text-gray-400">
-                          Active
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-black dark:text-white font-medium">
-                          {provider.totalUsage.toLocaleString()}
-                        </div>
-                        <div className="text-gray-600 dark:text-gray-400">
-                          Requests
-                        </div>
-                      </div>
-                    </div>
                   </div>
-
-                  {/* Provider Keys */}
-                  {expandedProviders.has(provider.name) && (
-                    <div className="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/30">
-                      <div className="p-4 space-y-3">
-                        {provider.keys.map((apiKey) => (
-                          <div
-                            key={apiKey.id}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-white dark:bg-black rounded-xl border border-gray-200 dark:border-gray-800"
-                          >
-                            <div className="flex-1">
-                              <div className="flex items-center gap-3 mb-2">
-                                <h4 className="font-medium text-black dark:text-white">
-                                  {apiKey.name}
-                                </h4>
-                                <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
-                                  apiKey.is_active 
-                                    ? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-400' 
-                                    : 'bg-gray-100 dark:bg-gray-900 text-gray-600 dark:text-gray-400'
-                                }`}>
-                                  <div className={`w-1.5 h-1.5 rounded-full ${
-                                    apiKey.is_active ? 'bg-green-500' : 'bg-gray-400'
-                                  }`}></div>
-                                  {apiKey.is_active ? "Active" : "Inactive"}
-                                </div>
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                                <div>
-                                  <span className="text-gray-600 dark:text-gray-400">Usage: </span>
-                                  <span className="text-black dark:text-white font-medium">{apiKey.usage_count.toLocaleString()} requests</span>
-                                </div>
-                                <div>
-                                  <span className="text-gray-600 dark:text-gray-400">Added: </span>
-                                  <span className="text-black dark:text-white font-medium">{new Date(apiKey.created_at).toLocaleDateString()}</span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center gap-2 mt-3 sm:mt-0 sm:ml-4">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={() => toggleApiKeyStatus(apiKey.id, apiKey.is_active)}
-                                    className="flex items-center gap-2"
-                                  >
-                                    <Power className="w-4 h-4" />
-                                    {apiKey.is_active ? 'Deactivate' : 'Activate'}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => deleteApiKey(apiKey.id)}
-                                    className="flex items-center gap-2 text-red-600 dark:text-red-400"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        {apiKeys.length > 0 && (
-          <div className="grid md:grid-cols-2 gap-6 sm:gap-8">
-            <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center">
-                  <Activity className="w-5 h-5 text-white dark:text-black" />
-                </div>
-                <h3 className="text-lg font-medium text-black dark:text-white">
-                  API Logs
-                </h3>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 font-light mb-4">
-                Monitor your API requests in real-time
-              </p>
-              <Button variant="outline" asChild className="border-gray-300 dark:border-gray-700 rounded-full">
-                <Link to="/analytics">View Logs</Link>
-              </Button>
-            </div>
-
-            <div className="p-6 sm:p-8 border border-gray-200 dark:border-gray-800 rounded-2xl">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-black dark:bg-white rounded-full flex items-center justify-center">
-                  <BarChart3 className="w-5 h-5 text-white dark:text-black" />
-                </div>
-                <h3 className="text-lg font-medium text-black dark:text-white">
-                  Analytics
-                </h3>
+            ) : (
+              <div className="text-center py-6 sm:py-8">
+                <p className="text-sm sm:text-base text-[#b0b0b0] mb-4">No API keys yet</p>
+                <AddApiKeyDialog onApiKeyAdded={fetchApiKeys}>
+                  <Button className="bg-white text-black hover:bg-[#e1e1e1]">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Your First API Key
+                  </Button>
+                </AddApiKeyDialog>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 font-light mb-4">
-                Track usage patterns and costs
-              </p>
-              <Button variant="outline" asChild className="border-gray-300 dark:border-gray-700 rounded-full">
-                <Link to="/analytics">View Analytics</Link>
-              </Button>
-            </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

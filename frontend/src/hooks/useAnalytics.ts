@@ -77,22 +77,14 @@ export const useAnalytics = (filters: AnalyticsFilters = {
     try {
       const startDate = getDateRange(filters.timeRange);
       
-      // Build query for all logs (no pagination)
+      // Build query for all logs (no pagination, but with high limit)
+      // Supabase default limit is 1000, so we need to explicitly set a higher limit
       let analyticsQuery = supabase
         .from('request_logs')
-        .select(`
-          log_id,
-          time_stamp,
-          model,
-          provider,
-          status,
-          response_time_ms,
-          total_tokens,
-          estimated_cost,
-          key_name
-        `)
+        .select('*', { count: 'exact' })
         .eq('user_id', user.id)
-        .order('time_stamp', { ascending: false });
+        .order('time_stamp', { ascending: false })
+        .limit(100000); // Set a very high limit to get all records
 
       // Apply time range filter only if not 'all'
       if (filters.timeRange !== 'all') {
@@ -120,13 +112,74 @@ export const useAnalytics = (filters: AnalyticsFilters = {
         return;
       }
       
-      // Process the data to extract key_name from the nested api_keys object
-      const allData = (analyticsResult.data as any[]).map((row: any) => ({
-        ...row,
-        key_name: row.api_keys?.name || null
+      // If we hit the limit, fetch remaining records in batches
+      let allData = (analyticsResult.data as any[]) || [];
+      const totalCount = analyticsResult.count || 0;
+      
+      // If there are more records than we fetched, fetch them in batches
+      if (totalCount > allData.length && allData.length >= 100000) {
+        const batches: any[] = [];
+        let offset = 100000;
+        
+        while (offset < totalCount) {
+          const batchSize = Math.min(100000, totalCount - offset);
+          const batchQuery = supabase
+            .from('request_logs')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('time_stamp', { ascending: false })
+            .range(offset, offset + batchSize - 1);
+          
+          // Apply same filters
+          if (filters.timeRange !== 'all') {
+            batchQuery.gte('time_stamp', startDate.toISOString());
+          }
+          if (filters.statusFilter === 'success') {
+            batchQuery.gte('status', 200).lt('status', 300);
+          } else if (filters.statusFilter === 'error') {
+            batchQuery.gte('status', 400);
+          }
+          if (filters.searchQuery) {
+            batchQuery.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,api_keys.name.ilike.%${filters.searchQuery}%`);
+          }
+          
+          const batchResult = await batchQuery;
+          if (batchResult.error) {
+            console.error('Error fetching batch:', batchResult.error);
+            break;
+          }
+          
+          if (batchResult.data && batchResult.data.length > 0) {
+            batches.push(...batchResult.data);
+            offset += batchResult.data.length;
+          } else {
+            break;
+          }
+        }
+        
+        allData = [...allData, ...batches];
+      }
+      
+      // Process the data - key_name is already a column in request_logs
+      const processedData = allData.map((row: any) => ({
+        log_id: row.log_id,
+        user_id: row.user_id,
+        api_key: row.api_key,
+        provider: row.provider,
+        model: row.model,
+        status: row.status,
+        request_payload: row.request_payload,
+        response_payload: row.response_payload,
+        prompt_tokens: row.prompt_tokens,
+        completion_tokens: row.completion_tokens,
+        total_tokens: row.total_tokens,
+        estimated_cost: row.estimated_cost,
+        response_time_ms: row.response_time_ms,
+        time_stamp: row.time_stamp,
+        key_name: row.key_name || null
       })) as RequestLog[];
       
-      setAllLogsForAnalytics(allData);
+      setAllLogsForAnalytics(processedData);
     } catch (err) {
       console.error('Error fetching analytics data:', err);
       setError(err as PostgrestError);
@@ -152,10 +205,7 @@ export const useAnalytics = (filters: AnalyticsFilters = {
       // Build query for paginated logs
       let query = supabase
         .from('request_logs')
-        .select(
-          'log_id, time_stamp, model, provider, status, response_time_ms, total_tokens, estimated_cost, key_name',
-          { count: 'exact' }
-        )
+        .select('*', { count: 'exact' })
         .eq('user_id', user.id)
         .order('time_stamp', { ascending: false });
 
@@ -173,7 +223,8 @@ export const useAnalytics = (filters: AnalyticsFilters = {
 
       // Apply search filter
       if (filters.searchQuery) {
-        query = query.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,key_name.ilike.%${filters.searchQuery}%`);
+        // Note: key_name might not be directly searchable, so we search provider and model
+        query = query.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%`);
       }
 
       // Apply pagination
@@ -185,7 +236,24 @@ export const useAnalytics = (filters: AnalyticsFilters = {
         throw result.error;
       }
       
-      const data = result.data as RequestLog[];
+      // Map the data to ensure all fields are present
+      const data = ((result.data || []) as any[]).map((row: any) => ({
+        log_id: row.log_id,
+        user_id: row.user_id,
+        api_key: row.api_key || '',
+        provider: row.provider,
+        model: row.model,
+        status: row.status,
+        request_payload: row.request_payload,
+        response_payload: row.response_payload,
+        prompt_tokens: row.prompt_tokens,
+        completion_tokens: row.completion_tokens,
+        total_tokens: row.total_tokens,
+        estimated_cost: row.estimated_cost,
+        response_time_ms: row.response_time_ms,
+        time_stamp: row.time_stamp,
+        key_name: row.key_name || null
+      })) as RequestLog[];
       const count = result.count || 0;
       
       if (loadMore) {

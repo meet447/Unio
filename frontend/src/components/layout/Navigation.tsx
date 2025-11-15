@@ -1,27 +1,24 @@
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/kibo-ui/button";
 import { useAuth } from "@/hooks/useAuth";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Menu, BarChart, User, HelpCircle, LogOut, BookOpen, Github, Star, Sparkles } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/kibo-ui/sheet";
+import { Menu, BarChart, User, HelpCircle, LogOut, BookOpen, Sparkles, ChevronDown } from "lucide-react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/kibo-ui/dropdown-menu";
 
 const Navigation = () => {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const publicNavItems = [
-    { path: "/features", label: "Features" },
+  const publicNavItems: Array<{ path: string; label: string; icon?: React.ReactNode }> = [
+    { path: "/features", label: "Models" },
+    { path: "/help", label: "Support" },
     { path: "/docs", label: "Docs" },
-    { path: "/help", label: "Contact" },
   ];
 
-  const publicNavItemsWithPlayground = [
-    { path: "/playground", label: "Playground", icon: <Sparkles className="h-4 w-4" /> },
-    ...publicNavItems,
-  ];
-
-  const userNavItems = [
+  const userNavItems: Array<{ path: string; label: string; icon: React.ReactNode }> = [
     { path: "/playground", label: "Playground", icon: <Sparkles className="h-5 w-5" /> },
     { path: "/dashboard", label: "Dashboard", icon: <BarChart className="h-5 w-5" /> },
     { path: "/analytics", label: "Analytics", icon: <BarChart className="h-5 w-5" /> },
@@ -30,136 +27,144 @@ const Navigation = () => {
   ];
 
   return (
-    <nav className="bg-white dark:bg-black border-b border-gray-200 dark:border-gray-800 sticky top-0 z-50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-black/95 dark:bg-black/95 backdrop-blur-xl border-b border-gray-800/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14 sm:h-16">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center hover:opacity-80 transition-opacity">
-            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-black dark:bg-white rounded-sm flex items-center justify-center mr-2">
-              <span className="text-white dark:text-black font-bold text-sm sm:text-lg">U</span>
-            </div>
-            <span className="text-lg sm:text-xl font-semibold text-black dark:text-white">unio</span>
+          <Link to="/" className="flex items-center gap-2 group">
+            <svg 
+              className="w-6 h-6 text-white transition-transform group-hover:scale-110" 
+              fill="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+            <span className="text-xl font-semibold text-white tracking-tight">Unio</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
-            {!user && publicNavItemsWithPlayground.map((item) => (
+          <div className="hidden lg:flex items-center gap-6">
+            {!user && publicNavItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors hover:text-black dark:hover:text-white flex items-center gap-1.5 ${
-                  location.pathname === item.path ? 'text-black dark:text-white' : 'text-gray-600 dark:text-gray-400'
-                } ${item.path === '/playground' ? 'font-semibold' : ''}`}
+                className={`text-sm font-medium transition-colors ${
+                  location.pathname === item.path 
+                    ? 'text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
               >
-                {'icon' in item && item.icon}
                 {item.label}
               </Link>
             ))}
           </div>
 
           {/* Right side items */}
-          <div className="flex items-center space-x-3 sm:space-x-4">
-            {!user && (
+          <div className="flex items-center gap-4">
+            {!user ? (
               <>
                 <Link
                   to="/login"
-                  className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors hidden sm:block"
+                  className="hidden sm:block text-sm font-medium text-gray-400 hover:text-white transition-colors"
                 >
                   Log in
                 </Link>
                 <Button
                   asChild
-                  className="bg-black hover:bg-gray-800 text-white px-3 sm:px-4 py-2 text-sm font-medium rounded-md touch-manipulation min-h-[40px] sm:min-h-[44px]"
+                  className="bg-white text-black hover:bg-gray-100 px-4 py-2 text-sm font-medium rounded-lg transition-all"
                 >
-                  <Link to="/register">Sign up</Link>
+                  <Link to="/register">Get Started</Link>
                 </Button>
+              </>
+            ) : (
+              <>
+                <div className="hidden md:flex items-center gap-2">
+                  <Link to="/dashboard">
+                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                      <BarChart className="h-4 w-4 mr-2" />
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Link to="/playground">
+                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Playground
+                    </Button>
+                  </Link>
+                </div>
+                <ThemeToggle />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                      <div className="w-6 h-6 rounded-full bg-gray-700 flex items-center justify-center text-xs text-white mr-2">
+                        {user.email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <span className="hidden sm:inline text-sm">{user.email?.split('@')[0] || 'User'}</span>
+                      <ChevronDown className="h-4 w-4 ml-2" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-gray-900 border-gray-800">
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile" className="cursor-pointer">
+                        <User className="h-4 w-4 mr-2" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/dashboard" className="cursor-pointer">
+                        <BarChart className="h-4 w-4 mr-2" />
+                        Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={signOut} className="cursor-pointer text-red-400">
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             )}
             
-            {/* Mobile menu button for public navigation */}
-            {!user && (
-              <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="lg:hidden p-2 touch-manipulation">
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">Open menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-64 sm:w-80 bg-white dark:bg-black border-gray-200 dark:border-gray-800">
-                  <div className="flex flex-col space-y-4 mt-6">
-                    {/* Mobile GitHub stats */}
-
-                    
-                    {/* Mobile navigation links */}
-                    {publicNavItemsWithPlayground.map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`text-base font-medium transition-colors p-2 rounded-md flex items-center gap-2 ${
-                          location.pathname === item.path 
-                            ? 'text-black dark:text-white bg-gray-100 dark:bg-gray-800' 
-                            : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900'
-                        } ${item.path === '/playground' ? 'font-semibold' : ''}`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {'icon' in item && item.icon}
-                        {item.label}
-                      </Link>
-                    ))}
-                    
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                      <Link
-                        to="/login"
-                        className="block text-base font-medium text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900 p-2 rounded-md transition-colors"
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        Log in
-                      </Link>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            )}
-            
-            {/* User menu for authenticated users */}
-            {user && (
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-2 touch-manipulation">
-                    <Menu className="h-5 w-5" />
-                    <span className="sr-only">Open user menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="right" className="w-64 sm:w-80 bg-white dark:bg-black border-gray-200 dark:border-gray-800">
-                  <div className="flex flex-col space-y-3 mt-6">
-                    {userNavItems.map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`flex items-center space-x-3 text-base font-medium transition-colors p-3 rounded-md ${
-                          location.pathname === item.path
-                            ? 'text-black dark:text-white bg-gray-100 dark:bg-gray-800'
-                            : 'text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900'
-                        }`}
-                      >
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </Link>
-                    ))}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+            {/* Mobile menu button */}
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="lg:hidden p-2 text-gray-400 hover:text-white">
+                  <Menu className="h-5 w-5" />
+                  <span className="sr-only">Open menu</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80 bg-gray-900 border-gray-800">
+                <div className="flex flex-col space-y-1 mt-8">
+                  {(!user ? publicNavItems : userNavItems).map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-lg transition-colors ${
+                        location.pathname === item.path
+                          ? 'text-white bg-gray-800'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                      }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {item.icon}
+                      {item.label}
+                    </Link>
+                  ))}
+                  {user && (
+                    <div className="border-t border-gray-800 pt-4 mt-4">
                       <Button
                         variant="ghost"
                         onClick={signOut}
-                        className="flex items-center space-x-3 text-base font-medium text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white hover:bg-gray-50 dark:hover:bg-gray-900 w-full justify-start p-3 rounded-md"
+                        className="flex items-center gap-3 w-full justify-start px-4 py-3 text-base font-medium text-red-400 hover:text-red-300 hover:bg-gray-800"
                       >
                         <LogOut className="h-5 w-5" />
                         <span>Logout</span>
                       </Button>
                     </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            )}
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>

@@ -1,5 +1,7 @@
 import React from 'react';
-import { Globe, TrendingUp } from 'lucide-react';
+import { Globe, TrendingUp, ArrowUpRight } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/kibo-ui/card';
+import { Badge } from '@/components/kibo-ui/badge';
 
 const ProjectShowcaseSection = () => {
   const projects = [
@@ -8,58 +10,65 @@ const ProjectShowcaseSection = () => {
       name: "Axiom",
       description: "An open-source AI search engine like Perplexity AI, powered by multiple LLM providers through Unio.",
       url: "https://axiom-ivory.vercel.app/",
-      iconColor: "text-black",
-      bgColor: "bg-gray-100"
     },
     {
       icon: TrendingUp,
       name: "Chipling",
       description: "An open-source AI rabbithole research tool that helps users dive deep into topics using AI.",
       url: "https://chipling.xyz",
-      iconColor: "text-black",
-      bgColor: "bg-gray-100"
     }
   ];
 
   return (
-    <section className="py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <section className="py-24 bg-[#030303] border-y border-[#1b1b1b]">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
+          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-4">
             Projects powered by Unio
           </h2>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600">
+          <p className="text-lg sm:text-xl text-[#9c9c9c] max-w-2xl mx-auto">
             See what developers are building with our unified AI platform
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 gap-6 sm:gap-8">
+        <div className="grid sm:grid-cols-2 gap-6">
           {projects.map((project) => {
             const IconComponent = project.icon;
             return (
-              <div key={project.name} className="bg-white rounded-lg p-6 sm:p-8 shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="flex items-start space-x-4">
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 ${project.bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                    <IconComponent className={`h-5 w-5 sm:h-6 sm:w-6 ${project.iconColor}`} />
-                  </div>
-                  <div>
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
-                      {project.name}
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600 mb-3">
-                      {project.description}
-                    </p>
-                    <a 
-                      href={project.url}
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-black hover:text-gray-700 text-sm font-medium"
-                    >
-                      Visit {project.name} →
-                    </a>
-                  </div>
-                </div>
-              </div>
+              <a
+                key={project.name}
+                href={project.url}
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group relative block"
+              >
+                <Card className="bg-[#0a0a0a] border-[#1d1d1d] hover:border-[#2a2a2a] transition-all duration-300 h-full">
+                  <CardHeader>
+                    <div className="flex items-start gap-6">
+                      <div className="flex-shrink-0">
+                        <div className="w-14 h-14 rounded-xl bg-[#0f0f0f] border border-[#1c1c1c] flex items-center justify-center group-hover:bg-white transition-colors duration-300">
+                          <IconComponent className="h-7 w-7 text-white group-hover:text-black transition-colors duration-300" />
+                        </div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <CardTitle className="text-white group-hover:text-[#9c9c9c] transition-colors">
+                            {project.name}
+                          </CardTitle>
+                          <ArrowUpRight className="h-5 w-5 text-[#7d7d7d] group-hover:text-white transition-colors flex-shrink-0 mt-1" />
+                        </div>
+                        <CardDescription className="text-[#9c9c9c] leading-relaxed mb-4">
+                          {project.description}
+                        </CardDescription>
+                        <Badge variant="secondary" className="bg-[#0f0f0f] border-[#1c1c1c] text-[#9c9c9c] hover:bg-[#141414]">
+                          <span>Visit project</span>
+                          <ArrowUpRight className="h-3 w-3 ml-2" />
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              </a>
             );
           })}
         </div>
