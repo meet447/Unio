@@ -17,30 +17,25 @@ interface ModelInfo {
 }
 
 const modelsByProvider: Record<string, ModelInfo[]> = {
-  OpenAI: [
-    { name: "gpt-4o", context: "128k", strengths: "General reasoning, UI co-pilot", latency: "~150ms", status: "live" },
-    { name: "gpt-4o-mini", context: "128k", strengths: "High-volume chatbots", latency: "~90ms", status: "live" },
-    { name: "o1-preview", context: "200k", strengths: "Deep reasoning, planning", latency: "~400ms", status: "beta" },
-  ],
-  Anthropic: [
-    { name: "claude-3.5-sonnet", context: "200k", strengths: "Long-form reasoning, RAG", latency: "~180ms", status: "live" },
-    { name: "claude-3.5-haiku", context: "200k", strengths: "Streaming, customer support", latency: "~120ms", status: "live" },
-  ],
   Google: [
-    { name: "gemini-1.5-pro", context: "1M", strengths: "Multimodal, massive context", latency: "~220ms", status: "live" },
-    { name: "gemini-1.5-flash", context: "1M", strengths: "Interactive agents, copilots", latency: "~140ms", status: "live" },
+    { name: "google:gemini-2.5-flash-lite", context: "1M", strengths: "Fast, efficient responses", latency: "~100ms", status: "live" },
+    { name: "google:gemini-2.5-flash", context: "1M", strengths: "Balanced performance and speed", latency: "~120ms", status: "live" },
+    { name: "google:gemini-2.5-pro", context: "1M", strengths: "Advanced reasoning and capabilities", latency: "~200ms", status: "live" },
+    { name: "google:gemini-2.0-flash-lite", context: "1M", strengths: "Lightweight, fast responses", latency: "~90ms", status: "live" },
+    { name: "google:gemini-2.0-flash", context: "1M", strengths: "Fast multimodal understanding", latency: "~110ms", status: "live" },
+    { name: "google:gemini-2.0-pro", context: "1M", strengths: "High-performance reasoning", latency: "~180ms", status: "live" },
   ],
   Groq: [
-    { name: "llama-3.1-70b-versatile", context: "128k", strengths: "Ultra low latency responses", latency: "~50ms", status: "live" },
-    { name: "mixtral-8x7b", context: "32k", strengths: "Cost-efficient summarization", latency: "~45ms", status: "live" },
-  ],
-  Together: [
-    { name: "meta-llama-3-70b-instruct", context: "32k", strengths: "Enterprise copilots", latency: "~130ms", status: "live" },
-    { name: "mistral-large-latest", context: "32k", strengths: "Multilingual chat", latency: "~110ms", status: "beta" },
-  ],
-  OpenRouter: [
-    { name: "nous-hermes-3", context: "32k", strengths: "Creative writing", latency: "~160ms", status: "live" },
-    { name: "perplexity-llama-3-sonar-large", context: "64k", strengths: "Search-grounded QA", latency: "~200ms", status: "beta" },
+    { name: "groq:qwen/qwen3-32b", context: "128k", strengths: "Large-scale reasoning tasks", latency: "~60ms", status: "live" },
+    { name: "groq:groq/compound", context: "128k", strengths: "Complex multi-step reasoning", latency: "~70ms", status: "live" },
+    { name: "groq:groq/compound-mini", context: "128k", strengths: "Efficient compound reasoning", latency: "~50ms", status: "live" },
+    { name: "groq:llama-3.1-8b-instant", context: "128k", strengths: "Ultra-fast instant responses", latency: "~30ms", status: "live" },
+    { name: "groq:llama-3.3-70b-versatile", context: "128k", strengths: "Versatile high-performance model", latency: "~55ms", status: "live" },
+    { name: "groq:meta-llama/llama-4-maverick-17b-128e-instruct", context: "128k", strengths: "Advanced instruction following", latency: "~65ms", status: "live" },
+    { name: "groq:meta-llama/llama-4-scout-17b-16e-instruct", context: "128k", strengths: "Scout model for exploration", latency: "~60ms", status: "live" },
+    { name: "groq:moonshotai/kimi-k2-instruct-0905", context: "128k", strengths: "Specialized instruction tasks", latency: "~70ms", status: "live" },
+    { name: "groq:openai/gpt-oss-120b", context: "128k", strengths: "Massive scale reasoning", latency: "~80ms", status: "live" },
+    { name: "groq:openai/gpt-oss-20b", context: "128k", strengths: "Open source GPT alternative", latency: "~45ms", status: "live" },
   ],
 };
 

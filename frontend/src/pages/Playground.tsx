@@ -46,7 +46,7 @@ interface ChatMessage {
 const Playground = () => {
   const { user } = useAuth();
   const [apiKey, setApiKey] = useState<string>("");
-  const [model, setModel] = useState<string>("google:gemini-2.5-flash");
+  const [model, setModel] = useState<string>("google:gemini-2.5-flash-lite");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [prefilled, setPrefilled] = useState(false);
@@ -54,11 +54,22 @@ const Playground = () => {
   const [submitStatus, setSubmitStatus] = useState<"idle" | "submitted" | "streaming" | "error">("idle");
 
   const models = [
+    { value: "google:gemini-2.5-flash-lite", label: "Gemini 2.5 Flash Lite" },
     { value: "google:gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+    { value: "google:gemini-2.5-pro", label: "Gemini 2.5 Pro" },
+    { value: "google:gemini-2.0-flash-lite", label: "Gemini 2.0 Flash Lite" },
     { value: "google:gemini-2.0-flash", label: "Gemini 2.0 Flash" },
-    { value: "openai:gpt-4o-mini", label: "GPT-4o Mini" },
-    { value: "anthropic:claude-3-5-sonnet-20241022", label: "Claude 3.5 Sonnet" },
-    { value: "groq:llama-3.1-70b-versatile", label: "Llama 3.1 70B" },
+    { value: "google:gemini-2.0-pro", label: "Gemini 2.0 Pro" },
+    { value: "groq:qwen/qwen3-32b", label: "Qwen3 32B" },
+    { value: "groq:groq/compound", label: "Groq Compound" },
+    { value: "groq:groq/compound-mini", label: "Groq Compound Mini" },
+    { value: "groq:llama-3.1-8b-instant", label: "Llama 3.1 8B Instant" },
+    { value: "groq:llama-3.3-70b-versatile", label: "Llama 3.3 70B Versatile" },
+    { value: "groq:meta-llama/llama-4-maverick-17b-128e-instruct", label: "Llama 4 Maverick 17B" },
+    { value: "groq:meta-llama/llama-4-scout-17b-16e-instruct", label: "Llama 4 Scout 17B" },
+    { value: "groq:moonshotai/kimi-k2-instruct-0905", label: "Kimi K2 Instruct" },
+    { value: "groq:openai/gpt-oss-120b", label: "GPT-OSS 120B" },
+    { value: "groq:openai/gpt-oss-20b", label: "GPT-OSS 20B" },
   ];
 
   const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/v1/api";
