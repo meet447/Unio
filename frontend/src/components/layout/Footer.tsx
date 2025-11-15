@@ -76,9 +76,6 @@ const Footer = () => {
               <Link to="/help" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
                 Help Center
               </Link>
-              <a href="mailto:support" className="block text-sm text-gray-600 dark:text-gray-400 hover:text-black dark:hover:text-white transition-colors">
-                Contact Support
-              </a>
             </div>
           </div>
 

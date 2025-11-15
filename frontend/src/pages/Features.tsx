@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/kibo-ui/button";
 import { 
   Key, 
   RotateCcw, 
@@ -303,8 +303,8 @@ const Features = () => {
                     <span className="text-sm text-gray-600">Response Time</span>
                     <span className="text-sm font-semibold text-gray-900">&lt;100ms</span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-500 h-2 rounded-full" style={{ width: "95%" }}></div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-800 rounded-full h-2">
+                    <div className="bg-white dark:bg-gray-300 h-2 rounded-full" style={{ width: "95%" }}></div>
                   </div>
                 </div>
                 

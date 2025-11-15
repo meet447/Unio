@@ -1,13 +1,19 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/kibo-ui/toaster";
+import { Toaster as Sonner } from "@/components/kibo-ui/sonner";
+import { TooltipProvider } from "@/components/kibo-ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
 import Layout from "./components/layout/Layout";
+import DashboardLayout from "./components/layout/DashboardLayout";
 import Home from "./pages/Home";
 import Features from "./pages/Features";
 import Dashboard from "./pages/Dashboard";
+import ApiKeys from "./pages/ApiKeys";
+import Logs from "./pages/Logs";
+import Models from "./pages/Models";
+import Billing from "./pages/Billing";
 import Profile from "./pages/Profile";
 import HelpCenter from "./pages/HelpCenter";
 import Documentation from "./pages/Documentation";
@@ -26,6 +32,7 @@ import OAuthCallback from "./components/OAuthCallback";
 const queryClient = new QueryClient();
 
 const App = () => (
+  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
@@ -36,7 +43,6 @@ const App = () => (
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
               <Route path="features" element={<Features />} />
-              <Route path="dashboard" element={<Dashboard />} />
               <Route path="profile" element={<Profile />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="playground" element={<Playground />} />
@@ -51,12 +57,20 @@ const App = () => (
               <Route path="cookies" element={<CookiePolicy />} />
               <Route path="security" element={<Security />} />
             </Route>
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="api-keys" element={<ApiKeys />} />
+              <Route path="logs" element={<Logs />} />
+              <Route path="models" element={<Models />} />
+              <Route path="billing" element={<Billing />} />
+            </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
+  </ThemeProvider>
 );
 
 export default App;

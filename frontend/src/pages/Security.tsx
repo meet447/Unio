@@ -34,8 +34,8 @@ const Security = () => {
             </div>
 
             <div className="p-6 border border-gray-200 dark:border-gray-800 rounded-2xl">
-              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-4">
-                <Eye className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              <div className="w-12 h-12 bg-gray-800 dark:bg-gray-900 rounded-full flex items-center justify-center mb-4">
+                <Eye className="w-6 h-6 text-white dark:text-gray-300" />
               </div>
               <h3 className="text-lg font-medium text-black dark:text-white mb-2">
                 Zero-Knowledge Architecture
@@ -203,7 +203,7 @@ const Security = () => {
             </h2>
             
             <div className="space-y-6">
-              <div className="p-6 bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 rounded-2xl">
+              <div className="p-6 bg-gray-900 dark:bg-gray-950 border border-gray-800 dark:border-gray-800 rounded-2xl">
                 <h3 className="text-lg font-medium text-black dark:text-white mb-3">
                   Protect Your Account
                 </h3>
@@ -287,12 +287,6 @@ const Security = () => {
                 >
                   Contact Support
                 </Link>
-                <a 
-                  href="mailto:security"
-                  className="border border-gray-300 dark:border-gray-700 text-black dark:text-white px-6 py-3 rounded-full font-medium hover:border-gray-400 dark:hover:border-gray-600 transition-colors"
-                >
-                  Email Security Team
-                </a>
               </div>
             </div>
           </section>

@@ -1,7 +1,7 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@/components/kibo-ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/kibo-ui/card";
+import { Input } from "@/components/kibo-ui/input";
+import { Label } from "@/components/kibo-ui/label";
 import { Key, Mail, Lock, User, Github } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";

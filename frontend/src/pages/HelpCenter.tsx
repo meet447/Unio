@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/kibo-ui/button";
+import { Input } from "@/components/kibo-ui/input";
+import { Textarea } from "@/components/kibo-ui/textarea";
 import { 
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/kibo-ui/accordion";
 import { 
   Search, 
   MessageSquare, 

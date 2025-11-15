@@ -1,11 +1,11 @@
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/kibo-ui/card";
+import { Badge } from "@/components/kibo-ui/badge";
 
 const FeatureShowcase = () => {
   return (
     <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
       {/* API Logs Demo */}
-      <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
+      <Card className="p-6 bg-gray-900 dark:bg-gray-950 border-gray-800 dark:border-gray-800">
         <div className="mb-4">
           <h3 className="font-semibold">Real-time API Logs</h3>
         </div>

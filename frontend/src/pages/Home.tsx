@@ -10,7 +10,7 @@ import {
 
 const Home = () => {
   return (
-    <div className="bg-white">
+    <div className="bg-[#030303]">
       <HeroSection />
       <HowItWorksSection />
       <CodeExampleSection />
