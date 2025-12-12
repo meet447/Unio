@@ -136,8 +136,19 @@ const ApiKeys = () => {
     );
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+        <div className="text-center bg-[#0a0a0a]/50 backdrop-blur-md p-8 rounded-[1.5rem] border border-[#1b1b1b] shadow-2xl">
+          <Loader2 className="w-10 h-10 animate-spin text-[#93c5fd] mx-auto mb-4" />
+          <p className="text-[#b0b0b0] text-lg">Loading API keys...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#030303] text-white p-4 sm:p-6 lg:p-10">
+    <div className="text-white p-4 sm:p-6 lg:p-10">
       <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
           <div>
@@ -171,15 +182,15 @@ const ApiKeys = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="border border-[#1b1b1b] rounded-2xl p-5 bg-[#050505]">
+          <div className="border border-[#1b1b1b] rounded-[1.5rem] p-5 bg-[#0a0a0a]/50 backdrop-blur-md shadow-2xl">
             <p className="text-sm text-[#7f7f7f] mb-2">Total Keys</p>
             <p className="text-3xl font-semibold">{stats.total}</p>
           </div>
-          <div className="border border-[#1b1b1b] rounded-2xl p-5 bg-[#050505]">
+          <div className="border border-[#1b1b1b] rounded-[1.5rem] p-5 bg-[#0a0a0a]/50 backdrop-blur-md shadow-2xl">
             <p className="text-sm text-[#7f7f7f] mb-2">Active Keys</p>
             <p className="text-3xl font-semibold">{stats.active}</p>
           </div>
-          <div className="border border-[#1b1b1b] rounded-2xl p-5 bg-[#050505]">
+          <div className="border border-[#1b1b1b] rounded-[1.5rem] p-5 bg-[#0a0a0a]/50 backdrop-blur-md shadow-2xl">
             <p className="text-sm text-[#7f7f7f] mb-2">Lifetime Requests</p>
             <p className="text-3xl font-semibold">{stats.usage.toLocaleString()}</p>
           </div>
@@ -196,27 +207,28 @@ const ApiKeys = () => {
             <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-[#6f6f6f] ml-2 flex-shrink-0" />
           </div>
 
+
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-[#8c8c8c] border border-[#1b1b1b] rounded-2xl bg-[#050505]">
+            <div className="flex items-center justify-center py-16 text-[#8c8c8c] border border-[#1b1b1b] rounded-[1.5rem] bg-[#0a0a0a]/50 backdrop-blur-md shadow-2xl">
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               Fetching API keys
             </div>
           ) : apiKeys.length === 0 ? (
-            <div className="text-center py-16 text-[#9d9d9d] border border-[#1b1b1b] rounded-2xl bg-[#050505]">
+            <div className="text-center py-16 text-[#9d9d9d] border border-[#1b1b1b] rounded-[1.5rem] bg-[#0a0a0a]/50 backdrop-blur-md shadow-2xl">
               <p>No API keys yet. Add your first provider credential to get started.</p>
             </div>
           ) : (
             <div className="space-y-6">
               {Object.entries(groupedKeys).map(([providerName, keys]) => (
-                <div key={providerName} className="border border-[#1b1b1b] rounded-2xl sm:rounded-3xl bg-[#050505] overflow-hidden">
-                  <div className="bg-[#0a0a0a] px-4 sm:px-6 py-3 border-b border-[#1c1c1c]">
+                <div key={providerName} className="border border-[#1b1b1b] rounded-[1.5rem] sm:rounded-[2rem] bg-[#0a0a0a]/50 backdrop-blur-md shadow-2xl overflow-hidden">
+                  <div className="bg-[#0a0a0a]/50 backdrop-blur-md px-4 sm:px-6 py-3 border-b border-[#1b1b1b]">
                     <h3 className="text-sm font-semibold text-[#e1e1e1] uppercase tracking-wider">
                       {providerName}
                     </h3>
                   </div>
-                  <div className="divide-y divide-[#111111]">
+                  <div className="divide-y divide-[#1b1b1b]">
                     {keys.map((key) => (
-                      <div key={key.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5 hover:bg-[#0a0a0a]/50 transition-colors">
+                      <div key={key.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5 hover:bg-[#121212]/50 transition-colors">
                         <div className="flex-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
                             <p className="text-base sm:text-lg font-medium truncate">{key.name}</p>

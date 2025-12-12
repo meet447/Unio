@@ -122,8 +122,19 @@ const Logs = () => {
     );
   }
 
+  if (loading && logs.length === 0) { // Only show full page loader if no logs are loaded yet
+    return (
+      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+        <div className="text-center bg-[#0a0a0a]/50 backdrop-blur-md p-8 rounded-[1.5rem] border border-[#1b1b1b] shadow-2xl">
+          <RefreshCw className="w-10 h-10 animate-spin text-[#93c5fd] mx-auto mb-4" />
+          <p className="text-[#b0b0b0] text-lg">Loading logs...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#030303] text-white p-4 sm:p-6 lg:p-10">
+    <div className="text-white p-4 sm:p-6 lg:p-10">
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
@@ -168,53 +179,53 @@ const Logs = () => {
                 placeholder="Search by model, provider, or key name..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 bg-[#0b0b0b] border-[#1f1f1f] text-white placeholder-[#6f6f6f]"
+                className="pl-10 bg-[#0a0a0a]/50 backdrop-blur-md border-[#1b1b1b] text-white placeholder-[#6f6f6f]"
               />
             </div>
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-full sm:w-40 bg-[#0b0b0b] border-[#1f1f1f] text-white hover:bg-[#121212]">
+            <SelectTrigger className="w-full sm:w-40 bg-[#0a0a0a]/50 backdrop-blur-md border-[#1b1b1b] text-white hover:bg-[#121212]/50">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[#0b0b0b] border-[#1f1f1f] text-white">
-              <SelectItem value="all" className="text-white focus:bg-[#151515]">All Time</SelectItem>
-              <SelectItem value="1d" className="text-white focus:bg-[#151515]">Last 24h</SelectItem>
-              <SelectItem value="7d" className="text-white focus:bg-[#151515]">Last 7 days</SelectItem>
-              <SelectItem value="30d" className="text-white focus:bg-[#151515]">Last 30 days</SelectItem>
-              <SelectItem value="90d" className="text-white focus:bg-[#151515]">Last 90 days</SelectItem>
+            <SelectContent className="bg-[#0a0a0a]/80 backdrop-blur-md border-[#1b1b1b] text-white">
+              <SelectItem value="all" className="text-white focus:bg-[#151515]/50">All Time</SelectItem>
+              <SelectItem value="1d" className="text-white focus:bg-[#151515]/50">Last 24h</SelectItem>
+              <SelectItem value="7d" className="text-white focus:bg-[#151515]/50">Last 7 days</SelectItem>
+              <SelectItem value="30d" className="text-white focus:bg-[#151515]/50">Last 30 days</SelectItem>
+              <SelectItem value="90d" className="text-white focus:bg-[#151515]/50">Last 90 days</SelectItem>
             </SelectContent>
           </Select>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-full sm:w-40 bg-[#0b0b0b] border-[#1f1f1f] text-white hover:bg-[#121212]">
+            <SelectTrigger className="w-full sm:w-40 bg-[#0a0a0a]/50 backdrop-blur-md border-[#1b1b1b] text-white hover:bg-[#121212]/50">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-[#0b0b0b] border-[#1f1f1f] text-white">
-              <SelectItem value="all" className="text-white focus:bg-[#151515]">All Status</SelectItem>
-              <SelectItem value="success" className="text-white focus:bg-[#151515]">Success</SelectItem>
-              <SelectItem value="error" className="text-white focus:bg-[#151515]">Errors</SelectItem>
+            <SelectContent className="bg-[#0a0a0a]/80 backdrop-blur-md border-[#1b1b1b] text-white">
+              <SelectItem value="all" className="text-white focus:bg-[#151515]/50">All Status</SelectItem>
+              <SelectItem value="success" className="text-white focus:bg-[#151515]/50">Success</SelectItem>
+              <SelectItem value="error" className="text-white focus:bg-[#151515]/50">Errors</SelectItem>
             </SelectContent>
           </Select>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-3 sm:p-4">
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-3 sm:p-4 shadow-2xl">
             <p className="text-xs sm:text-sm text-[#7f7f7f] mb-1">Total Logs</p>
             <p className="text-xl sm:text-2xl font-semibold">{totalCount.toLocaleString()}</p>
           </div>
-          <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-3 sm:p-4">
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-3 sm:p-4 shadow-2xl">
             <p className="text-xs sm:text-sm text-[#7f7f7f] mb-1">Success</p>
             <p className="text-xl sm:text-2xl font-semibold text-green-500">
               {logs.filter(l => l.status && l.status >= 200 && l.status < 300).length}
             </p>
           </div>
-          <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-3 sm:p-4">
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-3 sm:p-4 shadow-2xl">
             <p className="text-xs sm:text-sm text-[#7f7f7f] mb-1">Errors</p>
             <p className="text-xl sm:text-2xl font-semibold text-red-500">
               {logs.filter(l => l.status && l.status >= 400).length}
             </p>
           </div>
-          <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-3 sm:p-4">
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-3 sm:p-4 shadow-2xl">
             <p className="text-xs sm:text-sm text-[#7f7f7f] mb-1">Avg Response</p>
             <p className="text-xl sm:text-2xl font-semibold">
               {logs.length > 0 
@@ -225,25 +236,25 @@ const Logs = () => {
         </div>
 
         {/* Logs Table */}
-        <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg overflow-hidden">
+        <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] overflow-hidden shadow-2xl">
           {loading && logs.length === 0 ? (
-            <div className="flex items-center justify-center py-16 text-[#8c8c8c]">
+            <div className="flex items-center justify-center py-16 text-[#8c8c8c] bg-[#0a0a0a]/50 backdrop-blur-md">
               <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
               Loading logs...
             </div>
           ) : error ? (
-            <div className="flex items-center justify-center py-16 text-red-500">
+            <div className="flex items-center justify-center py-16 text-red-500 bg-[#0a0a0a]/50 backdrop-blur-md">
               <AlertCircle className="w-5 h-5 mr-2" />
               Error loading logs: {error.message}
             </div>
           ) : displayedLogs.length === 0 ? (
-            <div className="text-center py-16 text-[#9d9d9d]">
+            <div className="text-center py-16 text-[#9d9d9d] bg-[#0a0a0a]/50 backdrop-blur-md">
               <p>No logs found matching your filters.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
-                <thead className="bg-[#0f0f0f] border-b border-[#1c1c1c]">
+                <thead className="bg-[#0f0f0f]/50 border-b border-[#1b1b1b]">
                   <tr>
                     <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-[#b5b5b5] uppercase tracking-wider">
                       Timestamp
@@ -278,7 +289,7 @@ const Logs = () => {
                     
                     return (
                       <>
-                        <tr key={log.log_id} className="hover:bg-[#0f0f0f] transition-colors">
+                        <tr key={log.log_id} className="hover:bg-[#0f0f0f]/50 transition-colors">
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-[#9d9d9d] font-mono">
                             {log.time_stamp ? new Date(log.time_stamp).toLocaleString() : 'N/A'}
                           </td>
@@ -338,9 +349,9 @@ const Logs = () => {
                         </tr>
                         {isExpanded && (
                           <tr>
-                            <td colSpan={8} className="px-4 sm:px-6 py-4 bg-[#0f0f0f]">
+                            <td colSpan={8} className="px-4 sm:px-6 py-4 bg-[#0f0f0f]/50">
                               <div className="space-y-4">
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#050505] p-3 rounded border border-[#1c1c1c]">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#0a0a0a]/50 p-3 rounded-[1rem] border border-[#1b1b1b]">
                                   <div>
                                     <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Performance</span>
                                     <div className="space-y-1">
@@ -399,13 +410,13 @@ const Logs = () => {
 
                                 <div>
                                   <h4 className="text-sm font-medium text-white mb-2">Request Payload</h4>
-                                  <pre className="text-xs bg-[#050505] p-3 rounded border border-[#1c1c1c] overflow-x-auto text-[#9d9d9d]">
+                                  <pre className="text-xs bg-[#0a0a0a]/50 p-3 rounded-[1rem] border border-[#1b1b1b] overflow-x-auto text-[#9d9d9d]">
                                     {JSON.stringify(log.request_payload, null, 2)}
                                   </pre>
                                 </div>
                                 <div>
                                   <h4 className="text-sm font-medium text-white mb-2">Response Payload</h4>
-                                  <pre className="text-xs bg-[#050505] p-3 rounded border border-[#1c1c1c] overflow-x-auto text-[#9d9d9d]">
+                                  <pre className="text-xs bg-[#0a0a0a]/50 p-3 rounded-[1rem] border border-[#1b1b1b] overflow-x-auto text-[#9d9d9d]">
                                     {JSON.stringify(log.response_payload, null, 2)}
                                   </pre>
                                 </div>

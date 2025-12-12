@@ -47,11 +47,17 @@ const statusCopy: Record<ModelInfo["status"], { label: string; className: string
 
 const Models = () => {
   const [providers, setProviders] = useState<ProviderRow[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProviders = async () => {
-      const { data } = await supabase.from("providers").select("*").order("name");
-      setProviders(data || []);
+      setLoading(true);
+      try {
+        const { data } = await supabase.from("providers").select("*").order("name");
+        setProviders(data || []);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProviders();
@@ -73,8 +79,19 @@ const Models = () => {
     }));
   }, [providers]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+        <div className="text-center bg-[#0a0a0a]/50 backdrop-blur-md p-8 rounded-[1.5rem] border border-[#1b1b1b] shadow-2xl">
+          <Loader2 className="w-10 h-10 animate-spin text-[#93c5fd] mx-auto mb-4" />
+          <p className="text-[#b0b0b0] text-lg">Loading models...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#030303] text-white p-6 lg:p-10">
+    <div className="text-white p-6 lg:p-10">
       <div className="max-w-6xl mx-auto space-y-10">
         <div>
           <p className="text-sm uppercase tracking-[0.25rem] text-[#6f6f6f] mb-3">Model Matrix</p>
@@ -91,7 +108,7 @@ const Models = () => {
           {providerCards.map((provider) => (
             <div
               key={provider.id}
-              className="rounded-3xl border border-[#1a1a1a] bg-[#050505] p-6 flex flex-col gap-4"
+              className="rounded-[1.5rem] border border-[#1b1b1b] bg-[#0a0a0a]/50 backdrop-blur-md p-6 flex flex-col gap-4 shadow-2xl"
             >
               <div className="flex items-center justify-between">
                 <div>
@@ -106,7 +123,7 @@ const Models = () => {
               </div>
 
               {provider.models.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-[#242424] p-4 text-sm text-[#8c8c8c]">
+                <div className="rounded-[1rem] border border-dashed border-[#1b1b1b] p-4 text-sm text-[#8c8c8c] bg-[#0a0a0a]/50">
                   Model catalog coming soon for this provider.
                 </div>
               ) : (
@@ -114,7 +131,7 @@ const Models = () => {
                   {provider.models.map((model) => (
                     <div
                       key={`${provider.name}-${model.name}`}
-                      className="rounded-2xl border border-[#161616] bg-[#090909] px-4 py-3"
+                      className="rounded-[1rem] border border-[#1b1b1b] bg-[#0a0a0a]/50 backdrop-blur-sm px-4 py-3"
                     >
                       <div className="flex items-center justify-between gap-4 mb-1">
                         <p className="font-medium">{model.name}</p>
