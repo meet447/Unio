@@ -7,120 +7,109 @@ import {
   Plug,
   Zap,
   Database,
+  ShieldCheck,
+  Activity,
+  Layers
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/kibo-ui/card";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/kibo-ui/button";
 import { Badge } from "@/components/kibo-ui/badge";
-import { Link } from "react-router-dom";
-
-interface Feature {
-  title: string;
-  description: string;
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  alt: string;
-}
-
-const FeaturesSection: Feature[] = [
-  {
-    title: "Bring Your Own Keys",
-    description:
-      "Use your existing API keys across all providers. Secure storage with AES-256 encryption and intelligent key organization.",
-    icon: Key,
-    alt: "API key management feature",
-  },
-  {
-    title: "Automatic Key Rotation",
-    description:
-      "Intelligent load balancing and failover across your API keys. Never worry about rate limits or key failures again.",
-    icon: RotateCcw,
-    alt: "Automatic key rotation feature",
-  },
-  {
-    title: "Advanced Analytics",
-    description:
-      "Track usage, costs, and performance across all providers. Real-time metrics and comprehensive logging for insights.",
-    icon: BarChart3,
-    alt: "Advanced analytics feature",
-  },
-  {
-    title: "OpenAI SDK Compatible",
-    description:
-      "Drop-in replacement for existing OpenAI integrations. No code changes needed - just update your base URL and API key.",
-    icon: Plug,
-    alt: "OpenAI SDK compatibility feature",
-  },
-  {
-    title: "Smart Fallback System",
-    description:
-      "Automatic provider switching on failures. Configure fallback chains to ensure your applications never go down.",
-    icon: Zap,
-    alt: "Smart fallback system feature",
-  },
-  {
-    title: "Semantic Caching",
-    description:
-      "Coming soon: Reduce costs with intelligent response caching. Save money by avoiding duplicate requests across providers.",
-    icon: Database,
-    alt: "Semantic caching feature",
-  },
-];
-
-interface FeatureCardProps extends Feature {}
-
-const FeatureCard: React.FC<FeatureCardProps> = ({
-  title,
-  description,
-  icon: Icon,
-}) => (
-  <Card className="bg-[#0a0a0a] border-[#1d1d1d] hover:border-[#2a2a2a] transition-colors h-full">
-    <CardHeader>
-      <div className="w-12 h-12 rounded-lg bg-[#0f0f0f] border border-[#1c1c1c] flex items-center justify-center mb-4">
-        <Icon className="h-6 w-6 text-white" />
-      </div>
-      <CardTitle className="text-white text-xl">{title}</CardTitle>
-    </CardHeader>
-    <CardContent>
-      <CardDescription className="text-[#9c9c9c] leading-relaxed">
-        {description}
-      </CardDescription>
-    </CardContent>
-  </Card>
-);
 
 const FeaturesOverview: React.FC = () => {
   return (
-    <section className="py-20 bg-[#030303] border-y border-[#1b1b1b]">
+    <section className="py-24 bg-[#030303] border-y border-[#1b1b1b]">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto flex flex-col gap-12">
+        <div className="max-w-7xl mx-auto flex flex-col gap-16">
           {/* Header */}
-          <div className="flex flex-col items-start text-left gap-4 max-w-3xl">
-            <Badge variant="secondary" className="bg-[#0a0a0a] border-[#1d1d1d] text-[#9c9c9c] hover:bg-[#0f0f0f]">
-              AI Gateway
+          <div className="flex flex-col items-center text-center gap-6 max-w-3xl mx-auto">
+            <Badge variant="secondary" className="bg-[#0f0f0f] border-[#1d1d1d] text-[#9c9c9c] hover:bg-[#1a1a1a] px-4 py-1.5 rounded-full font-normal">
+              Power Features
             </Badge>
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl leading-[1.2] font-bold tracking-tight text-white">
-              A complete AI gateway solution with all the features you need.
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+              Everything you need to scale.
             </h2>
-            <p className="text-lg sm:text-xl text-[#9c9c9c] leading-relaxed">
-              Unio is packed with powerful features that enable you to seamlessly
-              manage multiple LLM providers through a single, unified interface.
+            <p className="text-lg sm:text-xl text-[#888] font-light max-w-2xl">
+              Powerful tools designed to give you complete control over your LLM infrastructure.
             </p>
           </div>
 
-          {/* Features */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FeaturesSection.map((feature, index) => (
-              <FeatureCard key={index} {...feature} />
-            ))}
-          </div>
+          {/* Bento Grid Features */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 auto-rows-[minmax(250px,auto)]">
+            
+            {/* Feature 1: Smart Fallback (Large, Pastel Blue) */}
+            <div className="md:col-span-2 rounded-3xl p-8 bg-[#93c5fd] text-black flex flex-col justify-between transition-transform hover:scale-[1.01] duration-300">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-black/10 flex items-center justify-center">
+                  <Zap className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-2xl font-bold tracking-tight">Smart Model Fallback</h3>
+                <p className="text-lg text-black/80 font-medium max-w-md">
+                  Ensure 99.99% uptime with automatic provider switching. Configure fallback chains that trigger instantly on failures or rate limits.
+                </p>
+              </div>
+              <div className="mt-8 flex items-center justify-center">
+                 {/* Decorative mock UI element */}
+                 <div className="w-full h-32 bg-white/30 rounded-xl backdrop-blur-sm border border-white/20 flex items-center justify-center">
+                    <Activity className="h-12 w-12 text-black/50" />
+                 </div>
+              </div>
+            </div>
 
-          {/* Call-to-action */}
-          <div className="flex justify-center mt-4">
-            <Button asChild variant="outline" className="border-[#1f1f1f] text-white hover:bg-[#0a0a0a]">
-              <Link to="/features" className="inline-flex items-center gap-2">
-                Explore more features
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+            {/* Feature 2: Analytics (Standard, Pastel Mint) */}
+            <div className="rounded-3xl p-8 bg-[#a7f3d0] text-black flex flex-col justify-between transition-transform hover:scale-[1.01] duration-300">
+               <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-black/10 flex items-center justify-center">
+                  <BarChart3 className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-2xl font-bold tracking-tight">Built-in Analytics</h3>
+                <p className="text-base text-black/80 font-medium">
+                   Track usage, costs, and latency in real-time. Gain deep insights into your AI traffic.
+                </p>
+              </div>
+              <div className="mt-6 flex justify-end">
+                <BarChart3 className="h-24 w-24 text-black/10 -mb-4 -mr-4" />
+              </div>
+            </div>
+
+            {/* Feature 3: BYOK (Standard, Pastel Purple) */}
+            <div className="rounded-3xl p-8 bg-[#e9d5ff] text-black flex flex-col justify-between transition-transform hover:scale-[1.01] duration-300">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-black/10 flex items-center justify-center">
+                  <Key className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">Bring Your Own Keys</h3>
+                <p className="text-sm text-black/80 leading-relaxed">
+                  Your keys, your control. We securely encrypt and store your credentials.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 4: OpenAI Compatible (Standard, Pastel Blue) */}
+            <div className="rounded-3xl p-8 bg-[#c7d2fe] text-black flex flex-col justify-between transition-transform hover:scale-[1.01] duration-300">
+              <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-black/10 flex items-center justify-center">
+                  <Plug className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">Drop-in Compatible</h3>
+                <p className="text-sm text-black/80 leading-relaxed">
+                  Works with the OpenAI SDK. Just change two lines of code to switch.
+                </p>
+              </div>
+            </div>
+
+            {/* Feature 5: Key Rotation (Standard, Pastel Peach) */}
+             <div className="rounded-3xl p-8 bg-[#fed7aa] text-black flex flex-col justify-between transition-transform hover:scale-[1.01] duration-300">
+               <div className="space-y-4">
+                <div className="w-12 h-12 rounded-2xl bg-black/10 flex items-center justify-center">
+                  <RotateCcw className="h-6 w-6 text-black" />
+                </div>
+                <h3 className="text-xl font-bold tracking-tight">Automatic Key Rotation</h3>
+                <p className="text-sm text-black/80 leading-relaxed">
+                  Distribute load intelligently across multiple keys to bypass rate limits.
+                </p>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

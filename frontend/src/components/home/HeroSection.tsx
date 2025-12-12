@@ -2,87 +2,60 @@ import React from 'react';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/kibo-ui/button';
-import { Card, CardContent } from '@/components/kibo-ui/card';
 import { Badge } from '@/components/kibo-ui/badge';
 
 const HeroSection = () => {
   return (
-    <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-[#030303] border-b border-[#1b1b1b]">
-      {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#030303] via-[#050505] to-[#030303]" />
-      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-white/5 rounded-full blur-3xl opacity-50" />
-      <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-white/5 rounded-full blur-3xl opacity-50" />
-      
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left side - Headline */}
-            <div className="space-y-6">
-              <Badge variant="secondary" className="bg-[#0a0a0a] border-[#1d1d1d] text-[#9c9c9c] hover:bg-[#0f0f0f]">
-                <Sparkles className="w-3 h-3 mr-2" />
+    <div className="bg-[#030303] px-4 pt-4 sm:px-6 sm:pt-6 lg:px-8 lg:pt-8">
+      <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-[#0a0a0a] border border-[#1b1b1b] rounded-[3rem] shadow-2xl">
+        {/* Background Textures & Pastels */}
+        <div className="absolute inset-0 bg-[#0a0a0a]">
+          {/* Pastel Orbs - Increased opacity for brightness */}
+          <div className="absolute top-[-20%] left-[-10%] w-[1000px] h-[1000px] bg-[#93c5fd]/20 rounded-full blur-[150px] pointer-events-none mix-blend-screen" />
+          <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-[#fed7aa]/20 rounded-full blur-[150px] pointer-events-none mix-blend-screen" />
+          <div className="absolute top-[40%] left-[50%] -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#a7f3d0]/10 rounded-full blur-[120px] pointer-events-none mix-blend-screen" />
+          
+          {/* Noise Texture */}
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
+        </div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-4xl mx-auto text-center space-y-8">
+            <div className="flex justify-center">
+              <Badge variant="secondary" className="bg-[#93c5fd]/20 border-[#93c5fd]/30 text-[#93c5fd] hover:bg-[#93c5fd]/30 px-4 py-1.5 text-sm font-medium rounded-full transition-colors backdrop-blur-sm shadow-md">
+                <Sparkles className="w-3.5 h-3.5 mr-2" />
                 Universal AI Gateway
               </Badge>
-              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-white leading-[1.1]">
-                One API.
-                <br />
-                <span className="text-[#9c9c9c]">Every Model.</span>
-              </h1>
-              <p className="text-lg sm:text-xl text-[#9c9c9c] leading-relaxed max-w-xl">
-                Unify all your AI providers through a single, OpenAI-compatible API. Bring your own keys, we handle the complexity.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <Button asChild size="lg" className="bg-white text-black hover:bg-[#e1e1e1]">
-                  <Link to="/register" className="inline-flex items-center gap-2">
-                    Get Started Free
-                    <ArrowRight className="h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button asChild variant="outline" size="lg" className="border-[#1f1f1f] text-white hover:bg-[#0a0a0a]">
-                  <Link to="/playground" className="inline-flex items-center gap-2">
-                    Try Playground
-                  </Link>
-                </Button>
-              </div>
             </div>
-
-            {/* Right side - Feature Card */}
-            <div className="hidden lg:block">
-              <Card className="bg-[#0a0a0a] border-[#1d1d1d] shadow-xl">
-                <CardContent className="p-8 space-y-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-[#7d7d7d] uppercase tracking-wider">Supported Providers</span>
-                      <Badge variant="secondary" className="bg-[#132315] text-[#82f2a6] border-0">10+</Badge>
-                    </div>
-                    <div className="grid grid-cols-3 gap-3">
-                      {['OpenAI', 'Anthropic', 'Google', 'Groq', 'Together', 'More'].map((provider, i) => (
-                        <div key={i} className="bg-[#0f0f0f] border border-[#1c1c1c] rounded-lg p-3 text-center">
-                          <span className="text-sm text-white font-medium">{provider}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="pt-4 border-t border-[#1c1c1c]">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-[#7d7d7d]">OpenAI Compatible</span>
-                      <span className="text-white font-semibold">✓</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm mt-2">
-                      <span className="text-[#7d7d7d]">Zero Code Changes</span>
-                      <span className="text-white font-semibold">✓</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm mt-2">
-                      <span className="text-[#7d7d7d]">Automatic Failover</span>
-                      <span className="text-white font-semibold">✓</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+            
+            <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold tracking-tight text-white leading-[1.1]">
+              One API.
+              <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-[#bbf2f7] to-white">Every Model.</span>
+            </h1>
+            
+            <p className="text-lg sm:text-xl text-[#b0b0b0] leading-relaxed max-w-2xl mx-auto font-light">
+              Unify all your AI providers through a single, OpenAI-compatible API. 
+              Bring your own keys, we handle the complexity.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-4 pt-6 justify-center">
+              <Button asChild size="lg" className="h-12 px-8 bg-white text-black hover:bg-[#f0f0f0] rounded-full font-semibold text-base transition-all hover:scale-105 border-0 shadow-lg">
+                <Link to="/register" className="inline-flex items-center gap-2">
+                  Get Started Free
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline" size="lg" className="h-12 px-8 border-white/20 bg-white/10 text-white hover:bg-white/15 rounded-full font-medium text-base backdrop-blur-sm shadow-lg">
+                <Link to="/playground" className="inline-flex items-center gap-2">
+                  Try Playground
+                </Link>
+              </Button>
             </div>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 };
 

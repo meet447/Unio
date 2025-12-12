@@ -35,26 +35,29 @@ const CodeExampleSection: React.FC = () => {
   };
   
   return (
-    <section className="py-20 bg-[#030303] border-y border-[#1b1b1b] px-4 sm:px-6 lg:px-8">
+    <section className="py-24 bg-[#030303] border-y border-[#1b1b1b] px-4 sm:px-6 lg:px-8">
       <div className="max-w-6xl mx-auto">
         {/* Heading */}
-        <div className="text-center mb-12 sm:mb-16">
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white mb-4">
-            Drop-in replacement for OpenAI
+        <div className="text-center mb-16 space-y-4">
+          <Badge variant="secondary" className="bg-[#0f0f0f] border-[#1d1d1d] text-[#9c9c9c] hover:bg-[#1a1a1a] px-4 py-1.5 rounded-full font-normal">
+             Developer Experience
+          </Badge>
+          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-tight">
+            Drop-in replacement.
           </h2>
-          <p className="text-lg sm:text-xl text-[#9c9c9c] max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-[#888] font-light max-w-2xl mx-auto">
             Use your existing code with any provider. Just change the base URL.
           </p>
         </div>
 
         {/* Code block */}
-        <Card className="bg-[#0a0a0a] border-[#1d1d1d] overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between px-6 py-4 bg-[#0f0f0f] border-b border-[#1c1c1c]">
+        <div className="rounded-3xl border border-[#1d1d1d] bg-[#0a0a0a] overflow-hidden shadow-2xl">
+          <div className="flex flex-row items-center justify-between px-6 py-4 bg-[#0f0f0f] border-b border-[#1c1c1c]">
             {/* Traffic lights */}
             <div className="flex items-center space-x-2">
-              <span className="w-3 h-3 bg-red-500 rounded-full" />
-              <span className="w-3 h-3 bg-yellow-500 rounded-full" />
-              <span className="w-3 h-3 bg-green-500 rounded-full" />
+              <span className="w-3 h-3 bg-red-500 rounded-full opacity-20" />
+              <span className="w-3 h-3 bg-yellow-500 rounded-full opacity-20" />
+              <span className="w-3 h-3 bg-green-500 rounded-full opacity-20" />
             </div>
 
             {/* Code language and copy button */}
@@ -82,9 +85,9 @@ const CodeExampleSection: React.FC = () => {
                 )}
               </Button>
             </div>
-          </CardHeader>
+          </div>
 
-          <CardContent className="p-0">
+          <div className="p-0">
             {/* Code content with syntax highlighting */}
             <div className="overflow-x-auto">
               <SyntaxHighlighter
@@ -96,6 +99,7 @@ const CodeExampleSection: React.FC = () => {
                   background: 'transparent',
                   fontSize: '14px',
                   lineHeight: '1.5',
+                  fontFamily: 'Menlo, Monaco, Consolas, "Courier New", monospace',
                 }}
                 showLineNumbers={false}
                 wrapLines={true}
@@ -103,8 +107,8 @@ const CodeExampleSection: React.FC = () => {
                 {codeExample}
               </SyntaxHighlighter>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </section>
   );

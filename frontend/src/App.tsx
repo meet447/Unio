@@ -13,19 +13,13 @@ import Dashboard from "./pages/Dashboard";
 import ApiKeys from "./pages/ApiKeys";
 import Logs from "./pages/Logs";
 import Models from "./pages/Models";
-import Billing from "./pages/Billing";
 import Profile from "./pages/Profile";
-import HelpCenter from "./pages/HelpCenter";
-import Documentation from "./pages/Documentation";
 import Analytics from "./pages/Analytics";
 import Playground from "./pages/Playground";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
 import CheckEmail from "./pages/CheckEmail";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import TermsOfService from "./pages/TermsOfService";
-import CookiePolicy from "./pages/CookiePolicy";
 import Security from "./pages/Security";
 import OAuthCallback from "./components/OAuthCallback";
 
@@ -46,15 +40,10 @@ const App = () => (
               <Route path="profile" element={<Profile />} />
               <Route path="analytics" element={<Analytics />} />
               <Route path="playground" element={<Playground />} />
-              <Route path="docs" element={<Documentation />} />
-              <Route path="help" element={<HelpCenter />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               <Route path="check-email" element={<CheckEmail />} />
               <Route path="auth/callback" element={<OAuthCallback />} />
-              <Route path="privacy" element={<PrivacyPolicy />} />
-              <Route path="terms" element={<TermsOfService />} />
-              <Route path="cookies" element={<CookiePolicy />} />
               <Route path="security" element={<Security />} />
             </Route>
             <Route path="/dashboard" element={<DashboardLayout />}>
@@ -62,7 +51,6 @@ const App = () => (
               <Route path="api-keys" element={<ApiKeys />} />
               <Route path="logs" element={<Logs />} />
               <Route path="models" element={<Models />} />
-              <Route path="billing" element={<Billing />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

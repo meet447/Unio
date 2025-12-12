@@ -118,6 +118,16 @@ const ApiKeys = () => {
     return { total, active, usage };
   }, [apiKeys]);
 
+  const groupedKeys = useMemo(() => {
+    return apiKeys.reduce((acc, key) => {
+      if (!acc[key.provider_name]) {
+        acc[key.provider_name] = [];
+      }
+      acc[key.provider_name].push(key);
+      return acc;
+    }, {} as Record<string, ApiKeyRecord[]>);
+  }, [apiKeys]);
+
   if (!user) {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-[#b0b0b0] bg-[#030303]">
@@ -175,9 +185,9 @@ const ApiKeys = () => {
           </div>
         </div>
 
-        <div className="border border-[#1b1b1b] rounded-2xl sm:rounded-3xl bg-[#050505] overflow-hidden">
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-[#1c1c1c]">
-            <div className="flex-1">
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+            <div>
               <p className="text-base sm:text-lg font-medium">Stored keys</p>
               <p className="text-xs sm:text-sm text-[#8c8c8c] mt-1">
                 Every key stays encrypted at rest. Delete instantly when no longer required.
@@ -187,61 +197,69 @@ const ApiKeys = () => {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-16 text-[#8c8c8c]">
+            <div className="flex items-center justify-center py-16 text-[#8c8c8c] border border-[#1b1b1b] rounded-2xl bg-[#050505]">
               <Loader2 className="w-5 h-5 mr-2 animate-spin" />
               Fetching API keys
             </div>
           ) : apiKeys.length === 0 ? (
-            <div className="text-center py-16 text-[#9d9d9d]">
+            <div className="text-center py-16 text-[#9d9d9d] border border-[#1b1b1b] rounded-2xl bg-[#050505]">
               <p>No API keys yet. Add your first provider credential to get started.</p>
             </div>
           ) : (
-            <div className="divide-y divide-[#111111]">
-              {apiKeys.map((key) => (
-                <div key={key.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
-                      <p className="text-base sm:text-lg font-medium truncate">{key.name}</p>
-                      <Badge
-                        variant="secondary"
-                        className={`${
-                          key.is_active ? "bg-[#132315] text-[#82f2a6]" : "bg-[#2b2b2b] text-[#d3d3d3]"
-                        } border-0 text-xs`}
-                      >
-                        {key.is_active ? "Active" : "Disabled"}
-                      </Badge>
-                    </div>
-                    <p className="text-xs sm:text-sm text-[#8c8c8c]">
-                      Provider • <span className="text-white">{key.provider_name}</span>
-                    </p>
-                    <p className="text-xs sm:text-sm text-[#8c8c8c]">
-                      Added on {new Date(key.created_at).toLocaleDateString()}
-                    </p>
+            <div className="space-y-6">
+              {Object.entries(groupedKeys).map(([providerName, keys]) => (
+                <div key={providerName} className="border border-[#1b1b1b] rounded-2xl sm:rounded-3xl bg-[#050505] overflow-hidden">
+                  <div className="bg-[#0a0a0a] px-4 sm:px-6 py-3 border-b border-[#1c1c1c]">
+                    <h3 className="text-sm font-semibold text-[#e1e1e1] uppercase tracking-wider">
+                      {providerName}
+                    </h3>
                   </div>
-                  <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6">
-                    <div className="text-left sm:text-right">
-                      <p className="text-xs sm:text-sm text-[#8c8c8c]">Requests</p>
-                      <p className="text-base sm:text-lg font-medium">{(key.usage_count || 0).toLocaleString()}</p>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-[#ff9494] hover:text-white hover:bg-[#2b0000] flex-shrink-0"
-                      onClick={() => handleDelete(key.id)}
-                      disabled={deletingId === key.id}
-                    >
-                      {deletingId === key.id ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          <span className="hidden sm:inline">Removing</span>
-                        </>
-                      ) : (
-                        <>
-                          <Trash2 className="w-4 h-4 sm:mr-2" />
-                          <span className="hidden sm:inline">Delete</span>
-                        </>
-                      )}
-                    </Button>
+                  <div className="divide-y divide-[#111111]">
+                    {keys.map((key) => (
+                      <div key={key.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 px-4 sm:px-6 py-4 sm:py-5 hover:bg-[#0a0a0a]/50 transition-colors">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                            <p className="text-base sm:text-lg font-medium truncate">{key.name}</p>
+                            <Badge
+                              variant="secondary"
+                              className={`${
+                                key.is_active ? "bg-[#132315] text-[#82f2a6]" : "bg-[#2b2b2b] text-[#d3d3d3]"
+                              } border-0 text-xs`}
+                            >
+                              {key.is_active ? "Active" : "Disabled"}
+                            </Badge>
+                          </div>
+                          <p className="text-xs sm:text-sm text-[#8c8c8c]">
+                            Added on {new Date(key.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center justify-between sm:justify-end gap-4 sm:gap-6">
+                          <div className="text-left sm:text-right">
+                            <p className="text-xs sm:text-sm text-[#8c8c8c]">Requests</p>
+                            <p className="text-base sm:text-lg font-medium">{(key.usage_count || 0).toLocaleString()}</p>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-[#ff9494] hover:text-white hover:bg-[#2b0000] flex-shrink-0"
+                            onClick={() => handleDelete(key.id)}
+                            disabled={deletingId === key.id}
+                          >
+                            {deletingId === key.id ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                <span className="hidden sm:inline">Removing</span>
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="w-4 h-4 sm:mr-2" />
+                                <span className="hidden sm:inline">Delete</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               ))}
