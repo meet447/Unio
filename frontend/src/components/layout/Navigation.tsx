@@ -17,7 +17,6 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const publicNavItems: Array<{ path: string; label: string }> = [
-    { path: "/features", label: "Models" },
   ];
 
   const userNavItems: Array<{ path: string; label: string; icon: React.ReactNode }> = [
