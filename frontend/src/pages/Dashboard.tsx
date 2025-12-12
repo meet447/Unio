@@ -141,7 +141,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#030303] text-white">
+    <div className="text-white">
 
       <div className="p-4 sm:p-6">
         {/* Welcome Section */}
@@ -162,7 +162,7 @@ const Dashboard = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
             <h2 className="text-lg sm:text-xl font-semibold text-white">Overview Statistics</h2>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-full sm:w-32 bg-[#0b0b0b] border-[#1f1f1f] text-white hover:bg-[#121212] focus:ring-[#2b2b2b]">
+              <SelectTrigger className="w-full sm:w-32 bg-[#0a0a0a]/50 border-[#1b1b1b] text-white hover:bg-[#121212]/50 focus:ring-[#2b2b2b]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-[#0b0b0b] border-[#1f1f1f] text-white [&>*]:text-white">
@@ -177,7 +177,7 @@ const Dashboard = () => {
             {displayStats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={index} className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-4 sm:p-6">
+                <div key={index} className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-4 sm:p-6 shadow-2xl">
                   <div className="flex items-center justify-between mb-3 sm:mb-4">
                     <Icon className="h-4 w-4 sm:h-5 sm:w-5 text-[#bbbbbb]" />
                   </div>
@@ -201,18 +201,18 @@ const Dashboard = () => {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
             <h2 className="text-lg sm:text-xl font-semibold text-white">API Usage Overview</h2>
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-full sm:w-32 bg-[#0b0b0b] border-[#1f1f1f] text-white hover:bg-[#121212] focus:ring-[#2b2b2b]">
+              <SelectTrigger className="w-full sm:w-32 bg-[#0a0a0a]/50 border-[#1b1b1b] text-white hover:bg-[#121212]/50 focus:ring-[#2b2b2b]">
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent className="bg-[#0b0b0b] border-[#1f1f1f] text-white [&>*]:text-white">
-                <SelectItem value="1d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 24 hours</SelectItem>
-                <SelectItem value="7d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 7 days</SelectItem>
-                <SelectItem value="30d" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">Last 30 days</SelectItem>
-                <SelectItem value="all" className="text-white focus:bg-[#151515] focus:text-white hover:bg-[#151515] data-[highlighted]:bg-[#151515]">All time</SelectItem>
+              <SelectContent className="bg-[#0a0a0a]/80 backdrop-blur-md border-[#1b1b1b] text-white">
+                <SelectItem value="1d" className="text-white focus:bg-[#151515]/50 focus:text-white hover:bg-[#151515]/50 data-[highlighted]:bg-[#151515]/50">Last 24 hours</SelectItem>
+                <SelectItem value="7d" className="text-white focus:bg-[#151515]/50 focus:text-white hover:bg-[#151515]/50 data-[highlighted]:bg-[#151515]/50">Last 7 days</SelectItem>
+                <SelectItem value="30d" className="text-white focus:bg-[#151515]/50 focus:text-white hover:bg-[#151515]/50 data-[highlighted]:bg-[#151515]/50">Last 30 days</SelectItem>
+                <SelectItem value="all" className="text-white focus:bg-[#151515]/50 focus:text-white hover:bg-[#151515]/50 data-[highlighted]:bg-[#151515]/50">All time</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-3 sm:p-6 overflow-x-auto">
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-3 sm:p-6 overflow-x-auto shadow-2xl">
             {chartData.length > 0 ? (
               <ChartContainer config={{ requests: { label: "Requests", color: "hsl(0, 0%, 100%)" } }} className="h-48 sm:h-64 min-w-[400px]">
                 <AreaChart data={formatChartData(chartData)}>
@@ -231,7 +231,7 @@ const Dashboard = () => {
                     stroke="#8c8c8c"
                   />
                   <ChartTooltip 
-                    content={<ChartTooltipContent className="bg-[#111111] border-[#2a2a2a]" />} 
+                    content={<ChartTooltipContent className="bg-[#111111]/80 backdrop-blur-md border-[#2a2a2a]" />} 
                   />
                   <Area
                     type="monotone"
@@ -261,17 +261,17 @@ const Dashboard = () => {
               </Button>
             </AddApiKeyDialog>
           </div>
-          <div className="bg-[#0a0a0a] border border-[#1d1d1d] rounded-lg p-4 sm:p-6">
+          <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-4 sm:p-6 shadow-2xl">
             {apiKeys.length > 0 ? (
               <div className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f] rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f]/50 rounded-lg">
                     <div>
                       <div className="text-xs sm:text-sm text-[#b5b5b5]">Total Keys</div>
                       <div className="text-xl sm:text-2xl font-semibold text-white">{apiKeys.length}</div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f] rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f]/50 rounded-lg">
                     <div>
                       <div className="text-xs sm:text-sm text-[#b5b5b5]">Active Keys</div>
                       <div className="text-xl sm:text-2xl font-semibold text-white">
@@ -279,7 +279,7 @@ const Dashboard = () => {
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f] rounded-lg">
+                  <div className="flex items-center justify-between p-3 sm:p-4 bg-[#0f0f0f]/50 rounded-lg">
                     <div>
                       <div className="text-xs sm:text-sm text-[#b5b5b5]">Total Usage</div>
                       <div className="text-xl sm:text-2xl font-semibold text-white">
@@ -292,7 +292,7 @@ const Dashboard = () => {
                   <div className="text-xs sm:text-sm text-[#b5b5b5] mb-2">Recent Keys</div>
                   <div className="space-y-2">
                     {apiKeys.slice(0, 5).map((key) => (
-                      <div key={key.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 bg-[#0f0f0f] rounded-lg">
+                      <div key={key.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 bg-[#0f0f0f]/50 rounded-lg">
                         <div>
                           <div className="text-sm font-medium text-white">{key.name}</div>
                           <div className="text-xs text-[#9d9d9d]">{key.provider_name}</div>

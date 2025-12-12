@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/kibo-ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/kibo-ui/sheet";
-import { Menu, BarChart, User, LogOut, BookOpen, Sparkles, ChevronDown } from "lucide-react";
+import { Menu, BarChart, User, LogOut, BookOpen, ChevronDown } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/kibo-ui/dropdown-menu";
@@ -17,7 +17,6 @@ const Navigation = () => {
   ];
 
   const userNavItems: Array<{ path: string; label: string; icon: React.ReactNode }> = [
-    { path: "/playground", label: "Playground", icon: <Sparkles className="h-4 w-4" /> },
     { path: "/dashboard", label: "Dashboard", icon: <BarChart className="h-4 w-4" /> },
     { path: "/analytics", label: "Analytics", icon: <BarChart className="h-4 w-4" /> },
     { path: "/profile", label: "Profile", icon: <User className="h-4 w-4" /> },
@@ -80,9 +79,6 @@ const Navigation = () => {
                 <div className="hidden md:flex items-center gap-2">
                   <Button asChild variant="ghost" size="sm" className="text-[#888] hover:text-white hover:bg-[#111]">
                     <Link to="/dashboard">Dashboard</Link>
-                  </Button>
-                  <Button asChild variant="ghost" size="sm" className="text-[#888] hover:text-white hover:bg-[#111]">
-                    <Link to="/playground">Playground</Link>
                   </Button>
                 </div>
                 <ThemeToggle />

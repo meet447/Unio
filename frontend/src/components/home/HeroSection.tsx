@@ -46,11 +46,6 @@ const HeroSection = () => {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="h-12 px-8 border-white/20 bg-white/10 text-white hover:bg-white/15 rounded-full font-medium text-base backdrop-blur-sm shadow-lg">
-                <Link to="/playground" className="inline-flex items-center gap-2">
-                  Try Playground
-                </Link>
-              </Button>
             </div>
           </div>
         </div>

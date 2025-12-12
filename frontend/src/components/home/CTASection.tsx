@@ -38,11 +38,6 @@ const CTASection = () => {
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="h-12 px-8 border-[#1f1f1f] bg-transparent text-white hover:bg-[#0a0a0a] rounded-full font-medium text-base hover:border-[#333]">
-              <Link to="/playground" className="inline-flex items-center gap-2">
-                Try Playground
-              </Link>
-            </Button>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-[#666]">
