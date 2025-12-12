@@ -134,7 +134,7 @@ const Logs = () => {
   }
 
   return (
-    <div className="text-white p-4 sm:p-6 lg:p-10">
+    <div className="text-white">
       <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">

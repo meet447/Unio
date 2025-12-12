@@ -158,7 +158,7 @@ async def chat_completions(
 
     except (RateLimitExceededError, ProviderAPIError) as e:
         # Try fallback
-        fallback_result = await _try_fallback(req, user_id, api_key, request_payload, start_time)
+        fallback_result = await _try_fallback(req, user_id, api_key, request_payload, start_time, background_tasks)
         if fallback_result:
             return fallback_result
         return create_error_response(e)
@@ -168,7 +168,7 @@ async def chat_completions(
         return create_error_response(e)
 
 
-async def _try_fallback(req: ChatRequest, user_id: str, api_key: str, request_payload: dict, start_time: float):
+async def _try_fallback(req: ChatRequest, user_id: str, api_key: str, request_payload: dict, start_time: float, background_tasks: BackgroundTasks):
     """Try fallback model if available."""
     if not req.fallback_model:
         return None

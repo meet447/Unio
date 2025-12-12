@@ -41,6 +41,17 @@ export interface ChartDataPoint {
   errors: number;
 }
 
+export interface ModelUsage {
+  name: string;
+  value: number;
+}
+
+export interface ProviderUsage {
+  name: string;
+  requests: number;
+  cost: number;
+}
+
 export const useAnalytics = (filters: AnalyticsFilters = {
   timeRange: 'all',
   statusFilter: 'all',
@@ -63,7 +74,7 @@ export const useAnalytics = (filters: AnalyticsFilters = {
       // Return a very old date to get all records
       return new Date('2020-01-01');
     }
-    
+
     const now = new Date();
     const ranges = {
       '1d': new Date(now.getTime() - 24 * 60 * 60 * 1000),
@@ -80,7 +91,7 @@ export const useAnalytics = (filters: AnalyticsFilters = {
 
     try {
       const startDate = getDateRange(filters.timeRange);
-      
+
       // Build query for all logs (no pagination, but with high limit)
       // Supabase default limit is 1000, so we need to explicitly set a higher limit
       let analyticsQuery = supabase
@@ -104,27 +115,27 @@ export const useAnalytics = (filters: AnalyticsFilters = {
 
       // Apply search filter for analytics
       if (filters.searchQuery) {
-        analyticsQuery = analyticsQuery.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,api_keys.name.ilike.%${filters.searchQuery}%`);
+        analyticsQuery = analyticsQuery.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,key_name.ilike.%${filters.searchQuery}%`);
       }
 
       const analyticsResult = await analyticsQuery;
-      
+
       if (analyticsResult.error) {
         console.error('Error fetching analytics data:', analyticsResult.error);
         setError(analyticsResult.error);
         setAllLogsForAnalytics([]);
         return;
       }
-      
+
       // If we hit the limit, fetch remaining records in batches
       let allData = (analyticsResult.data as any[]) || [];
       const totalCount = analyticsResult.count || 0;
-      
+
       // If there are more records than we fetched, fetch them in batches
       if (totalCount > allData.length && allData.length >= 100000) {
         const batches: any[] = [];
         let offset = 100000;
-        
+
         while (offset < totalCount) {
           const batchSize = Math.min(100000, totalCount - offset);
           const batchQuery = supabase
@@ -133,7 +144,7 @@ export const useAnalytics = (filters: AnalyticsFilters = {
             .eq('user_id', user.id)
             .order('time_stamp', { ascending: false })
             .range(offset, offset + batchSize - 1);
-          
+
           // Apply same filters
           if (filters.timeRange !== 'all') {
             batchQuery.gte('time_stamp', startDate.toISOString());
@@ -144,15 +155,15 @@ export const useAnalytics = (filters: AnalyticsFilters = {
             batchQuery.gte('status', 400);
           }
           if (filters.searchQuery) {
-            batchQuery.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,api_keys.name.ilike.%${filters.searchQuery}%`);
+            batchQuery.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,key_name.ilike.%${filters.searchQuery}%`);
           }
-          
+
           const batchResult = await batchQuery;
           if (batchResult.error) {
             console.error('Error fetching batch:', batchResult.error);
             break;
           }
-          
+
           if (batchResult.data && batchResult.data.length > 0) {
             batches.push(...batchResult.data);
             offset += batchResult.data.length;
@@ -160,10 +171,10 @@ export const useAnalytics = (filters: AnalyticsFilters = {
             break;
           }
         }
-        
+
         allData = [...allData, ...batches];
       }
-      
+
       // Process the data - key_name is already a column in request_logs
       const processedData = allData.map((row: any) => ({
         log_id: row.log_id,
@@ -186,7 +197,7 @@ export const useAnalytics = (filters: AnalyticsFilters = {
         is_fallback: row.is_fallback,
         key_rotation_log: row.key_rotation_log
       })) as RequestLog[];
-      
+
       setAllLogsForAnalytics(processedData);
     } catch (err) {
       console.error('Error fetching analytics data:', err);
@@ -232,18 +243,18 @@ export const useAnalytics = (filters: AnalyticsFilters = {
       // Apply search filter
       if (filters.searchQuery) {
         // Note: key_name might not be directly searchable, so we search provider and model
-        query = query.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%`);
+        query = query.or(`provider.ilike.%${filters.searchQuery}%,model.ilike.%${filters.searchQuery}%,key_name.ilike.%${filters.searchQuery}%`);
       }
 
       // Apply pagination
       query = query.range(currentOffset, currentOffset + currentLimit - 1);
 
       const result = await query;
-      
+
       if (result.error) {
         throw result.error;
       }
-      
+
       // Map the data to ensure all fields are present
       const data = ((result.data || []) as any[]).map((row: any) => ({
         log_id: row.log_id,
@@ -267,13 +278,13 @@ export const useAnalytics = (filters: AnalyticsFilters = {
         key_rotation_log: row.key_rotation_log
       })) as RequestLog[];
       const count = result.count || 0;
-      
+
       if (loadMore) {
         setLogs(prev => [...prev, ...data]);
       } else {
         setLogs(data);
       }
-      
+
       setTotalCount(count);
       setHasMore(data.length === currentLimit);
     } catch (err) {
@@ -299,7 +310,7 @@ export const useAnalytics = (filters: AnalyticsFilters = {
   // Generate chart data from ALL logs for analytics
   const chartData = useMemo(() => {
     const dataSource = allLogsForAnalytics;
-    
+
     if (dataSource.length === 0) {
       // Return empty array when no data is available
       return [];
@@ -307,13 +318,13 @@ export const useAnalytics = (filters: AnalyticsFilters = {
 
     // Group ALL logs by hour for better granularity
     const groupedData = new Map<string, ChartDataPoint>();
-    
+
     dataSource.forEach(log => {
       if (!log.time_stamp) return;
-      
+
       const date = new Date(log.time_stamp);
       const hourKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:00`;
-      
+
       if (!groupedData.has(hourKey)) {
         groupedData.set(hourKey, {
           time: hourKey,
@@ -323,7 +334,7 @@ export const useAnalytics = (filters: AnalyticsFilters = {
           errors: 0
         });
       }
-      
+
       const point = groupedData.get(hourKey)!;
       point.requests += 1;
       point.responseTime += log.response_time_ms || 0;
@@ -343,10 +354,44 @@ export const useAnalytics = (filters: AnalyticsFilters = {
       .slice(-72); // Show last 72 hours of data for better visualization
   }, [allLogsForAnalytics]);
 
+  const { modelUsage, providerUsage } = useMemo(() => {
+    const dataSource = allLogsForAnalytics;
+    if (dataSource.length === 0) return { modelUsage: [], providerUsage: [] };
+
+    const mUsage = new Map<string, number>();
+    const pUsage = new Map<string, { requests: number; cost: number }>();
+
+    dataSource.forEach(log => {
+      const model = log.model || 'Unknown';
+      const provider = log.provider || 'Unknown';
+
+      mUsage.set(model, (mUsage.get(model) || 0) + 1);
+
+      if (!pUsage.has(provider)) {
+        pUsage.set(provider, { requests: 0, cost: 0 });
+      }
+      const p = pUsage.get(provider)!;
+      p.requests += 1;
+      p.cost += log.estimated_cost || 0;
+    });
+
+    const sortedModelUsage = Array.from(mUsage.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8); // Top 8 models
+
+    const sortedProviderUsage = Array.from(pUsage.entries())
+      .map(([name, data]) => ({ name, ...data }))
+      .sort((a, b) => b.requests - a.requests)
+      .slice(0, 8); // Top 8 providers
+
+    return { modelUsage: sortedModelUsage, providerUsage: sortedProviderUsage };
+  }, [allLogsForAnalytics]);
+
   // Calculate summary statistics from ALL logs for analytics
   const stats = useMemo(() => {
     const dataSource = allLogsForAnalytics;
-    
+
     if (dataSource.length === 0) {
       // Return zero stats when no data is available
       return {
@@ -393,6 +438,8 @@ export const useAnalytics = (filters: AnalyticsFilters = {
       fetchLogs();
     },
     chartData,
-    stats
+    stats,
+    modelUsage,
+    providerUsage
   };
 };

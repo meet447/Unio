@@ -17,6 +17,12 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  ResponsiveContainer,
 } from "recharts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/kibo-ui/select";
 
@@ -43,15 +49,15 @@ const Dashboard = () => {
     statusFilter: 'all',
     limit: 10
   };
-  
-  const { logs, chartData, stats } = useAnalytics(analyticsFilters);
+
+  const { logs, chartData, stats, modelUsage, providerUsage } = useAnalytics(analyticsFilters);
 
   useEffect(() => {
     if (!user) {
       navigate("/login");
       return;
     }
-    
+
     fetchApiKeys();
   }, [user, navigate]);
 
@@ -133,17 +139,16 @@ const Dashboard = () => {
   const formatChartData = (data: typeof chartData) => {
     return data.slice(-12).map(point => ({
       ...point,
-      time: new Date(point.time).toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
+      time: new Date(point.time).toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
       })
     }));
   };
 
   return (
     <div className="text-white">
-
-      <div className="p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Welcome Section */}
         <div className="mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-semibold text-white mb-2">
@@ -217,21 +222,21 @@ const Dashboard = () => {
               <ChartContainer config={{ requests: { label: "Requests", color: "hsl(0, 0%, 100%)" } }} className="h-48 sm:h-64 min-w-[400px]">
                 <AreaChart data={formatChartData(chartData)}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                  <XAxis 
-                    dataKey="time" 
+                  <XAxis
+                    dataKey="time"
                     axisLine={false}
                     tickLine={false}
                     fontSize={10}
                     stroke="#8c8c8c"
                   />
-                  <YAxis 
+                  <YAxis
                     axisLine={false}
                     tickLine={false}
                     fontSize={10}
                     stroke="#8c8c8c"
                   />
-                  <ChartTooltip 
-                    content={<ChartTooltipContent className="bg-[#111111]/80 backdrop-blur-md border-[#2a2a2a]" />} 
+                  <ChartTooltip
+                    content={<ChartTooltipContent className="bg-[#111111]/80 backdrop-blur-md border-[#2a2a2a]" />}
                   />
                   <Area
                     type="monotone"
@@ -247,6 +252,80 @@ const Dashboard = () => {
                 No usage data available
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Usage Breakdown */}
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-lg sm:text-xl font-semibold text-white mb-4">Usage Analytics</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Model Distribution */}
+            <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-6 shadow-2xl">
+              <h3 className="text-sm font-medium text-[#b5b5b5] mb-4">Model Distribution</h3>
+              <div className="h-[300px] w-full">
+                {modelUsage && modelUsage.length > 0 ? (
+                  <ChartContainer config={{ value: { label: "Usage", color: "hsl(0, 0%, 100%)" } }} className="h-full w-full">
+                    <PieChart>
+                      <Pie
+                        data={modelUsage}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={60}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                        stroke="none"
+                      >
+                        {modelUsage.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={`hsl(0, 0%, ${95 - (index * 14)}%)`} />
+                        ))}
+                      </Pie>
+                      <ChartTooltip content={<ChartTooltipContent className="bg-[#111111]/80 border-[#2a2a2a]" />} />
+                    </PieChart>
+                  </ChartContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-[#555]">No data</div>
+                )}
+              </div>
+            </div>
+
+            {/* Provider Usage */}
+            <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-6 shadow-2xl">
+              <h3 className="text-sm font-medium text-[#b5b5b5] mb-4">Top Providers</h3>
+              <div className="h-[300px] w-full">
+                {providerUsage && providerUsage.length > 0 ? (
+                  <ChartContainer config={{ requests: { label: "Requests", color: "hsl(0, 0%, 100%)" } }} className="h-full w-full">
+                    <BarChart data={providerUsage}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+                      <XAxis
+                        dataKey="name"
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={12}
+                        stroke="#8c8c8c"
+                      />
+                      <YAxis
+                        axisLine={false}
+                        tickLine={false}
+                        fontSize={12}
+                        stroke="#8c8c8c"
+                      />
+                      <ChartTooltip
+                        cursor={{ fill: '#1a1a1a' }}
+                        content={<ChartTooltipContent className="bg-[#111111]/80 border-[#2a2a2a]" />}
+                      />
+                      <Bar
+                        dataKey="requests"
+                        fill="#ffffff"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                ) : (
+                  <div className="h-full flex items-center justify-center text-[#555]">No data</div>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
