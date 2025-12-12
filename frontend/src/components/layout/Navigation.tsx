@@ -14,8 +14,6 @@ const Navigation = () => {
 
   const publicNavItems: Array<{ path: string; label: string }> = [
     { path: "/features", label: "Models" },
-    { path: "/help", label: "Support" },
-    { path: "/docs", label: "Docs" },
   ];
 
   const userNavItems: Array<{ path: string; label: string; icon: React.ReactNode }> = [
@@ -23,7 +21,6 @@ const Navigation = () => {
     { path: "/dashboard", label: "Dashboard", icon: <BarChart className="h-4 w-4" /> },
     { path: "/analytics", label: "Analytics", icon: <BarChart className="h-4 w-4" /> },
     { path: "/profile", label: "Profile", icon: <User className="h-4 w-4" /> },
-    { path: "/docs", label: "Documentation", icon: <BookOpen className="h-4 w-4" /> },
   ];
 
   return (

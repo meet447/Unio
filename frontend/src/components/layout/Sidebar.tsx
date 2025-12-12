@@ -2,11 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
   Key, 
-  CreditCard, 
   Zap, 
-  BookOpen, 
   User, 
-  HelpCircle,
   Heart,
   FileText
 } from "lucide-react";
@@ -20,14 +17,11 @@ const Sidebar = () => {
     { path: "/dashboard", label: "Overview", icon: LayoutDashboard },
     { path: "/dashboard/api-keys", label: "API Keys", icon: Key },
     { path: "/dashboard/logs", label: "Logs", icon: FileText },
-    { path: "/dashboard/billing", label: "Billing", icon: CreditCard },
     { path: "/dashboard/models", label: "Models", icon: Zap },
-    { path: "/docs", label: "Documentation", icon: BookOpen },
   ];
 
   const bottomNavItems = [
     { path: "/profile", label: "Profile", icon: User },
-    { path: "/help", label: "Help & Support", icon: HelpCircle },
   ];
 
   return (
@@ -64,7 +58,7 @@ const Sidebar = () => {
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path || 
-              (item.path === "/dashboard" && location.pathname.startsWith("/dashboard") && !location.pathname.includes("/api-keys") && !location.pathname.includes("/billing") && !location.pathname.includes("/models") && !location.pathname.includes("/logs") && !location.pathname.includes("/credits"));
+              (item.path === "/dashboard" && location.pathname.startsWith("/dashboard") && !location.pathname.includes("/api-keys") && !location.pathname.includes("/models") && !location.pathname.includes("/logs") && !location.pathname.includes("/credits"));
             
             return (
               <Link
@@ -108,22 +102,6 @@ const Sidebar = () => {
             );
           })}
         </nav>
-
-        {/* Footer Links */}
-        <div className="p-4 border-t border-[#181818] space-y-2">
-          <Link
-            to="/terms"
-            className="block text-xs text-[#808080] hover:text-[#cfcfcf] transition-colors"
-          >
-            Terms of Service
-          </Link>
-          <Link
-            to="/privacy"
-            className="block text-xs text-[#808080] hover:text-[#cfcfcf] transition-colors"
-          >
-            Privacy Policy
-          </Link>
-        </div>
       </div>
     </aside>
     </>

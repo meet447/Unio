@@ -15,7 +15,6 @@ import Logs from "./pages/Logs";
 import Models from "./pages/Models";
 import Profile from "./pages/Profile";
 import Analytics from "./pages/Analytics";
-import Playground from "./pages/Playground";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
@@ -39,7 +38,6 @@ const App = () => (
               <Route path="features" element={<Features />} />
               <Route path="profile" element={<Profile />} />
               <Route path="analytics" element={<Analytics />} />
-              <Route path="playground" element={<Playground />} />
               <Route path="login" element={<Login />} />
               <Route path="register" element={<Register />} />
               <Route path="check-email" element={<CheckEmail />} />
