@@ -8,7 +8,7 @@ const Footer = () => {
   useEffect(() => {
     const checkApiStatus = async () => {
       try {
-        const response = await fetch("https://unio.onrender.com/health");
+        const response = await fetch("https://api.unio.chipling.xyz/health");
         if (response.ok) {
           setApiStatus("online");
         } else {

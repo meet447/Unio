@@ -17,7 +17,7 @@ if not api_key:
     raise ValueError("UNIO_API_KEY environment variable is required")
 
 client = OpenAI(
-    base_url='https://unio.onrender.com/v1/api',
+    base_url='https://api.unio.chipling.xyz/v1',
     api_key=api_key
 )
 

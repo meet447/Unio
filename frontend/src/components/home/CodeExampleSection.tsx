@@ -12,7 +12,7 @@ const codeExample = `from openai import OpenAI
 # Use Unio as a drop-in replacement
 client = OpenAI(
     api_key="your-unio-token",
-    base_url="https://unio.onrender.com/v1/api"
+    base_url="https://api.unio.chipling.xyz/v1"
 )
 
 response = client.chat.completions.create(

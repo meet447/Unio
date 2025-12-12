@@ -40,7 +40,7 @@ Unio is a unified AI gateway that simplifies working with multiple LLM providers
 4. **Start making requests!**
 
 ```bash
-curl -X POST https://unio.onrender.com/v1/chat/completions \
+curl -X POST https://api.unio.chipling.xyz/v1/chat/completions \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_UNIO_TOKEN" \
   -d '{
