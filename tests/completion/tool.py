@@ -40,7 +40,7 @@ def search_gutenberg_books(search_terms):
         return []
     
     search_query = " ".join(search_terms)
-    print(f"🔍 Searching Project Gutenberg for: '{search_query}'")
+    # print(f"🔍 Searching Project Gutenberg for: '{search_query}'") # Removed for test function
     
     try:
         url = "https://gutendex.com/books"
@@ -60,11 +60,11 @@ def search_gutenberg_books(search_terms):
                 "download_count": book.get("download_count", 0)
             })
         
-        print(f"✅ Found {len(simplified_results)} books")
+        # print(f"✅ Found {len(simplified_results)} books") # Removed for test function
         return simplified_results
         
     except Exception as e:
-        print(f"❌ Error searching books: {e}")
+        # print(f"❌ Error searching books: {e}") # Removed for test function
         return []
 
 # Tool metadata
@@ -91,112 +91,116 @@ tools = [
 
 TOOL_MAPPING = {"search_gutenberg_books": search_gutenberg_books}
 
-# Messages
-messages = [
-    {
-        "role": "system", 
-        "content": "You are a helpful librarian assistant. When asked about books, use the search_gutenberg_books tool to find relevant books from Project Gutenberg. Always provide detailed information about the books you find."
-    },
-    {
-        "role": "user", 
-        "content": "I'm looking for books by James Joyce available on Project Gutenberg. Can you search for them and tell me about what you find?"
-    }
-]
+def test_completion_tool():
+    # Messages
+    messages = [
+        {
+            "role": "system", 
+            "content": "You are a helpful librarian assistant. When asked about books, use the search_gutenberg_books tool to find relevant books from Project Gutenberg. Always provide detailed information about the books you find."
+        },
+        {
+            "role": "user", 
+            "content": "I'm looking for books by James Joyce available on Project Gutenberg. Can you search for them and tell me about what you find?"
+        }
+    ]
 
-print("📚 Starting Tool Calling Example")
-print(f"🤖 Model: {MODEL}")
-print(f"🛠️  Available tools: {[tool['function']['name'] for tool in tools]}")
-print()
+    # print("📚 Starting Tool Calling Example") # Removed for test function
+    # print(f"🤖 Model: {MODEL}") # Removed for test function
+    # print(f"🛠️  Available tools: {[tool['function']['name'] for tool in tools]}") # Removed for test function
+    # print() # Removed for test function
 
-# Request completion
-print("🔄 Making initial request with tool definitions...")
-response = client.chat.completions.create(model=MODEL, messages=messages, tools=tools)
+    # Request completion
+    # print("🔄 Making initial request with tool definitions...") # Removed for test function
+    response = client.chat.completions.create(model=MODEL, messages=messages, tools=tools)
 
-message = response.choices[0].message
-print(f"📝 Assistant response: {message.content}")
+    message = response.choices[0].message
+    # print(f"📝 Assistant response: {message.content}") # Removed for test function
 
-# Add assistant message to conversation
-if message.content:
-    messages.append({"role": "assistant", "content": message.content})
+    # Add assistant message to conversation
+    if message.content:
+        messages.append({"role": "assistant", "content": message.content})
 
-# Check if the model made tool calls
-if message.tool_calls:
-    print(f"🔧 Model made {len(message.tool_calls)} tool call(s)")
-    
-    # Process each tool call
-    for tool_call in message.tool_calls:
-        print(f"\n🛠️  Executing tool: {tool_call.function.name}")
-        print(f"📋 Arguments: {tool_call.function.arguments}")
+    # Check if the model made tool calls
+    if message.tool_calls:
+        # print(f"🔧 Model made {len(message.tool_calls)} tool call(s)") # Removed for test function
         
-        # Get the function to call
-        function_name = tool_call.function.name
-        function_to_call = TOOL_MAPPING.get(function_name)
+        # Process each tool call
+        for tool_call in message.tool_calls:
+            # print(f"\n🛠️  Executing tool: {tool_call.function.name}") # Removed for test function
+            # print(f"📋 Arguments: {tool_call.function.arguments}") # Removed for test function
+            
+            # Get the function to call
+            function_name = tool_call.function.name
+            function_to_call = TOOL_MAPPING.get(function_name)
+            
+            if function_to_call:
+                try:
+                    # Parse the function arguments
+                    function_args = json.loads(tool_call.function.arguments)
+                    search_terms = function_args.get("search_terms", ["James Joyce"])
+                    
+                    # Call the function
+                    function_result = function_to_call(search_terms)
+                    # print(f"✅ Tool result: Found {len(function_result)} books") # Removed for test function
+                    
+                    # Add tool call message to conversation
+                    messages.append({
+                        "role": "assistant", 
+                        "content": None,
+                        "tool_calls": [{
+                            "id": tool_call.id,
+                            "type": "function",
+                            "function": {
+                                "name": function_name,
+                                "arguments": tool_call.function.arguments
+                            }
+                        }]
+                    })
+                    
+                    # Add tool result message to conversation
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": json.dumps(function_result)
+                    })
+                    
+                except Exception as e:
+                    # print(f"❌ Error executing tool: {e}") # Removed for test function
+                    # Add error result
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
+                        "content": f"Error: {str(e)}"
+                    })
+            else:
+                # print(f"❌ Unknown function: {function_name}") # Removed for test function
+                pass
         
-        if function_to_call:
-            try:
-                # Parse the function arguments
-                function_args = json.loads(tool_call.function.arguments)
-                search_terms = function_args.get("search_terms", ["James Joyce"])
-                
-                # Call the function
-                function_result = function_to_call(search_terms)
-                print(f"✅ Tool result: Found {len(function_result)} books")
-                
-                # Add tool call message to conversation
-                messages.append({
-                    "role": "assistant", 
-                    "content": None,
-                    "tool_calls": [{
-                        "id": tool_call.id,
-                        "type": "function",
-                        "function": {
-                            "name": function_name,
-                            "arguments": tool_call.function.arguments
-                        }
-                    }]
-                })
-                
-                # Add tool result message to conversation
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(function_result)
-                })
-                
-            except Exception as e:
-                print(f"❌ Error executing tool: {e}")
-                # Add error result
-                messages.append({
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": f"Error: {str(e)}"
-                })
-        else:
-            print(f"❌ Unknown function: {function_name}")
-    
-    # Get final response from the model with tool results
-    print("\n🔄 Getting final response with tool results...")
-    final_response = client.chat.completions.create(
-        model=MODEL,
-        messages=messages,
-        tools=tools
-    )
-    
-    print("\n🎯 Final Response:")
-    print("=" * 50)
-    print(final_response.choices[0].message.content)
-    print("=" * 50)
-    
-else:
-    print("ℹ️  No tool calls were made by the model")
-    print(f"📄 Direct response: {message.content}")
+        # Get final response from the model with tool results
+        # print("\n🔄 Getting final response with tool results...") # Removed for test function
+        final_response = client.chat.completions.create(
+            model=MODEL,
+            messages=messages,
+            tools=tools
+        )
+        
+        # print("\n🎯 Final Response:") # Removed for test function
+        # print("=" * 50) # Removed for test function
+        # print(final_response.choices[0].message.content) # Removed for test function
+        # print("=" * 50) # Removed for test function
+        return final_response.choices[0].message.content
+        
+    else:
+        # print("ℹ️  No tool calls were made by the model") # Removed for test function
+        # print(f"📄 Direct response: {message.content}") # Removed for test function
+        return message.content
 
-print("\n✨ Tool calling example completed successfully!")
-print("\n" + "="*60)
-print("WHAT HAPPENED:")
-print("1. 🤖 LLM received tool definitions and user request")
-print("2. 🔧 LLM decided to call the 'search_gutenberg_books' tool")
-print("3. 🔍 Our code executed the function with the LLM's arguments")
-print("4. 📊 Function returned book data from Project Gutenberg API")
-print("5. 🎯 LLM received the data and formatted a helpful response")
-print("="*60)
+    # print("\n✨ Tool calling example completed successfully!") # Removed for test function
+    # print("\n" + "="*60) # Removed for test function
+    # print("WHAT HAPPENED:") # Removed for test function
+    # print("1. 🤖 LLM received tool definitions and user request") # Removed for test function
+    # print("2. 🔧 LLM decided to call the 'search_gutenberg_books' tool") # Removed for test function
+    # print("3. 🔍 Our code executed the function with the LLM's arguments") # Removed for test function
+    # print("4. 📊 Function returned book data from Project Gutenberg API") # Removed for test function
+    # print("5. 🎯 LLM received the data and formatted a helpful response") # Removed for test function
+    # print("="*60) # Removed for test function
