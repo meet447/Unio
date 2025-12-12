@@ -33,16 +33,8 @@ def fetch_userid(api_key: str) -> str:
         if response.data:
             return response.data[0]['user_id']
         
-        # If no result, try alternative method (PostgREST parsing fallback)
-        logger.debug("Direct query returned no results, trying alternative method")
-        all_tokens = supabase.table("user_api_tokens").select("user_id, token_hash, is_active").execute()
-        
-        # Filter in Python
-        matching = [t for t in all_tokens.data if t.get('token_hash') == api_key and t.get('is_active') is True]
-        if matching:
-            return matching[0]['user_id']
-        
-        # No matching token found
+        # If no result, raise error immediately
+        logger.warning(f"Invalid API Key attempt: {api_key[:8]}...")
         raise InvalidAPIKeyError("Invalid API Key")
         
     except InvalidAPIKeyError:

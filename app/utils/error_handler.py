@@ -142,6 +142,4 @@ async def log_request_async(
         logger.error(f"Failed to log request: {e}")
 
 
-def fire_and_forget_log(**kwargs):
-    """Create a fire-and-forget logging task."""
-    asyncio.create_task(log_request_async(**kwargs))
+

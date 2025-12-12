@@ -1,10 +1,10 @@
-from fastapi import Header, APIRouter, Request
+from fastapi import Header, APIRouter, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse, JSONResponse
 from models.chat import ChatRequest
-from services.provider import get_provider, get_all_providers, PROVIDER_IDS, PROVIDER_ID_TO_NAME
+from services.provider import get_provider, get_all_providers
 from auth.check_key import fetch_userid
 from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIError, ModelNotFoundError
-from utils.error_handler import create_error_response, get_error_response, fire_and_forget_log
+from utils.error_handler import create_error_response, get_error_response, log_request_async
 from utils.token_counter import count_tokens_in_messages, estimate_completion_tokens
 import time
 import json
@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 @router.post("/chat/completions")
 async def chat_completions(
     req: ChatRequest, 
+    background_tasks: BackgroundTasks,
     authorization: str = Header(None),
     x_fallback_model: str = Header(None, alias="X-Fallback-Model")
 ):
@@ -71,14 +72,7 @@ async def chat_completions(
                             metadata = chunk
                             continue
 
-                        # Extract content only for simple validation if needed, or just pass through
-                        # (Key extraction from chunks is no longer needed as it's in metadata)
-                        if isinstance(chunk, str) and chunk.startswith('data: ') and '[DONE]' not in chunk:
-                            try:
-                                data = json.loads(chunk[6:].strip())
-                                # We no longer extract key_name here
-                            except (json.JSONDecodeError, KeyError, IndexError):
-                                pass
+                        # Pass through original chunks
                         yield chunk
                     
                     # Log successful request using metadata from provider
@@ -87,7 +81,8 @@ async def chat_completions(
                     t_tokens = metadata.get("total_tokens", p_tokens + c_tokens)
                     key_name = metadata.get("key_name", "")
 
-                    fire_and_forget_log(
+                    # Await log_request_async directly to ensure it completes before stream closes
+                    await log_request_async(
                         user_id=user_id,
                         api_key=api_key,
                         provider=req.model,
@@ -118,7 +113,7 @@ async def chat_completions(
                     error_content, _ = get_error_response(e)
                     yield f"data: {json.dumps(error_content)}\n\n"
                     
-                    fire_and_forget_log(
+                    await log_request_async(
                         user_id=user_id, api_key=api_key, provider=req.model, model=req.model,
                         status=e.status_code, request_payload=request_payload, response_payload=error_content,
                         start_time=start_time, prompt_tokens=prompt_tokens, completion_tokens=0,
@@ -139,7 +134,8 @@ async def chat_completions(
             
             # Log request
             usage = response_data.usage
-            fire_and_forget_log(
+            background_tasks.add_task(
+                log_request_async,
                 user_id=user_id,
                 api_key=api_key,
                 provider=req.model,
@@ -212,7 +208,7 @@ async def _try_fallback(req: ChatRequest, user_id: str, api_key: str, request_pa
                     t_tokens = metadata.get("total_tokens", p_tokens + c_tokens)
                     key_name = metadata.get("key_name", "")
 
-                    fire_and_forget_log(
+                    await log_request_async(
                         user_id=user_id, api_key=api_key, provider=fallback_req.model, model=fallback_req.model,
                         status=200, request_payload=request_payload, response_payload={},
                         start_time=start_time, prompt_tokens=p_tokens, completion_tokens=c_tokens,
@@ -230,7 +226,8 @@ async def _try_fallback(req: ChatRequest, user_id: str, api_key: str, request_pa
         else:
             response = await fallback_client.chat_completions(req=fallback_req)
             usage = response.usage
-            fire_and_forget_log(
+            background_tasks.add_task(
+                log_request_async,
                 user_id=user_id, api_key=api_key, provider=fallback_req.model, model=fallback_req.model,
                 status=200, request_payload=request_payload, response_payload={},
                 start_time=start_time, 

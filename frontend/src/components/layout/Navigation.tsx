@@ -2,10 +2,11 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/kibo-ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/kibo-ui/sheet";
-import { Menu, BarChart, User, LogOut, BookOpen, ChevronDown } from "lucide-react";
+import { Menu, BarChart, User, LogOut, ChevronDown } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/kibo-ui/dropdown-menu";
+import { navItems, bottomNavItems } from "./Sidebar";
 
 interface NavigationProps {
   isDashboard?: boolean;
@@ -25,20 +26,23 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
     { path: "/profile", label: "Profile", icon: <User className="h-4 w-4" /> },
   ];
 
+  // Combine sidebar items for mobile dashboard menu
+  const mobileDashboardItems = [...navItems, ...bottomNavItems];
+
   return (
-    <nav className={`fixed top-0 right-0 z-40 bg-[#0a0a0a]/50 backdrop-blur-md border-b border-[#1b1b1b] ${isDashboard ? 'left-64' : 'left-0'}`}>
+    <nav className={`fixed top-0 right-0 z-40 bg-[#0a0a0a]/50 backdrop-blur-md border-b border-[#1b1b1b] ${isDashboard ? 'lg:left-64 left-0' : 'left-0'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           {!isDashboard && (
             <Link to="/" className="flex items-center gap-2 group">
               <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center">
-                <svg 
-                  className="w-5 h-5 text-black" 
-                  fill="currentColor" 
+                <svg
+                  className="w-5 h-5 text-black"
+                  fill="currentColor"
                   viewBox="0 0 24 24"
                 >
-                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
               </div>
               <span className="text-lg font-bold text-white tracking-tight">Unio</span>
@@ -51,11 +55,10 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`text-sm font-medium transition-colors ${
-                  location.pathname === item.path 
-                    ? 'text-white' 
+                className={`text-sm font-medium transition-colors ${location.pathname === item.path
+                    ? 'text-white'
                     : 'text-[#888] hover:text-white'
-                }`}
+                  }`}
               >
                 {item.label}
               </Link>
@@ -112,7 +115,7 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
                 </DropdownMenu>
               </>
             )}
-            
+
             {/* Mobile menu button */}
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
@@ -123,21 +126,44 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
               </SheetTrigger>
               <SheetContent side="right" className="w-80 bg-[#0a0a0a] border-[#1d1d1d] p-6">
                 <div className="flex flex-col space-y-2 mt-8">
-                  {(!user ? publicNavItems : userNavItems).map((item) => (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${
-                        location.pathname === item.path
-                          ? 'text-black bg-white'
-                          : 'text-[#888] hover:text-white hover:bg-[#111]'
-                      }`}
-                      onClick={() => setIsMenuOpen(false)}
-                    >
-                      {item.icon}
-                      {item.label}
-                    </Link>
-                  ))}
+                  {isDashboard ? (
+                    // Dashboard Mobile Menu
+                    mobileDashboardItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${location.pathname === item.path
+                              ? 'text-black bg-white'
+                              : 'text-[#888] hover:text-white hover:bg-[#111]'
+                            }`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          <Icon className="h-5 w-5" />
+                          {item.label}
+                        </Link>
+                      );
+                    })
+                  ) : (
+                    // Public/Home Mobile Menu
+                    (!user ? publicNavItems : userNavItems).map((item) => (
+                      <Link
+                        key={item.path}
+                        to={item.path}
+                        className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${location.pathname === item.path
+                            ? 'text-black bg-white'
+                            : 'text-[#888] hover:text-white hover:bg-[#111]'
+                          }`}
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        {/* Render icon if it exists, otherwise nothing */}
+                        {'icon' in item ? item.icon : null}
+                        {item.label}
+                      </Link>
+                    ))
+                  )}
+
                   {user && (
                     <div className="border-t border-[#1d1d1d] pt-4 mt-4">
                       <Button

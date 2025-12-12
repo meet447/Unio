@@ -2,14 +2,14 @@ import { useState, useMemo } from "react";
 import { useAnalytics, RequestLog, AnalyticsFilters } from "@/hooks/useAnalytics";
 import { Input } from "@/components/kibo-ui/input";
 import { Button } from "@/components/kibo-ui/button";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/kibo-ui/select";
-import { 
+import {
   Search,
   RefreshCw,
   AlertCircle,
@@ -31,13 +31,13 @@ const Logs = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [expandedLogs, setExpandedLogs] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
-  const itemsPerPage = 50;
+  const itemsPerPage = 10;
 
   const filters: AnalyticsFilters = {
     timeRange,
     searchQuery,
     statusFilter,
-    limit: itemsPerPage * page,
+    limit: itemsPerPage,
     offset: 0
   };
 
@@ -228,7 +228,7 @@ const Logs = () => {
           <div className="bg-[#0a0a0a]/50 backdrop-blur-md border border-[#1b1b1b] rounded-[1.5rem] p-3 sm:p-4 shadow-2xl">
             <p className="text-xs sm:text-sm text-[#7f7f7f] mb-1">Avg Response</p>
             <p className="text-xl sm:text-2xl font-semibold">
-              {logs.length > 0 
+              {logs.length > 0
                 ? `${Math.round(logs.reduce((acc, l) => acc + (l.response_time_ms || 0), 0) / logs.length)}ms`
                 : '0ms'}
             </p>
@@ -286,7 +286,7 @@ const Logs = () => {
                   {displayedLogs.map((log: RequestLog) => {
                     const isExpanded = expandedLogs.has(log.log_id);
                     const hasRotation = log.key_rotation_log && log.key_rotation_log.length > 1;
-                    
+
                     return (
                       <>
                         <tr key={log.log_id} className="hover:bg-[#0f0f0f]/50 transition-colors">
@@ -355,55 +355,55 @@ const Logs = () => {
                                   <div>
                                     <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Performance</span>
                                     <div className="space-y-1">
-                                        <div className="flex justify-between">
-                                            <span className="text-[#9d9d9d] text-xs">Latency (TTFT):</span>
-                                            <span className="text-white text-xs">{log.latency_ms ? `${Math.round(log.latency_ms)}ms` : 'N/A'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-[#9d9d9d] text-xs">Speed:</span>
-                                            <span className="text-white text-xs">{log.tokens_per_second ? `${log.tokens_per_second.toFixed(1)} t/s` : 'N/A'}</span>
-                                        </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-[#9d9d9d] text-xs">Latency (TTFT):</span>
+                                        <span className="text-white text-xs">{log.latency_ms ? `${Math.round(log.latency_ms)}ms` : 'N/A'}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-[#9d9d9d] text-xs">Speed:</span>
+                                        <span className="text-white text-xs">{log.tokens_per_second ? `${log.tokens_per_second.toFixed(1)} t/s` : 'N/A'}</span>
+                                      </div>
                                     </div>
                                   </div>
                                   <div>
                                     <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Token Usage</span>
                                     <div className="space-y-1">
-                                        <div className="flex justify-between">
-                                            <span className="text-[#9d9d9d] text-xs">Input:</span>
-                                            <span className="text-white text-xs">{log.input_tokens || 0}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-[#9d9d9d] text-xs">Output:</span>
-                                            <span className="text-white text-xs">{log.output_tokens || 0}</span>
-                                        </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-[#9d9d9d] text-xs">Input:</span>
+                                        <span className="text-white text-xs">{log.input_tokens || 0}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-[#9d9d9d] text-xs">Output:</span>
+                                        <span className="text-white text-xs">{log.output_tokens || 0}</span>
+                                      </div>
                                     </div>
                                   </div>
                                   <div>
                                     <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Request Info</span>
                                     <div className="space-y-1">
-                                        <div className="flex justify-between">
-                                            <span className="text-[#9d9d9d] text-xs">Key Name:</span>
-                                            <span className="text-white text-xs">{log.key_name || 'N/A'}</span>
-                                        </div>
-                                        <div className="flex justify-between">
-                                            <span className="text-[#9d9d9d] text-xs">Fallback Used:</span>
-                                            <span className={`text-xs ${log.is_fallback ? 'text-yellow-500' : 'text-white'}`}>{log.is_fallback ? 'Yes' : 'No'}</span>
-                                        </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-[#9d9d9d] text-xs">Key Name:</span>
+                                        <span className="text-white text-xs">{log.key_name || 'N/A'}</span>
+                                      </div>
+                                      <div className="flex justify-between">
+                                        <span className="text-[#9d9d9d] text-xs">Fallback Used:</span>
+                                        <span className={`text-xs ${log.is_fallback ? 'text-yellow-500' : 'text-white'}`}>{log.is_fallback ? 'Yes' : 'No'}</span>
+                                      </div>
                                     </div>
                                   </div>
                                   <div>
                                     <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Rotation Log</span>
                                     <div className="space-y-1 max-h-20 overflow-y-auto">
-                                        {log.key_rotation_log && log.key_rotation_log.length > 0 ? (
-                                            log.key_rotation_log.map((entry: any, i: number) => (
-                                                <div key={i} className="flex justify-between text-xs">
-                                                    <span className="text-[#9d9d9d]">{entry.key}:</span>
-                                                    <span className={entry.status === 'success' ? 'text-green-500' : 'text-red-500'}>{entry.status}</span>
-                                                </div>
-                                            ))
-                                        ) : (
-                                            <span className="text-[#555] text-xs">No rotation events</span>
-                                        )}
+                                      {log.key_rotation_log && log.key_rotation_log.length > 0 ? (
+                                        log.key_rotation_log.map((entry: any, i: number) => (
+                                          <div key={i} className="flex justify-between text-xs">
+                                            <span className="text-[#9d9d9d]">{entry.key}:</span>
+                                            <span className={entry.status === 'success' ? 'text-green-500' : 'text-red-500'}>{entry.status}</span>
+                                          </div>
+                                        ))
+                                      ) : (
+                                        <span className="text-[#555] text-xs">No rotation events</span>
+                                      )}
                                     </div>
                                   </div>
                                 </div>

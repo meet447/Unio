@@ -1,4 +1,4 @@
-from fastapi import Header, APIRouter
+from fastapi import Header, APIRouter, BackgroundTasks
 from fastapi.responses import JSONResponse, StreamingResponse
 from models.chat import (
     ResponseRequest, OutputTextContentPart, ToolCallsContentPart, ResponseMessage, ResponseData, 
@@ -7,7 +7,7 @@ from models.chat import (
 from services.provider import get_provider
 from auth.check_key import fetch_userid
 from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIError
-from utils.error_handler import create_error_response, fire_and_forget_log
+from utils.error_handler import create_error_response, log_request_async
 from utils.token_counter import count_tokens_in_messages, estimate_completion_tokens, count_tokens_in_tools
 import time
 import json
@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 @router.post("/responses")
 async def create_response(
     req: ResponseRequest, 
+    background_tasks: BackgroundTasks,
     authorization: str = Header(None),
     x_fallback_model: str = Header(None, alias="X-Fallback-Model")
 ):
@@ -60,7 +61,7 @@ async def create_response(
         if req.stream:
             return await _generate_streaming_response(client, req, user_id, api_key, request_payload, start_time)
         else:
-            return await _generate_response(client, req, user_id, api_key, request_payload, start_time)
+            return await _generate_response(client, req, user_id, api_key, request_payload, start_time, background_tasks)
             
     except (RateLimitExceededError, ProviderAPIError) as e:
         # Try fallback
@@ -71,7 +72,7 @@ async def create_response(
                 if req.stream:
                     return await _generate_streaming_response(fallback_client, req, user_id, api_key, request_payload, start_time)
                 else:
-                    return await _generate_response(fallback_client, req, user_id, api_key, request_payload, start_time)
+                    return await _generate_response(fallback_client, req, user_id, api_key, request_payload, start_time, background_tasks)
             except Exception:
                 pass
         return create_error_response(e)
@@ -81,7 +82,7 @@ async def create_response(
         return create_error_response(e)
 
 
-async def _generate_response(client, req: ResponseRequest, user_id: str, api_key: str, request_payload: dict, start_time: float) -> JSONResponse:
+async def _generate_response(client, req: ResponseRequest, user_id: str, api_key: str, request_payload: dict, start_time: float, background_tasks: BackgroundTasks) -> JSONResponse:
     """Generate non-streaming response."""
     # Convert input to messages
     messages = [Message(role="user", content=req.input)] if isinstance(req.input, str) else req.input
@@ -99,8 +100,10 @@ async def _generate_response(client, req: ResponseRequest, user_id: str, api_key
     chat_response = await client.chat_completions(req=chat_req)
     
     # Log request
+    # Log request
     usage = chat_response.usage
-    fire_and_forget_log(
+    background_tasks.add_task(
+        log_request_async,
         user_id=user_id,
         api_key=api_key,
         provider=req.model,
@@ -158,7 +161,7 @@ async def _generate_streaming_response(client, req: ResponseRequest, user_id: st
         t_tokens = metadata.get("total_tokens", p_tokens + c_tokens)
         key_name = metadata.get("key_name", "")
         
-        fire_and_forget_log(
+        await log_request_async(
             user_id=user_id,
             api_key=api_key,
             provider=req.model,
