@@ -124,7 +124,7 @@ const Logs = () => {
 
   if (loading && logs.length === 0) { // Only show full page loader if no logs are loaded yet
     return (
-      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center bg-[#0a0a0a]/50 backdrop-blur-md p-8 rounded-[1.5rem] border border-[#1b1b1b] shadow-2xl">
           <RefreshCw className="w-10 h-10 animate-spin text-[#93c5fd] mx-auto mb-4" />
           <p className="text-[#b0b0b0] text-lg">Loading logs...</p>

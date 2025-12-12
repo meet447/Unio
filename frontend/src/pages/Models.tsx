@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/kibo-ui/badge";
+import { Loader2 } from "lucide-react";
 
 interface ProviderRow {
   id: string;
@@ -81,7 +82,7 @@ const Models = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center bg-[#0a0a0a]/50 backdrop-blur-md p-8 rounded-[1.5rem] border border-[#1b1b1b] shadow-2xl">
           <Loader2 className="w-10 h-10 animate-spin text-[#93c5fd] mx-auto mb-4" />
           <p className="text-[#b0b0b0] text-lg">Loading models...</p>

@@ -93,7 +93,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#030303] flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center">
         <div className="text-center bg-[#0a0a0a]/50 backdrop-blur-md p-8 rounded-[1.5rem] border border-[#1b1b1b] shadow-2xl">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#93c5fd] mx-auto mb-4"></div>
           <p className="text-[#b0b0b0] text-lg">Loading dashboard...</p>

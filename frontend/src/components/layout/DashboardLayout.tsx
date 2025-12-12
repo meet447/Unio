@@ -16,7 +16,7 @@ const DashboardLayout = () => {
       <Navigation isDashboard={true} />
       <div className="relative z-10 flex">
         <Sidebar />
-        <main className="flex-1 ml-64 p-8 pt-16">
+        <main className="flex-1 ml-64 p-8 pt-16 rounded-tl-[1.5rem] bg-[#030303]/80 backdrop-blur-md">
           <Outlet />
         </main>
       </div>

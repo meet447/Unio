@@ -37,7 +37,7 @@ const Sidebar = () => {
           text-decoration: none !important;
         }
       `}</style>
-      <aside className="dashboard-sidebar fixed left-0 top-0 bottom-0 w-64 bg-[#0a0a0a]/50 backdrop-blur-md overflow-y-auto z-40">
+      <aside className="dashboard-sidebar fixed left-0 top-0 bottom-0 w-64 bg-[#0a0a0a]/50 backdrop-blur-md overflow-y-auto z-50">
         <div className="flex flex-col h-full">
         {/* Logo */}
         <div className="p-6 border-b border-[#1b1b1b]">
