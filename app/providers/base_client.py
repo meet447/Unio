@@ -122,19 +122,22 @@ class BaseLLMClient:
                 
                 tokens_per_second = completion_tokens / duration if duration > 0 else 0
                 
-                return ChatResponse(
+                chat_response = ChatResponse(
                     id=response.id or str(uuid.uuid4()),
                     object="chat.completion",
                     created=response.created or int(time.time()),
                     model=req.model,
                     choices=choices,
-                    key_name=key_name,
+                    # key_name removed from model init to prevent serialization
                     usage=usage,
                     system_fingerprint=response.system_fingerprint,
-                    latency_ms=0, # Per requirement
+                    latency_ms=0,
                     tokens_per_second=tokens_per_second,
                     key_rotation_log=rotation_log
                 )
+                # Attach key_name for internal logging only
+                chat_response.key_name = key_name
+                return chat_response
 
             except RateLimitError as e:
                 logger.warning(f"Key {key_name} rate limited: {e}")

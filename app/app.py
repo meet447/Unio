@@ -44,12 +44,12 @@ app.add_middleware(
 
 app.include_router(
     api.router,
-    prefix="/v1/api",
+    prefix="/v1",
 )
 
 app.include_router(
     response.router,
-    prefix="/v1/api",
+    prefix="/v1",
 )
 
 @app.get('/')

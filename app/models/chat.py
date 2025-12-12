@@ -108,7 +108,7 @@ class ChatResponse(BaseModel):
     created: int
     model: str
     choices: List[Choice]
-    key_name: str
+    key_name: Optional[str] = None
     usage: Optional[Usage] = None
     system_fingerprint: Optional[str] = None
 

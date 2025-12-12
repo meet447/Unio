@@ -158,7 +158,7 @@ async def chat_completions(
                 is_fallback=False
             )
             
-            return response_data
+            return JSONResponse(content=response_data.model_dump(exclude={"key_name"}, exclude_none=True))
 
     except (RateLimitExceededError, ProviderAPIError) as e:
         # Try fallback
@@ -243,7 +243,7 @@ async def _try_fallback(req: ChatRequest, user_id: str, api_key: str, request_pa
                 key_rotation_log=getattr(response, "key_rotation_log", []),
                 is_fallback=True
             )
-            return response
+            return JSONResponse(content=response.model_dump(exclude={"key_name"}, exclude_none=True))
             
     except Exception as e:
         logger.warning(f"Fallback failed: {e}")

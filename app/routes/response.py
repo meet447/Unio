@@ -81,7 +81,7 @@ async def create_response(
         return create_error_response(e)
 
 
-async def _generate_response(client, req: ResponseRequest, user_id: str, api_key: str, request_payload: dict, start_time: float) -> ResponseData:
+async def _generate_response(client, req: ResponseRequest, user_id: str, api_key: str, request_payload: dict, start_time: float) -> JSONResponse:
     """Generate non-streaming response."""
     # Convert input to messages
     messages = [Message(role="user", content=req.input)] if isinstance(req.input, str) else req.input
@@ -98,35 +98,6 @@ async def _generate_response(client, req: ResponseRequest, user_id: str, api_key
     
     chat_response = await client.chat_completions(req=chat_req)
     
-    # Build response content
-    content_parts = []
-    if chat_response.choices and chat_response.choices[0].message.content:
-        content_parts.append(OutputTextContentPart(type="text", text=chat_response.choices[0].message.content))
-    if chat_response.choices and chat_response.choices[0].message.tool_calls:
-        content_parts.append(ToolCallsContentPart(type="tool_calls", tool_calls=chat_response.choices[0].message.tool_calls))
-    
-    response_data = ResponseData(
-        id=str(uuid.uuid4()),
-        object="response",
-        created=int(time.time()),
-        model=req.model,
-        status="completed",
-        output=[ResponseMessage(
-            id=f"msg_{uuid.uuid4().hex}",
-            type="message",
-            role="assistant",
-            content=content_parts,
-            status="completed"
-        )],
-        usage=chat_response.usage,
-        key_name=chat_response.key_name,
-        system_fingerprint=chat_response.system_fingerprint,
-        instructions=req.instructions or "You are a helpful assistant.",
-        temperature=req.temperature or 0.7,
-        tools=req.tools,
-        tool_choice=req.tool_choice
-    )
-    
     # Log request
     usage = chat_response.usage
     fire_and_forget_log(
@@ -136,15 +107,18 @@ async def _generate_response(client, req: ResponseRequest, user_id: str, api_key
         model=req.model,
         status=200,
         request_payload=request_payload,
-        response_payload=response_data.model_dump(),
+        response_payload=chat_response.model_dump(),
         start_time=start_time,
         prompt_tokens=usage.prompt_tokens if usage else 0,
         completion_tokens=usage.completion_tokens if usage else 0,
         total_tokens=usage.total_tokens if usage else 0,
-        key_name=chat_response.key_name
+        key_name=chat_response.key_name,
+        latency_ms=getattr(chat_response, "latency_ms", 0),
+        tokens_per_second=getattr(chat_response, "tokens_per_second", 0),
+        key_rotation_log=getattr(chat_response, "key_rotation_log", []),
     )
     
-    return response_data
+    return JSONResponse(content=chat_response.model_dump(exclude={"key_name"}, exclude_none=True))
 
 
 async def _generate_streaming_response(client, req: ResponseRequest, user_id: str, api_key: str, request_payload: dict, start_time: float) -> StreamingResponse:
@@ -161,62 +135,46 @@ async def _generate_streaming_response(client, req: ResponseRequest, user_id: st
         tool_choice=req.tool_choice
     )
     
+    # Initial count for fallback, will be overwritten by metadata if available
     prompt_tokens = count_tokens_in_messages(messages, req.model)
     if req.tools:
         prompt_tokens += count_tokens_in_tools([tool.model_dump() for tool in req.tools], req.model)
     
     async def stream_generator():
-        response_id = f"resp_{uuid.uuid4().hex}"
-        message_id = f"msg_{uuid.uuid4().hex}"
-        created_time = int(time.time())
-        completion_content = ""
-        
-        base_response = {
-            "id": response_id,
-            "object": "response",
-            "created_at": created_time,
-            "status": "in_progress",
-            "model": req.model,
-            "output": [],
-        }
-        
-        # Send initial events
-        yield f"event: response.created\ndata: {json.dumps({'type': 'response.created', 'response': base_response})}\n\n"
-        yield f"event: response.in_progress\ndata: {json.dumps({'type': 'response.in_progress', 'response': base_response})}\n\n"
-        
-        output_item = {"id": message_id, "type": "message", "status": "in_progress", "role": "assistant", "content": []}
-        yield f"event: response.output_item.added\ndata: {json.dumps({'type': 'response.output_item.added', 'output_index': 0, 'item': output_item})}\n\n"
-        
-        content_added = False
+        metadata = {}
         
         async for chunk in client.stream_chat_completions(req=chat_req):
-            if chunk.startswith('data: ') and '[DONE]' not in chunk:
-                try:
-                    data = json.loads(chunk[6:].strip())
-                    if 'choices' in data and data['choices']:
-                        delta = data['choices'][0].get('delta', {})
-                        if delta.get('content'):
-                            if not content_added:
-                                yield f"event: response.content_part.added\ndata: {json.dumps({'type': 'response.content_part.added', 'item_id': message_id, 'output_index': 0, 'content_index': 0, 'part': {'type': 'text', 'text': ''}})}\\n\\n"
-                                content_added = True
-                            
-                            completion_content += delta['content']
-                            yield f"event: response.output_text.delta\ndata: {json.dumps({'type': 'response.output_text.delta', 'item_id': message_id, 'output_index': 0, 'content_index': 0, 'delta': delta['content']})}\n\n"
-                except (json.JSONDecodeError, KeyError):
-                    pass
+            # Capture internal metadata
+            if isinstance(chunk, dict) and chunk.get("type") == "internal_metadata":
+                metadata = chunk
+                continue
+
+            # Pass through original chunks
+            yield chunk
         
-        # Send completion events
-        completion_tokens = estimate_completion_tokens(completion_content, req.model)
-        total_tokens = prompt_tokens + completion_tokens
+        # Log successful request using metadata
+        p_tokens = metadata.get("prompt_tokens", prompt_tokens)
+        c_tokens = metadata.get("completion_tokens", 0)
+        t_tokens = metadata.get("total_tokens", p_tokens + c_tokens)
+        key_name = metadata.get("key_name", "")
         
-        if content_added:
-            yield f"event: response.output_text.done\ndata: {json.dumps({'type': 'response.output_text.done', 'item_id': message_id, 'output_index': 0, 'content_index': 0, 'text': completion_content})}\n\n"
-        
-        final_response = base_response.copy()
-        final_response.update({
-            "status": "completed",
-            "usage": {"input_tokens": prompt_tokens, "output_tokens": completion_tokens, "total_tokens": total_tokens}
-        })
-        yield f"event: response.completed\ndata: {json.dumps({'type': 'response.completed', 'response': final_response})}\n\n"
+        fire_and_forget_log(
+            user_id=user_id,
+            api_key=api_key,
+            provider=req.model,
+            model=req.model,
+            status=200,
+            request_payload=request_payload,
+            response_payload={},
+            start_time=start_time,
+            prompt_tokens=p_tokens,
+            completion_tokens=c_tokens,
+            total_tokens=t_tokens,
+            key_name=key_name,
+            latency_ms=metadata.get("latency_ms", 0),
+            tokens_per_second=metadata.get("tokens_per_second", 0),
+            key_rotation_log=metadata.get("key_rotation_log", []),
+            is_fallback=False
+        )
     
     return StreamingResponse(stream_generator(), media_type="text/event-stream")
