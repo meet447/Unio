@@ -17,9 +17,12 @@ import {
   XCircle,
   ChevronDown,
   ChevronUp,
-  Download
+  Download,
+  Zap,
+  ArrowRightLeft // Added for key rotation visualization
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/kibo-ui/badge";
 
 const Logs = () => {
   const { user } = useAuth();
@@ -76,7 +79,7 @@ const Logs = () => {
 
   const exportLogs = () => {
     const csvContent = [
-      ['Timestamp', 'Model', 'Provider', 'Key Name', 'Status', 'Response Time (ms)', 'Tokens', 'Cost', 'Error'].join(','),
+      ['Timestamp', 'Model', 'Provider', 'Key Name', 'Status', 'Response Time (ms)', 'Latency (TTFT ms)', 'Speed (tok/s)', 'Input Tokens', 'Output Tokens', 'Total Tokens', 'Cost', 'Fallback', 'Rotated', 'Error'].join(','),
       ...logs.map(log => [
         log.time_stamp ? new Date(log.time_stamp).toISOString() : 'N/A',
         log.model || 'N/A',
@@ -84,8 +87,14 @@ const Logs = () => {
         log.key_name || 'N/A',
         log.status || 'N/A',
         log.response_time_ms || 'N/A',
+        log.latency_ms || '0',
+        log.tokens_per_second ? log.tokens_per_second.toFixed(2) : '0',
+        log.input_tokens || '0',
+        log.output_tokens || '0',
         log.total_tokens || 'N/A',
         log.estimated_cost || '0',
+        log.is_fallback ? 'Yes' : 'No',
+        (log.key_rotation_log && log.key_rotation_log.length > 1) ? 'Yes' : 'No',
         log.status && log.status >= 400 ? 'Yes' : 'No'
       ].join(','))
     ].join('\n');
@@ -249,10 +258,10 @@ const Logs = () => {
                       Status
                     </th>
                     <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-[#b5b5b5] uppercase tracking-wider">
-                      Response Time
+                      Performance
                     </th>
                     <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-[#b5b5b5] uppercase tracking-wider">
-                      Tokens
+                      Tokens (In/Out)
                     </th>
                     <th className="px-4 sm:px-6 py-3 text-left text-xs sm:text-sm font-medium text-[#b5b5b5] uppercase tracking-wider">
                       Cost
@@ -265,6 +274,8 @@ const Logs = () => {
                 <tbody className="divide-y divide-[#111111]">
                   {displayedLogs.map((log: RequestLog) => {
                     const isExpanded = expandedLogs.has(log.log_id);
+                    const hasRotation = log.key_rotation_log && log.key_rotation_log.length > 1;
+                    
                     return (
                       <>
                         <tr key={log.log_id} className="hover:bg-[#0f0f0f] transition-colors">
@@ -272,7 +283,13 @@ const Logs = () => {
                             {log.time_stamp ? new Date(log.time_stamp).toLocaleString() : 'N/A'}
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                            {log.model || 'N/A'}
+                            <div className="flex flex-col gap-1">
+                              <span>{log.model || 'N/A'}</span>
+                              <div className="flex gap-1">
+                                {log.is_fallback && <Badge variant="secondary" className="text-[10px] h-4 px-1 bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Fallback</Badge>}
+                                {hasRotation && <Badge variant="secondary" className="text-[10px] h-4 px-1 bg-blue-500/10 text-blue-500 border-blue-500/20">Rotated</Badge>}
+                              </div>
+                            </div>
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-[#9d9d9d]">
                             {log.provider || 'N/A'}
@@ -286,10 +303,20 @@ const Logs = () => {
                             </div>
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-white font-mono">
-                            {log.response_time_ms ? `${log.response_time_ms}ms` : 'N/A'}
+                            <div className="flex flex-col">
+                              <span>{log.response_time_ms ? `${log.response_time_ms}ms` : 'N/A'}</span>
+                              <span className="text-xs text-[#6f6f6f]">
+                                {log.latency_ms ? `TTFT: ${Math.round(log.latency_ms)}ms` : ''}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-white">
-                            {log.total_tokens ? log.total_tokens.toLocaleString() : 'N/A'}
+                            <div className="flex flex-col">
+                              <span>{log.total_tokens ? log.total_tokens.toLocaleString() : 'N/A'}</span>
+                              <span className="text-xs text-[#6f6f6f]">
+                                {log.input_tokens || 0} / {log.output_tokens || 0}
+                              </span>
+                            </div>
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-white">
                             {log.estimated_cost ? `$${log.estimated_cost.toFixed(4)}` : '$0.0000'}
@@ -313,6 +340,63 @@ const Logs = () => {
                           <tr>
                             <td colSpan={8} className="px-4 sm:px-6 py-4 bg-[#0f0f0f]">
                               <div className="space-y-4">
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-[#050505] p-3 rounded border border-[#1c1c1c]">
+                                  <div>
+                                    <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Performance</span>
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between">
+                                            <span className="text-[#9d9d9d] text-xs">Latency (TTFT):</span>
+                                            <span className="text-white text-xs">{log.latency_ms ? `${Math.round(log.latency_ms)}ms` : 'N/A'}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-[#9d9d9d] text-xs">Speed:</span>
+                                            <span className="text-white text-xs">{log.tokens_per_second ? `${log.tokens_per_second.toFixed(1)} t/s` : 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Token Usage</span>
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between">
+                                            <span className="text-[#9d9d9d] text-xs">Input:</span>
+                                            <span className="text-white text-xs">{log.input_tokens || 0}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-[#9d9d9d] text-xs">Output:</span>
+                                            <span className="text-white text-xs">{log.output_tokens || 0}</span>
+                                        </div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Request Info</span>
+                                    <div className="space-y-1">
+                                        <div className="flex justify-between">
+                                            <span className="text-[#9d9d9d] text-xs">Key Name:</span>
+                                            <span className="text-white text-xs">{log.key_name || 'N/A'}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-[#9d9d9d] text-xs">Fallback Used:</span>
+                                            <span className={`text-xs ${log.is_fallback ? 'text-yellow-500' : 'text-white'}`}>{log.is_fallback ? 'Yes' : 'No'}</span>
+                                        </div>
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Rotation Log</span>
+                                    <div className="space-y-1 max-h-20 overflow-y-auto">
+                                        {log.key_rotation_log && log.key_rotation_log.length > 0 ? (
+                                            log.key_rotation_log.map((entry: any, i: number) => (
+                                                <div key={i} className="flex justify-between text-xs">
+                                                    <span className="text-[#9d9d9d]">{entry.key}:</span>
+                                                    <span className={entry.status === 'success' ? 'text-green-500' : 'text-red-500'}>{entry.status}</span>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <span className="text-[#555] text-xs">No rotation events</span>
+                                        )}
+                                    </div>
+                                  </div>
+                                </div>
+
                                 <div>
                                   <h4 className="text-sm font-medium text-white mb-2">Request Payload</h4>
                                   <pre className="text-xs bg-[#050505] p-3 rounded border border-[#1c1c1c] overflow-x-auto text-[#9d9d9d]">
@@ -324,24 +408,6 @@ const Logs = () => {
                                   <pre className="text-xs bg-[#050505] p-3 rounded border border-[#1c1c1c] overflow-x-auto text-[#9d9d9d]">
                                     {JSON.stringify(log.response_payload, null, 2)}
                                   </pre>
-                                </div>
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                                  <div>
-                                    <span className="text-[#7f7f7f]">Key Name:</span>
-                                    <span className="ml-2 text-white">{log.key_name || 'N/A'}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#7f7f7f]">Prompt Tokens:</span>
-                                    <span className="ml-2 text-white">{log.prompt_tokens || 'N/A'}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#7f7f7f]">Completion Tokens:</span>
-                                    <span className="ml-2 text-white">{log.completion_tokens || 'N/A'}</span>
-                                  </div>
-                                  <div>
-                                    <span className="text-[#7f7f7f]">Total Tokens:</span>
-                                    <span className="ml-2 text-white">{log.total_tokens || 'N/A'}</span>
-                                  </div>
                                 </div>
                               </div>
                             </td>
@@ -385,4 +451,3 @@ const Logs = () => {
 };
 
 export default Logs;
-

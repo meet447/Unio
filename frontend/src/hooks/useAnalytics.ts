@@ -12,13 +12,17 @@ export interface RequestLog {
   status: number | null;
   request_payload: any | null;
   response_payload: any | null;
-  prompt_tokens: number | null;
-  completion_tokens: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
   total_tokens: number | null;
   estimated_cost: number | null;
   response_time_ms: number | null;
+  latency_ms: number | null;
+  tokens_per_second: number | null;
   time_stamp: string | null;
   key_name: string | null;
+  is_fallback: boolean | null;
+  key_rotation_log: any[] | null;
 }
 
 export interface AnalyticsFilters {
@@ -170,13 +174,17 @@ export const useAnalytics = (filters: AnalyticsFilters = {
         status: row.status,
         request_payload: row.request_payload,
         response_payload: row.response_payload,
-        prompt_tokens: row.prompt_tokens,
-        completion_tokens: row.completion_tokens,
+        input_tokens: row.input_tokens || row.prompt_tokens, // Fallback for old data
+        output_tokens: row.output_tokens || row.completion_tokens, // Fallback for old data
         total_tokens: row.total_tokens,
         estimated_cost: row.estimated_cost,
         response_time_ms: row.response_time_ms,
+        latency_ms: row.latency_ms,
+        tokens_per_second: row.tokens_per_second,
         time_stamp: row.time_stamp,
-        key_name: row.key_name || null
+        key_name: row.key_name || null,
+        is_fallback: row.is_fallback,
+        key_rotation_log: row.key_rotation_log
       })) as RequestLog[];
       
       setAllLogsForAnalytics(processedData);
@@ -246,13 +254,17 @@ export const useAnalytics = (filters: AnalyticsFilters = {
         status: row.status,
         request_payload: row.request_payload,
         response_payload: row.response_payload,
-        prompt_tokens: row.prompt_tokens,
-        completion_tokens: row.completion_tokens,
+        input_tokens: row.input_tokens || row.prompt_tokens,
+        output_tokens: row.output_tokens || row.completion_tokens,
         total_tokens: row.total_tokens,
         estimated_cost: row.estimated_cost,
         response_time_ms: row.response_time_ms,
+        latency_ms: row.latency_ms,
+        tokens_per_second: row.tokens_per_second,
         time_stamp: row.time_stamp,
-        key_name: row.key_name || null
+        key_name: row.key_name || null,
+        is_fallback: row.is_fallback,
+        key_rotation_log: row.key_rotation_log
       })) as RequestLog[];
       const count = result.count || 0;
       

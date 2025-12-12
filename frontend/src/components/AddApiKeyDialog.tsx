@@ -12,6 +12,8 @@ interface Provider {
   id: string;
   name: string;
   description: string;
+  base_url?: string;
+  user_id?: string;
 }
 
 interface AddApiKeyDialogProps {
@@ -26,16 +28,21 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
   const [selectedProvider, setSelectedProvider] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
+  
+  // Custom provider state
+  const [newProviderName, setNewProviderName] = useState("");
+  const [newProviderBaseUrl, setNewProviderBaseUrl] = useState("");
+  
   const { toast } = useToast();
 
+  const fetchProviders = async () => {
+    const { data } = await supabase.from('providers').select('*').order('name');
+    if (data) {
+      setProviders(data);
+    }
+  };
+
   useEffect(() => {
-    const fetchProviders = async () => {
-      const { data } = await supabase.from('providers').select('*').order('name');
-      if (data) {
-        setProviders(data);
-      }
-    };
-    
     fetchProviders();
   }, []);
 
@@ -50,9 +57,30 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
         throw new Error('User not authenticated');
       }
 
+      let providerId = selectedProvider;
+
+      // Handle creation of new provider
+      if (selectedProvider === "new_custom_provider") {
+        if (!newProviderName) throw new Error("Provider name is required");
+        
+        const { data: newProvider, error: providerError } = await supabase
+          .from('providers')
+          .insert({
+            name: newProviderName.toLowerCase().replace(/\s/g, ''),
+            base_url: newProviderBaseUrl || null,
+            user_id: user.id, // Associate with current user
+            description: "Custom user provider"
+          })
+          .select()
+          .single();
+          
+        if (providerError) throw providerError;
+        providerId = newProvider.id;
+      }
+
       const { error } = await supabase.from('api_keys').insert({
         user_id: user.id,
-        provider_id: selectedProvider,
+        provider_id: providerId,
         name,
         encrypted_key: apiKey, // In production, this should be properly encrypted
       });
@@ -68,8 +96,14 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
       setName("");
       setSelectedProvider("");
       setApiKey("");
+      setNewProviderName("");
+      setNewProviderBaseUrl("");
       setOpen(false);
       onApiKeyAdded();
+      
+      // Refresh providers list
+      fetchProviders();
+      
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -100,7 +134,7 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
             <Label htmlFor="name">Key Name</Label>
             <Input
               id="name"
-              placeholder="e.g., Production OpenAI Key"
+              placeholder="e.g., Production Key"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -119,9 +153,36 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
                     {provider.name}
                   </SelectItem>
                 ))}
+                <SelectItem value="new_custom_provider">
+                  + Create New Provider
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
+
+          {selectedProvider === "new_custom_provider" && (
+            <>
+              <div className="space-y-1">
+                <Label htmlFor="newProviderName">Provider Name</Label>
+                <Input
+                  id="newProviderName"
+                  placeholder="e.g., LocalAI"
+                  value={newProviderName}
+                  onChange={(e) => setNewProviderName(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="newProviderBaseUrl">Base URL (Optional)</Label>
+                <Input
+                  id="newProviderBaseUrl"
+                  placeholder="e.g., http://localhost:8080/v1"
+                  value={newProviderBaseUrl}
+                  onChange={(e) => setNewProviderBaseUrl(e.target.value)}
+                />
+              </div>
+            </>
+          )}
           
           <div className="space-y-1">
             <Label htmlFor="apiKey">API Key</Label>

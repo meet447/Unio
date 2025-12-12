@@ -30,7 +30,7 @@ def get_encoding_for_model(model: str):
                 break
                 
         return tiktoken.get_encoding(encoding_name)
-    except:
+    except Exception:
         # Fallback to default encoding
         return tiktoken.get_encoding("cl100k_base")
 

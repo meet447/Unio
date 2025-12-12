@@ -1,4 +1,4 @@
-from config import supabase
+from config import supabase_admin as supabase
 from datetime import datetime, timezone
 import logging
 
@@ -18,7 +18,11 @@ async def log_request(
     total_tokens: int = 0,
     estimated_cost: float = 0.0,
     response_time_ms: float = 0.0,
-    key_name: str = ""
+    key_name: str = "",
+    is_fallback: bool = False,
+    key_rotation_log: list = None,
+    latency_ms: float = 0.0,
+    tokens_per_second: float = 0.0
 ):
     """
     Insert a log into the request_logs table.
@@ -37,13 +41,17 @@ async def log_request(
         "status": status,
         "request_payload": request_payload,
         "response_payload": response_payload,
-        "prompt_tokens": prompt_tokens,
-        "completion_tokens": completion_tokens,
+        "input_tokens": prompt_tokens,
+        "output_tokens": completion_tokens,
         "total_tokens": total_tokens,
         "estimated_cost": estimated_cost,
-        "response_time_ms": response_time_ms,
-        "time_stamp": timestamp,  # now JSON-serializable
-        "key_name": key_name
+        "response_time_ms": int(response_time_ms),
+        "time_stamp": timestamp,
+        "key_name": key_name,
+        "is_fallback": is_fallback,
+        "key_rotation_log": key_rotation_log or [],
+        "latency_ms": int(latency_ms),
+        "tokens_per_second": tokens_per_second
     }
 
     try:

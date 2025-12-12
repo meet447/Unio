@@ -119,7 +119,7 @@ class ChatCompletionChunk(BaseModel):
     created: int
     model: str
     choices: List[ChoiceChunk]
-    key_name: str
+    key_name: Optional[str] = None
     usage: Optional[Usage] = None
     system_fingerprint: Optional[str] = None
 
@@ -200,6 +200,11 @@ class ResponseData(BaseModel):
     # Custom fields for compatibility
     key_name: Optional[str] = None
     system_fingerprint: Optional[str] = None
+    
+    # Metadata for logging (Unio specific)
+    latency_ms: Optional[float] = None
+    tokens_per_second: Optional[float] = None
+    key_rotation_log: Optional[List[dict]] = None
 
 
 # Streaming response structures
