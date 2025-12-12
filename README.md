@@ -1,4 +1,4 @@
-# 🔥 Unio
+# Unio
 
 *One API for ALL LLMs*
 
@@ -15,22 +15,24 @@ Unify your AI providers with intelligent key management, automatic failover, and
 
 Unio is a unified AI gateway that simplifies working with multiple LLM providers through a single, OpenAI-compatible API. Instead of managing separate integrations for OpenAI, Anthropic, Google, Groq, and others, Unio provides one interface with intelligent key rotation, automatic failover, and detailed analytics.
 
-
 **Key Benefits:**
-- 🔑 **Bring Your Own Keys** - Use your existing API keys across all providers
-- 🔄 **Automatic Key Rotation** - Intelligent load balancing and failover
-- 📊 **Advanced Analytics** - Track usage, costs, and performance across providers
-- 🔌 **OpenAI SDK Compatible** - Drop-in replacement for existing OpenAI integrations
-- 🚀 **Smart Fallback System** - Automatic provider switching on failures
-- ⚡ **Semantic Caching** - Coming soon: Reduce costs with intelligent caching
+
+- **Bring Your Own Keys** - Use your existing API keys across all providers
+- **Automatic Key Rotation** - Intelligent load balancing and failover
+- **Advanced Analytics** - Track usage, costs, and performance across providers
+- **OpenAI SDK Compatible** - Drop-in replacement for existing OpenAI integrations
+- **Smart Fallback System** - Automatic provider switching on failures
+- **Key Verification** - Validate credentials instantly upon addition
+- **Dynamic Model Catalog** - Real-time discovery of available models from your providers
 
 ---
 
 ## Projects that use Unio
+
 - [axiom](https://axiom-ivory.vercel.app/) - a opensource ai search engine like perplexity ai
 - [chipling](https://chipling.xyz) - opensouce ai rabbithole research tool
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Using the Hosted Version
 
@@ -54,6 +56,7 @@ curl -X POST https://api.unio.chipling.xyz/v1/chat/completions \
 ### Self-Hosting
 
 #### Prerequisites
+
 - Python 3.8+ (for local development) OR Docker (for containerized deployment)
 - Node.js 16+ (for frontend)
 - Supabase account (for database)
@@ -121,18 +124,18 @@ Visit `http://localhost:5173` to access the dashboard.
 
 ---
 
-## 📖 Documentation
+## Documentation
 
 ### Supported Providers
 
 | Provider | Models | Streaming | Function Calling |
 |----------|---------|-----------|------------------|
-| OpenAI | GPT-4, GPT-3.5, etc. | ✅ | ✅ |
-| Anthropic | Claude 3.5, Claude 3, etc. | ✅ | ✅ |
-| Google | Gemini Pro, Gemini Flash | ✅ | ✅ |
-| Groq | Llama 3, Mixtral, etc. | ✅ | ❌ |
-| Together | Llama 3, Qwen, etc. | ✅ | ❌ |
-| OpenRouter | 100+ models | ✅ | ✅ |
+| OpenAI | GPT-4, GPT-3.5, etc. | Yes | Yes |
+| Anthropic | Claude 3.5, Claude 3, etc. | Yes | Yes |
+| Google | Gemini Pro, Gemini Flash | Yes | Yes |
+| Groq | Llama 3, Mixtral, etc. | Yes | No |
+| Together | Llama 3, Qwen, etc. | Yes | No |
+| OpenRouter | 100+ models | Yes | Yes |
 
 ### API Usage
 
@@ -207,28 +210,32 @@ response = client.chat.completions.create(
 
 ---
 
-## 🎯 Features
+## Features
 
-### 🔑 API Key Management
+### API Key Management
+
 - Secure storage with AES-256 encryption
 - Per-provider key organization
 - Usage tracking and analytics
 - Key health monitoring
 
-### 🔄 Intelligent Routing
+### Intelligent Routing
+
 - Automatic key rotation within providers
 - Smart fallback between providers
 - Load balancing for high availability
 - Rate limit handling
 
-### 📊 Analytics Dashboard
+### Analytics Dashboard
+
 - Real-time usage metrics
 - Cost tracking across providers
 - Performance analytics
 - Request/response logging
 - Error rate monitoring
 
-### 🛡️ Security & Reliability
+### Security & Reliability
+
 - OpenAI SDK compatibility
 - Comprehensive error handling
 - Structured logging
@@ -237,7 +244,7 @@ response = client.chat.completions.create(
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 Unio follows a modern microservices architecture:
 
@@ -248,6 +255,7 @@ Unio follows a modern microservices architecture:
 │   • Dashboard   │    │   • API Gateway │    │   • Users       │
 │   • Analytics   │    │   • Auth        │    │   • API Keys    │
 │   • Key Mgmt    │    │   • Providers   │    │   • Logs        │
+│                 │    │   • Models/Fetch│    │                │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
                               │
                               ▼
@@ -266,12 +274,14 @@ Unio follows a modern microservices architecture:
 ### Tech Stack
 
 **Backend:**
+
 - FastAPI (Python)
 - Supabase (PostgreSQL)
 - Pydantic for validation
 - Uvicorn ASGI server
 
 **Frontend:**
+
 - React 18 with TypeScript
 - Vite build tool
 - Tailwind CSS + shadcn/ui
@@ -279,13 +289,14 @@ Unio follows a modern microservices architecture:
 - React Router for navigation
 
 **Infrastructure:**
+
 - Supabase for authentication & database
 - Server-Sent Events for streaming
 - RESTful API design
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details.
 
@@ -293,12 +304,14 @@ We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.
 
 1. **Fork the repository**
 2. **Clone your fork**
+
    ```bash
    git clone https://github.com/your-username/unio.git
    cd unio
    ```
 
 3. **Set up the development environment**
+
    ```bash
    # Backend
    cd app
@@ -314,6 +327,7 @@ We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.
    ```
 
 4. **Create a feature branch**
+
    ```bash
    git checkout -b feature/amazing-feature
    ```
@@ -335,22 +349,22 @@ npm test
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 💬 Community & Support
+## Community & Support
 
-- 📧 **Email**: meet.sonawane2015@gmail.com
-- 💻 **GitHub Issues**: [Report bugs or request features](https://github.com/maoucodes/Unio/issues)
-- 📖 **Documentation**: [Full API Documentation](https://unio.chipling.xyz/docs)
-- 🐦 **Twitter**: 
+- **Email**: <meet.sonawane2015@gmail.com>
+- **GitHub Issues**: [Report bugs or request features](https://github.com/maoucodes/Unio/issues)
+- **Documentation**: [Full API Documentation](https://unio.chipling.xyz/docs)
+- **Twitter**:
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 - [ ] **Semantic Caching** - Intelligent response caching
 - [ ] **Custom Models** - Support for self-hosted models
@@ -363,6 +377,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <p><strong>Made with ❤️ by the Unio team</strong></p>
-  <p>⭐ Star us on GitHub if you find Unio useful!</p>
+  <p><strong>Made with love by the Unio team</strong></p>
+  <p>Star us on GitHub if you find Unio useful!</p>
 </div>

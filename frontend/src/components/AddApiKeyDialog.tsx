@@ -28,11 +28,11 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
   const [selectedProvider, setSelectedProvider] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [loading, setLoading] = useState(false);
-  
+
   // Custom provider state
   const [newProviderName, setNewProviderName] = useState("");
   const [newProviderBaseUrl, setNewProviderBaseUrl] = useState("");
-  
+
   const { toast } = useToast();
 
   const fetchProviders = async () => {
@@ -52,9 +52,46 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       if (!user) {
         throw new Error('User not authenticated');
+      }
+
+      // Verify API Key before saving
+      let verifyName = "";
+      let verifyUrl = "";
+
+      if (selectedProvider === "new_custom_provider") {
+        verifyName = newProviderName;
+        verifyUrl = newProviderBaseUrl;
+      } else {
+        const p = providers.find(p => p.id === selectedProvider);
+        if (p) {
+          verifyName = p.name;
+          verifyUrl = p.base_url || "";
+        }
+      }
+
+      // Perform verification request
+      try {
+        const verifyRes = await fetch("http://localhost:8000/v1/verify-key", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            provider_name: verifyName,
+            base_url: verifyUrl || undefined,
+            api_key: apiKey
+          })
+        });
+
+        const verifyData = await verifyRes.json();
+
+        if (!verifyRes.ok || !verifyData.valid) {
+          throw new Error(verifyData.error || "Key verification failed. Please check your credentials.");
+        }
+      } catch (err: any) {
+        // Re-throw to be caught by outer catch and shown in toast
+        throw new Error(`Verification Failed: ${err.message}`);
       }
 
       let providerId = selectedProvider;
@@ -62,7 +99,7 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
       // Handle creation of new provider
       if (selectedProvider === "new_custom_provider") {
         if (!newProviderName) throw new Error("Provider name is required");
-        
+
         const { data: newProvider, error: providerError } = await supabase
           .from('providers')
           .insert({
@@ -73,7 +110,7 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
           })
           .select()
           .single();
-          
+
         if (providerError) throw providerError;
         providerId = newProvider.id;
       }
@@ -100,10 +137,10 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
       setNewProviderBaseUrl("");
       setOpen(false);
       onApiKeyAdded();
-      
+
       // Refresh providers list
       fetchProviders();
-      
+
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -140,7 +177,7 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
               required
             />
           </div>
-          
+
           <div className="space-y-1">
             <Label htmlFor="provider">Provider</Label>
             <Select value={selectedProvider} onValueChange={setSelectedProvider} required>
@@ -183,7 +220,7 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
               </div>
             </>
           )}
-          
+
           <div className="space-y-1">
             <Label htmlFor="apiKey">API Key</Label>
             <Input
@@ -195,7 +232,7 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
               required
             />
           </div>
-          
+
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel

@@ -2,17 +2,172 @@ from fastapi import Header, APIRouter, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse, JSONResponse
 from models.chat import ChatRequest
 from services.provider import get_provider, get_all_providers
-from auth.check_key import fetch_userid
+from services.provider import get_provider, get_all_providers
+from auth.check_key import fetch_userid, fetch_all_providers_with_keys
 from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIError, ModelNotFoundError
 from utils.error_handler import create_error_response, get_error_response, log_request_async
 from utils.token_counter import count_tokens_in_messages, estimate_completion_tokens
 import time
+import asyncio
 import json
 import logging
+from pydantic import BaseModel
+from typing import Any
+from openai import AsyncOpenAI
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
+class VerifyKeyRequest(BaseModel):
+    provider_name: str
+    base_url: str = None
+    api_key: str
+
+
+@router.post("/verify-key")
+async def verify_key(req: VerifyKeyRequest):
+    """
+    Verify an upstream API key by attempting to list models.
+    """
+    if not req.api_key:
+         return JSONResponse(
+            status_code=400,
+            content={"error": "API Key is required"}
+        )
+
+    # Determine Base URL
+    base_url = req.base_url
+    if req.provider_name.lower() == "openai" and not base_url:
+        base_url = None
+
+    try:
+        # Using OpenAI client to test connection (works for OAI-compatible endpoints)
+        client = AsyncOpenAI(
+            api_key=req.api_key,
+            base_url=base_url,
+            timeout=10.0 # Short timeout for verification
+        )
+        
+        await client.models.list()
+        
+        return JSONResponse(content={"valid": True, "message": "Key verification successful"})
+        
+    except Exception as e:
+        logger.warning(f"Key verification failed for {req.provider_name}: {e}")
+        return JSONResponse(
+            status_code=400,
+            content={"valid": False, "error": str(e)}
+        )
+
+
+class FetchModelsRequest(BaseModel):
+    user_id: str
+
+
+@router.post("/models/fetch")
+async def fetch_provider_models(req: FetchModelsRequest):
+    """
+    Fetch available models from all configured providers for a user.
+    """
+    providers_data = fetch_all_providers_with_keys(req.user_id)
+    results = []
+
+    async def fetch_for_provider(provider_id, keys):
+        if not keys:
+            return None
+            
+        # Use first active key
+        key_record = keys[0]
+        api_key = key_record.get('encrypted_key') # assuming plaintext for now as per verify_key
+        
+        # Get provider details
+        provider_name = "Unknown"
+        base_url = None
+        
+        if key_record.get('providers'):
+            provider_name = key_record['providers'].get('name')
+            base_url = key_record['providers'].get('base_url')
+        
+        # OpenAI default check
+        if provider_name and provider_name.lower() == "openai" and not base_url:
+            base_url = None
+
+        try:
+            client = AsyncOpenAI(
+                api_key=api_key,
+                base_url=base_url,
+                timeout=10.0
+            )
+            models_page = await client.models.list()
+            print(models_page)
+            # Parse models
+            model_list = []
+            for m in models_page.data:
+                model_list.append({"id": m.id, "created": m.created, "object": m.object})
+                
+            return {
+                "provider": provider_name,
+                "models": model_list
+            }
+        except Exception as e:
+            logger.warning(f"Failed to fetch models for {provider_name}: {e}")
+            return {
+                "provider": provider_name,
+                "error": str(e),
+                "models": []
+            }
+
+    tasks = []
+    for pid, keys in providers_data.items():
+        tasks.append(fetch_for_provider(pid, keys))
+        
+    if tasks:
+        fetched_results = await asyncio.gather(*tasks)
+        results = [r for r in fetched_results if r]
+    
+    return JSONResponse(content={"data": results})
+
+
+
+def is_empty_chunk(chunk: Any) -> bool:
+    """Check if the chunk is an empty SSE delta with no content/info."""
+    if not isinstance(chunk, str) or not chunk.startswith("data: "):
+        return False
+    
+    data_str = chunk[6:].strip()
+    if data_str == "[DONE]":
+        return False
+        
+    try:
+        data = json.loads(data_str)
+        # Check for usage or other top-level fields
+        if data.get("usage") or data.get("system_fingerprint"): # system_fingerprint often comes with empty delta? User said "system_fingerprint": "..." in empty chunk. 
+            # If user considers system_fingerprint ONLY chunk as "empty", I should skip it?
+            # User snippet showed: "system_fingerprint": "..." AND "delta": {}.
+            # If I skip it, client might miss fingerprint but who cares?
+            # It's better to reduce noise.
+            # But let's be careful. If usage is present, MUST keep.
+            pass
+            
+        if data.get("usage"):
+            return False
+
+        choices = data.get("choices", [])
+        if not choices:
+            return False # Keep purely structural/empty chunks if not standard choice format?
+            
+        choice = choices[0]
+        delta = choice.get("delta", {})
+        finish_reason = choice.get("finish_reason")
+        
+        # Keep if has meaningful content
+        if delta.get("content") or delta.get("tool_calls") or finish_reason:
+            return False
+            
+        return True
+    except:
+        return False
 
 @router.post("/chat/completions")
 async def chat_completions(
@@ -72,8 +227,9 @@ async def chat_completions(
                             metadata = chunk
                             continue
 
-                        # Pass through original chunks
-                        yield chunk
+                        # Pass through original chunks, filtering empty keep-alives
+                        if not is_empty_chunk(chunk):
+                            yield chunk
                     
                     # Log successful request using metadata from provider
                     p_tokens = metadata.get("prompt_tokens", prompt_tokens)
@@ -200,7 +356,8 @@ async def _try_fallback(req: ChatRequest, user_id: str, api_key: str, request_pa
                             continue
                         
                         # No need to extract key_name from chunks anymore
-                        yield chunk
+                        if not is_empty_chunk(chunk):
+                            yield chunk
                     
                     # Log successful fallback
                     p_tokens = metadata.get("prompt_tokens", prompt_tokens)
