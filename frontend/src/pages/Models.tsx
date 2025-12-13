@@ -77,7 +77,7 @@ const Models = () => {
           }
 
           // 3. Fetch Dynamic Models from Backend
-          const res = await fetch("http://localhost:8000/v1/models/fetch", {
+          const res = await fetch("https://api.unio.chipling.xyz/v1/models/fetch", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ user_id: user.id })
