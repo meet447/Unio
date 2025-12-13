@@ -8,7 +8,7 @@ const ProjectShowcaseSection = () => {
       icon: Globe,
       name: "Axiom",
       description: "An open-source AI search engine like Perplexity AI, powered by multiple LLM providers through Unio.",
-      url: "https://axiom-ivory.vercel.app/",
+      url: "https://axiom.chipling.xyz/",
       color: "bg-[#93c5fd]",
     },
     {
