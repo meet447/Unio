@@ -111,6 +111,9 @@ class ChatResponse(BaseModel):
     key_name: Optional[str] = None
     usage: Optional[Usage] = None
     system_fingerprint: Optional[str] = None
+    latency_ms: Optional[float] = None
+    tokens_per_second: Optional[float] = None
+    key_rotation_log: Optional[List[dict]] = None
 
 
 class ChatCompletionChunk(BaseModel):

@@ -24,6 +24,37 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/kibo-ui/badge";
 
+const PayloadViewer = ({ title, data }: { title: string, data: any }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  if (!data) return null;
+
+  return (
+    <div className="border border-[#1b1b1b] rounded-[1rem] bg-[#0a0a0a]/50 overflow-hidden mt-4">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-3 text-sm font-medium text-white hover:bg-[#151515] transition-colors"
+      >
+        <span>{title}</span>
+        {isOpen ? (
+          <ChevronUp className="w-4 h-4 text-[#9d9d9d]" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-[#9d9d9d]" />
+        )}
+      </button>
+
+      {isOpen && (
+        <div className="border-t border-[#1b1b1b] bg-[#050505]">
+          <pre className="text-xs p-4 overflow-auto max-h-[400px] text-[#9d9d9d] font-mono leading-relaxed">
+            {JSON.stringify(data, null, 2)}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+};
+
+
 const Logs = () => {
   const { user } = useAuth();
   const [timeRange, setTimeRange] = useState("all");
@@ -408,18 +439,8 @@ const Logs = () => {
                                   </div>
                                 </div>
 
-                                <div>
-                                  <h4 className="text-sm font-medium text-white mb-2">Request Payload</h4>
-                                  <pre className="text-xs bg-[#0a0a0a]/50 p-3 rounded-[1rem] border border-[#1b1b1b] overflow-x-auto text-[#9d9d9d]">
-                                    {JSON.stringify(log.request_payload, null, 2)}
-                                  </pre>
-                                </div>
-                                <div>
-                                  <h4 className="text-sm font-medium text-white mb-2">Response Payload</h4>
-                                  <pre className="text-xs bg-[#0a0a0a]/50 p-3 rounded-[1rem] border border-[#1b1b1b] overflow-x-auto text-[#9d9d9d]">
-                                    {JSON.stringify(log.response_payload, null, 2)}
-                                  </pre>
-                                </div>
+                                <PayloadViewer title="Request Payload" data={log.request_payload} />
+                                <PayloadViewer title="Response Payload" data={log.response_payload} />
                               </div>
                             </td>
                           </tr>
