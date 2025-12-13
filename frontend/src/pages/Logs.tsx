@@ -293,7 +293,7 @@ const Logs = () => {
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-xs sm:text-sm text-[#9d9d9d] font-mono">
                             {log.time_stamp ? new Date(log.time_stamp).toLocaleString() : 'N/A'}
                           </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
+                          <td className="px-4 sm:px-6 py-4 text-sm font-medium text-white break-all max-w-[250px]">
                             <div className="flex flex-col gap-1">
                               <span>{log.model || 'N/A'}</span>
                               <div className="flex gap-1">
@@ -302,7 +302,7 @@ const Logs = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-[#9d9d9d]">
+                          <td className="px-4 sm:px-6 py-4 text-sm text-[#9d9d9d] break-all max-w-[150px]">
                             {log.provider || 'N/A'}
                           </td>
                           <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
