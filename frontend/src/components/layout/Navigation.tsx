@@ -3,7 +3,7 @@ import { Button } from "@/components/kibo-ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/kibo-ui/sheet";
 import { Menu, BarChart, User, LogOut, ChevronDown } from "lucide-react";
-import { ThemeToggle } from "@/components/ThemeToggle";
+
 import { useState } from "react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/kibo-ui/dropdown-menu";
 import { navItems, bottomNavItems } from "./Sidebar";
@@ -56,8 +56,8 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
                 key={item.path}
                 to={item.path}
                 className={`text-sm font-medium transition-colors ${location.pathname === item.path
-                    ? 'text-white'
-                    : 'text-[#888] hover:text-white'
+                  ? 'text-white'
+                  : 'text-[#888] hover:text-white'
                   }`}
               >
                 {item.label}
@@ -89,7 +89,7 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
                     <Link to="/dashboard">Dashboard</Link>
                   </Button>
                 </div>
-                <ThemeToggle />
+                {/* ThemeToggle removed */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="sm" className="text-[#888] hover:text-white hover:bg-[#111] gap-2 rounded-full px-3">
@@ -135,8 +135,8 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
                           key={item.path}
                           to={item.path}
                           className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${location.pathname === item.path
-                              ? 'text-black bg-white'
-                              : 'text-[#888] hover:text-white hover:bg-[#111]'
+                            ? 'text-black bg-white'
+                            : 'text-[#888] hover:text-white hover:bg-[#111]'
                             }`}
                           onClick={() => setIsMenuOpen(false)}
                         >
@@ -152,13 +152,13 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
                         key={item.path}
                         to={item.path}
                         className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${location.pathname === item.path
-                            ? 'text-black bg-white'
-                            : 'text-[#888] hover:text-white hover:bg-[#111]'
+                          ? 'text-black bg-white'
+                          : 'text-[#888] hover:text-white hover:bg-[#111]'
                           }`}
                         onClick={() => setIsMenuOpen(false)}
                       >
                         {/* Render icon if it exists, otherwise nothing */}
-                        {'icon' in item ? item.icon : null}
+                        {'icon' in (item as any) ? (item as any).icon : null}
                         {item.label}
                       </Link>
                     ))

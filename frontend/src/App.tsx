@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/kibo-ui/sonner";
 import { TooltipProvider } from "@/components/kibo-ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
 import { AuthProvider } from "./hooks/useAuth";
 import { Suspense, lazy } from "react";
 
@@ -13,7 +12,6 @@ const DashboardLayout = lazy(() => import("./components/layout/DashboardLayout")
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home"));
-const Features = lazy(() => import("./pages/Features"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const ApiKeys = lazy(() => import("./pages/ApiKeys"));
 const Logs = lazy(() => import("./pages/Logs"));
@@ -23,47 +21,40 @@ const Analytics = lazy(() => import("./pages/Analytics"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const CheckEmail = lazy(() => import("./pages/CheckEmail"));
-const Security = lazy(() => import("./pages/Security"));
 const OAuthCallback = lazy(() => import("./components/OAuthCallback"));
 
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
-              <Routes>
-                <Route path="/" element={<Layout />}>
-                  <Route index element={<Home />} />
-                  <Route path="features" element={<Features />} />
-                  <Route path="profile" element={<Profile />} />
-                  <Route path="analytics" element={<Analytics />} />
-                  <Route path="login" element={<Login />} />
-                  <Route path="register" element={<Register />} />
-                  <Route path="check-email" element={<CheckEmail />} />
-                  <Route path="auth/callback" element={<OAuthCallback />} />
-                  <Route path="security" element={<Security />} />
-                </Route>
-                <Route path="/dashboard" element={<DashboardLayout />}>
-                  <Route index element={<Dashboard />} />
-                  <Route path="api-keys" element={<ApiKeys />} />
-                  <Route path="logs" element={<Logs />} />
-                  <Route path="models" element={<Models />} />
-                </Route>
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  </ThemeProvider>
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Suspense fallback={<div className="flex h-screen w-full items-center justify-center"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>}>
+            <Routes>
+              <Route path="/" element={<Layout />}>
+                <Route index element={<Home />} />
+                <Route path="profile" element={<Profile />} />
+                <Route path="analytics" element={<Analytics />} />
+                <Route path="login" element={<Login />} />
+                <Route path="register" element={<Register />} />
+                <Route path="auth/callback" element={<OAuthCallback />} />
+              </Route>
+              <Route path="/dashboard" element={<DashboardLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="api-keys" element={<ApiKeys />} />
+                <Route path="logs" element={<Logs />} />
+                <Route path="models" element={<Models />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export default App;

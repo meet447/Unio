@@ -2,7 +2,6 @@ import {
   HeroSection,
   HowItWorksSection,
   CodeExampleSection,
-  FeaturesSection,
   StatsSection,
   ProjectShowcaseSection,
   CTASection
@@ -14,7 +13,6 @@ const Home = () => {
       <HeroSection />
       <HowItWorksSection />
       <CodeExampleSection />
-      <FeaturesSection />
       <StatsSection />
       <ProjectShowcaseSection />
       <CTASection />
