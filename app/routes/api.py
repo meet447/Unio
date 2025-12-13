@@ -259,7 +259,7 @@ async def chat_completions(
                     
                 except (RateLimitExceededError, ProviderAPIError) as e:
                     # Try fallback if available
-                    fallback_result = await _try_fallback(req, user_id, api_key, request_payload, start_time)
+                    fallback_result = await _try_fallback(req, user_id, api_key, request_payload, start_time, background_tasks)
                     if fallback_result:
                         async for chunk in fallback_result:
                             yield chunk
@@ -274,7 +274,7 @@ async def chat_completions(
                         status=e.status_code, request_payload=request_payload, response_payload=error_content,
                         start_time=start_time, prompt_tokens=prompt_tokens, completion_tokens=0,
                         total_tokens=prompt_tokens, key_name=extracted_key or "",
-                        key_rotation_log=metadata.get("key_rotation_log", [])
+                        key_rotation_log=getattr(e, "rotation_log", [])
                     )
                     
                 except Exception as e:

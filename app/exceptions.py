@@ -7,19 +7,21 @@ class InvalidAPIKeyError(Exception):
         super().__init__(self.message)
 
 class RateLimitExceededError(Exception):
-    def __init__(self, message="Rate limit exceeded"):
+    def __init__(self, message="Rate limit exceeded", rotation_log=None):
         self.message = message
         self.status_code = 429
         self.error_type = "rate_limit_exceeded"
         self.error_code = "rate_limit_exceeded"
+        self.rotation_log = rotation_log or []
         super().__init__(self.message)
 
 class ProviderAPIError(Exception):
-    def __init__(self, message="Provider API error", status_code=500):
+    def __init__(self, message="Provider API error", status_code=500, rotation_log=None):
         self.message = message
         self.status_code = status_code
         self.error_type = "api_error"
         self.error_code = "provider_error"
+        self.rotation_log = rotation_log or []
         super().__init__(self.message)
 
 class ModelNotFoundError(Exception):

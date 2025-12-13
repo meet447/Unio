@@ -166,11 +166,11 @@ class BaseLLMClient:
         if errors:
             last_type, _, last_msg = errors[-1]
             if last_type == "rate_limit":
-                raise RateLimitExceededError(f"All keys rate limited. Last: {last_msg}")
+                raise RateLimitExceededError(f"All keys rate limited. Last: {last_msg}", rotation_log=rotation_log)
             else:
-                raise ProviderAPIError(f"All keys failed. Last: {last_msg}")
+                raise ProviderAPIError(f"All keys failed. Last: {last_msg}", rotation_log=rotation_log)
         
-        raise ProviderAPIError("No API keys available")
+        raise ProviderAPIError("No API keys available", rotation_log=rotation_log)
 
     async def stream_chat_completions(self, req: ChatRequest):
         """
@@ -299,8 +299,8 @@ class BaseLLMClient:
         if errors:
             last_type, _, last_msg = errors[-1]
             if last_type == "rate_limit":
-                raise RateLimitExceededError(f"All keys rate limited. Last: {last_msg}")
+                raise RateLimitExceededError(f"All keys rate limited. Last: {last_msg}", rotation_log=rotation_log)
             else:
-                raise ProviderAPIError(f"All keys failed. Last: {last_msg}")
+                raise ProviderAPIError(f"All keys failed. Last: {last_msg}", rotation_log=rotation_log)
         
-        raise ProviderAPIError("No API keys available for streaming")
+        raise ProviderAPIError("No API keys available for streaming", rotation_log=rotation_log)
