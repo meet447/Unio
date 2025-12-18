@@ -6,6 +6,20 @@ import Navigation from "@/components/layout/Navigation";
 const changes = [
     {
         date: "December 18, 2025",
+        version: "v1.3.0",
+        title: "Smart Semantic Caching",
+        description: "Implemented high-performance semantic caching to reduce latency and redundant LLM costs.",
+        items: [
+            "Integrated Semantic Caching for both streaming and non-streaming responses.",
+            "Added Cache Hit/Miss badges and detailed performance metrics to request logs.",
+            "Implemented vector-based similarity search (pgvector) for intent-based matching.",
+            "Added support for custom similarity thresholds and cache toggling via API parameters.",
+            "Implemented background cache accumulation for streaming responses."
+        ],
+        type: "Feature"
+    },
+    {
+        date: "December 18, 2025",
         version: "v1.2.0",
         title: "Enhanced RAG & Logging",
         description: "Introduced detailed RAG logging and improved documentation with standardized model naming.",
