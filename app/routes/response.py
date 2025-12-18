@@ -6,6 +6,7 @@ from models.chat import (
 )
 from services.provider import get_provider
 from services.vault import VaultService
+from services.cache import CacheService
 from auth.check_key import fetch_userid
 from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIError
 from utils.error_handler import create_error_response, log_request_async
@@ -60,7 +61,7 @@ async def create_response(
 
     try:
         if req.stream:
-            return await _generate_streaming_response(client, req, user_id, api_key, request_payload, start_time)
+            return await _generate_streaming_response(client, req, user_id, api_key, request_payload, start_time, background_tasks)
         else:
             return await _generate_response(client, req, user_id, api_key, request_payload, start_time, background_tasks)
             
@@ -71,7 +72,7 @@ async def create_response(
                 fallback_client = get_provider(model=req.fallback_model, user_id=user_id)
                 req.model = req.fallback_model
                 if req.stream:
-                    return await _generate_streaming_response(fallback_client, req, user_id, api_key, request_payload, start_time)
+                    return await _generate_streaming_response(fallback_client, req, user_id, api_key, request_payload, start_time, background_tasks)
                 else:
                     return await _generate_response(fallback_client, req, user_id, api_key, request_payload, start_time, background_tasks)
             except Exception:
@@ -136,6 +137,56 @@ async def _generate_response(client, req: ResponseRequest, user_id: str, api_key
                     })
         except Exception as e:
             logger.error(f"RAG retrieval failed: {e}")
+    # Semantic Cache Check
+    prompt_key = json.dumps([m.model_dump() for m in messages], sort_keys=True)
+    if req.cache_enabled:
+        cache_hit = await CacheService.find_in_cache(
+            user_id=user_id,
+            model=req.model,
+            prompt=prompt_key,
+            threshold=req.cache_threshold
+        )
+        if cache_hit:
+            latency_ms = (time.time() - start_time) * 1000
+            response_payload = cache_hit["response"]
+            
+            # Inject cache metadata
+            if "usage" not in response_payload: response_payload["usage"] = {}
+            response_payload["usage"]["cache_hit"] = True
+            response_payload["usage"]["cache_type"] = cache_hit["hit_type"]
+            response_payload["usage"]["cache_similarity"] = cache_hit["similarity"]
+            response_payload["latency_ms"] = latency_ms
+            
+            # Log the hit
+            background_tasks.add_task(
+                log_request_async,
+                user_id=user_id,
+                api_key=api_key,
+                provider=req.model,
+                model=req.model,
+                status=200,
+                request_payload=request_payload,
+                response_payload=response_payload,
+                start_time=start_time,
+                prompt_tokens=response_payload["usage"].get("prompt_tokens", 0),
+                completion_tokens=response_payload["usage"].get("completion_tokens", 0),
+                total_tokens=response_payload["usage"].get("total_tokens", 0),
+                key_name="Cache",
+                latency_ms=latency_ms,
+                is_cache_hit=True
+            )
+            
+            if req.stream:
+                async def stream_cache_hit():
+                    content = response_payload["choices"][0]["message"]["content"]
+                    chunk_size = 20
+                    for i in range(0, len(content), chunk_size):
+                        chunk_text = content[i:i + chunk_size]
+                        yield f"data: {json.dumps({'id': response_payload['id'], 'object': 'chat.completion.chunk', 'created': response_payload['created'], 'model': response_payload['model'], 'choices': [{'index': 0, 'delta': {'content': chunk_text}, 'finish_reason': None}]})}\n\n"
+                    yield "data: [DONE]\n\n"
+                return StreamingResponse(stream_cache_hit(), media_type="text/event-stream")
+            
+            return JSONResponse(content=response_payload)
 
     chat_req = ChatRequest(
         model=req.model,
@@ -148,6 +199,16 @@ async def _generate_response(client, req: ResponseRequest, user_id: str, api_key
     )
     
     chat_response = await client.chat_completions(req=chat_req)
+    
+    # Save to cache if enabled
+    if req.cache_enabled:
+        background_tasks.add_task(
+            CacheService.save_to_cache,
+            user_id=user_id,
+            model=req.model,
+            prompt=prompt_key,
+            response=chat_response.model_dump(exclude={"key_name"}, exclude_none=True)
+        )
     
     # Log request
     # Log request
@@ -174,7 +235,7 @@ async def _generate_response(client, req: ResponseRequest, user_id: str, api_key
     return JSONResponse(content=chat_response.model_dump(exclude={"key_name"}, exclude_none=True))
 
 
-async def _generate_streaming_response(client, req: ResponseRequest, user_id: str, api_key: str, request_payload: dict, start_time: float) -> StreamingResponse:
+async def _generate_streaming_response(client, req: ResponseRequest, user_id: str, api_key: str, request_payload: dict, start_time: float, background_tasks: BackgroundTasks) -> StreamingResponse:
     """Generate streaming response in OpenAI Responses API format."""
     messages = [Message(role="user", content=req.input)] if isinstance(req.input, str) else req.input
 
@@ -226,7 +287,57 @@ async def _generate_streaming_response(client, req: ResponseRequest, user_id: st
                     })
         except Exception as e:
             logger.error(f"RAG retrieval failed: {e}")
-    
+    # Semantic Cache Check
+    prompt_key = json.dumps([m.model_dump() for m in messages], sort_keys=True)
+    if req.cache_enabled:
+        cache_hit = await CacheService.find_in_cache(
+            user_id=user_id,
+            model=req.model,
+            prompt=prompt_key,
+            threshold=req.cache_threshold
+        )
+        if cache_hit:
+            latency_ms = (time.time() - start_time) * 1000
+            response_payload = cache_hit["response"]
+            
+            # Inject cache metadata
+            if "usage" not in response_payload: response_payload["usage"] = {}
+            response_payload["usage"]["cache_hit"] = True
+            response_payload["usage"]["cache_type"] = cache_hit["hit_type"]
+            response_payload["usage"]["cache_similarity"] = cache_hit["similarity"]
+            response_payload["latency_ms"] = latency_ms
+            
+            # Log the hit
+            background_tasks.add_task(
+                log_request_async,
+                user_id=user_id,
+                api_key=api_key,
+                provider=req.model,
+                model=req.model,
+                status=200,
+                request_payload=request_payload,
+                response_payload=response_payload,
+                start_time=start_time,
+                prompt_tokens=response_payload["usage"].get("prompt_tokens", 0),
+                completion_tokens=response_payload["usage"].get("completion_tokens", 0),
+                total_tokens=response_payload["usage"].get("total_tokens", 0),
+                key_name="Cache",
+                latency_ms=latency_ms,
+                is_cache_hit=True
+            )
+            
+            if req.stream:
+                async def stream_cache_hit():
+                    content = response_payload["choices"][0]["message"]["content"]
+                    chunk_size = 20
+                    for i in range(0, len(content), chunk_size):
+                        chunk_text = content[i:i + chunk_size]
+                        yield f"data: {json.dumps({'id': response_payload['id'], 'object': 'chat.completion.chunk', 'created': response_payload['created'], 'model': response_payload['model'], 'choices': [{'index': 0, 'delta': {'content': chunk_text}, 'finish_reason': None}]})}\n\n"
+                    yield "data: [DONE]\n\n"
+                return StreamingResponse(stream_cache_hit(), media_type="text/event-stream")
+            
+            return JSONResponse(content=response_payload)
+
     chat_req = ChatRequest(
         model=req.model,
         messages=messages,
@@ -250,6 +361,12 @@ async def _generate_streaming_response(client, req: ResponseRequest, user_id: st
             if isinstance(chunk, dict) and chunk.get("type") == "internal_metadata":
                 metadata = chunk
                 continue
+
+            # Extract content for caching
+            if hasattr(chunk, 'choices') and chunk.choices:
+                delta = chunk.choices[0].delta
+                if hasattr(delta, 'content') and delta.content:
+                    completion_content += delta.content
 
             # Pass through original chunks
             yield chunk
@@ -278,5 +395,36 @@ async def _generate_streaming_response(client, req: ResponseRequest, user_id: st
             key_rotation_log=metadata.get("key_rotation_log", []),
             is_fallback=False
         )
+        
+        # Save to cache if enabled
+        if req.cache_enabled and completion_content:
+            p_tokens = metadata.get("prompt_tokens", prompt_tokens)
+            c_tokens = metadata.get("completion_tokens", 0)
+            mock_response = {
+                "id": f"chatcmpl-{uuid.uuid4()}",
+                "object": "chat.completion",
+                "created": int(time.time()),
+                "model": req.model,
+                "choices": [{
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": completion_content
+                    },
+                    "finish_reason": "stop"
+                }],
+                "usage": {
+                    "prompt_tokens": p_tokens,
+                    "completion_tokens": c_tokens,
+                    "total_tokens": p_tokens + c_tokens
+                }
+            }
+            background_tasks.add_task(
+                CacheService.save_to_cache,
+                user_id=user_id,
+                model=req.model,
+                prompt=prompt_key,
+                response=mock_response
+            )
     
     return StreamingResponse(stream_generator(), media_type="text/event-stream")

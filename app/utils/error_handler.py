@@ -109,7 +109,8 @@ async def log_request_async(
     is_fallback: bool = False,
     key_rotation_log: list = None,
     latency_ms: float = 0.0,
-    tokens_per_second: float = 0.0
+    tokens_per_second: float = 0.0,
+    is_cache_hit: bool = False
 ):
     """
     Fire-and-forget async logging wrapper.
@@ -136,7 +137,8 @@ async def log_request_async(
             is_fallback=is_fallback,
             key_rotation_log=key_rotation_log or [],
             latency_ms=latency_ms,
-            tokens_per_second=tokens_per_second
+            tokens_per_second=tokens_per_second,
+            is_cache_hit=is_cache_hit
         )
     except Exception as e:
         logger.error(f"Failed to log request: {e}")

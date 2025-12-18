@@ -22,7 +22,8 @@ async def log_request(
     is_fallback: bool = False,
     key_rotation_log: list = None,
     latency_ms: float = 0.0,
-    tokens_per_second: float = 0.0
+    tokens_per_second: float = 0.0,
+    is_cache_hit: bool = False
 ):
     """
     Insert a log into the request_logs table.
@@ -51,7 +52,8 @@ async def log_request(
         "is_fallback": is_fallback,
         "key_rotation_log": key_rotation_log or [],
         "latency_ms": int(latency_ms),
-        "tokens_per_second": tokens_per_second
+        "tokens_per_second": tokens_per_second,
+        "is_cache_hit": is_cache_hit
     }
 
     try:

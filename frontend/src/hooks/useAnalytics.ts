@@ -23,6 +23,7 @@ export interface RequestLog {
   key_name: string | null;
   is_fallback: boolean | null;
   key_rotation_log: any[] | null;
+  is_cache_hit: boolean | null;
 }
 
 export interface AnalyticsFilters {
@@ -195,7 +196,8 @@ export const useAnalytics = (filters: AnalyticsFilters = {
         time_stamp: row.time_stamp,
         key_name: row.key_name || null,
         is_fallback: row.is_fallback,
-        key_rotation_log: row.key_rotation_log
+        key_rotation_log: row.key_rotation_log,
+        is_cache_hit: row.is_cache_hit
       })) as RequestLog[];
 
       setAllLogsForAnalytics(processedData);
@@ -275,7 +277,8 @@ export const useAnalytics = (filters: AnalyticsFilters = {
         time_stamp: row.time_stamp,
         key_name: row.key_name || null,
         is_fallback: row.is_fallback,
-        key_rotation_log: row.key_rotation_log
+        key_rotation_log: row.key_rotation_log,
+        is_cache_hit: row.is_cache_hit
       })) as RequestLog[];
       const count = result.count || 0;
 

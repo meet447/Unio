@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse, JSONResponse
 from models.chat import ChatRequest, Message
 from services.provider import get_provider, get_all_providers
 from services.vault import VaultService
+from services.cache import CacheService
 from auth.check_key import fetch_userid, fetch_all_providers_with_keys
 from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIError, ModelNotFoundError
 from utils.error_handler import create_error_response, get_error_response, log_request_async
@@ -11,6 +12,7 @@ import time
 import asyncio
 import json
 import logging
+import uuid
 from pydantic import BaseModel
 from typing import Any
 from openai import AsyncOpenAI
@@ -199,7 +201,7 @@ async def chat_completions(
         req.fallback_model = x_fallback_model
     
     # Initialize request payload for logging early to capture RAG meta
-    request_payload = req.model_dump(exclude_unset=True)
+    request_payload = req.model_dump()
 
     # RAG Retrieval
     if req.vault_id:
@@ -273,7 +275,59 @@ async def chat_completions(
         )
 
     start_time = time.time()
-    # request_payload already initialized above
+    
+    # Semantic Cache Check
+    prompt_key = json.dumps([m.model_dump() for m in req.messages], sort_keys=True)
+    if req.cache_enabled:
+        cache_hit = await CacheService.find_in_cache(
+            user_id=user_id,
+            model=req.model,
+            prompt=prompt_key,
+            threshold=req.cache_threshold
+        )
+        if cache_hit:
+            latency_ms = (time.time() - start_time) * 1000
+            response_payload = cache_hit["response"]
+            
+            # Inject cache metadata
+            if "usage" not in response_payload: response_payload["usage"] = {}
+            response_payload["usage"]["cache_hit"] = True
+            response_payload["usage"]["cache_type"] = cache_hit["hit_type"]
+            response_payload["usage"]["cache_similarity"] = cache_hit["similarity"]
+            response_payload["latency_ms"] = latency_ms
+            
+            # Log the hit
+            background_tasks.add_task(
+                log_request_async,
+                user_id=user_id,
+                api_key=api_key,
+                provider=req.model,
+                model=req.model,
+                status=200,
+                request_payload=request_payload,
+                response_payload=response_payload,
+                start_time=start_time,
+                prompt_tokens=response_payload["usage"].get("prompt_tokens", 0),
+                completion_tokens=response_payload["usage"].get("completion_tokens", 0),
+                total_tokens=response_payload["usage"].get("total_tokens", 0),
+                key_name="Cache",
+                latency_ms=latency_ms,
+                is_cache_hit=True
+            )
+            
+            if req.stream:
+                async def stream_cache_hit():
+                    content = response_payload["choices"][0]["message"]["content"]
+                    # Yield in small chunks to simulate streaming
+                    chunk_size = 20
+                    for i in range(0, len(content), chunk_size):
+                        chunk_text = content[i:i + chunk_size]
+                        yield f"data: {json.dumps({'id': response_payload['id'], 'object': 'chat.completion.chunk', 'created': response_payload['created'], 'model': response_payload['model'], 'choices': [{'index': 0, 'delta': {'content': chunk_text}, 'finish_reason': None}]})}\n\n"
+                    yield "data: [DONE]\n\n"
+                
+                return StreamingResponse(stream_cache_hit(), media_type="text/event-stream")
+            
+            return JSONResponse(content=response_payload)
 
 
     try:
@@ -293,6 +347,12 @@ async def chat_completions(
                             metadata = chunk
                             continue
 
+                        # Extract content for caching
+                        if hasattr(chunk, 'choices') and chunk.choices:
+                            delta = chunk.choices[0].delta
+                            if hasattr(delta, 'content') and delta.content:
+                                completion_content += delta.content
+
                         # Pass through original chunks, filtering empty keep-alives
                         if not is_empty_chunk(chunk):
                             yield chunk
@@ -302,8 +362,6 @@ async def chat_completions(
                     c_tokens = metadata.get("completion_tokens", 0) 
                     t_tokens = metadata.get("total_tokens", p_tokens + c_tokens)
                     key_name = metadata.get("key_name", "")
-
-                    # Await log_request_async directly to ensure it completes before stream closes
                     await log_request_async(
                         user_id=user_id,
                         api_key=api_key,
@@ -322,6 +380,37 @@ async def chat_completions(
                         key_rotation_log=metadata.get("key_rotation_log", []),
                         is_fallback=False
                     )
+                    
+                    # Save to cache if enabled
+                    if req.cache_enabled and completion_content:
+                        p_tokens = metadata.get("prompt_tokens", prompt_tokens)
+                        c_tokens = metadata.get("completion_tokens", 0)
+                        mock_response = {
+                            "id": f"chatcmpl-{uuid.uuid4()}",
+                            "object": "chat.completion",
+                            "created": int(time.time()),
+                            "model": req.model,
+                            "choices": [{
+                                "index": 0,
+                                "message": {
+                                    "role": "assistant",
+                                    "content": completion_content
+                                },
+                                "finish_reason": "stop"
+                            }],
+                            "usage": {
+                                "prompt_tokens": p_tokens,
+                                "completion_tokens": c_tokens,
+                                "total_tokens": p_tokens + c_tokens
+                            }
+                        }
+                        background_tasks.add_task(
+                            CacheService.save_to_cache,
+                            user_id=user_id,
+                            model=req.model,
+                            prompt=prompt_key,
+                            response=mock_response
+                        )
                     
                 except (RateLimitExceededError, ProviderAPIError) as e:
                     # Try fallback if available
@@ -353,6 +442,16 @@ async def chat_completions(
         else:
             # Non-streaming response
             response_data = await client.chat_completions(req=req)
+            
+            # Save to cache if enabled
+            if req.cache_enabled:
+                background_tasks.add_task(
+                    CacheService.save_to_cache,
+                    user_id=user_id,
+                    model=req.model,
+                    prompt=prompt_key,
+                    response=response_data.model_dump(exclude={"key_name"}, exclude_none=True)
+                )
             
             # Log request
             usage = response_data.usage

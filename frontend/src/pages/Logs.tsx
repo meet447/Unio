@@ -330,6 +330,8 @@ const Logs = () => {
                               <div className="flex gap-1">
                                 {log.is_fallback && <Badge variant="secondary" className="text-[10px] h-4 px-1 bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Fallback</Badge>}
                                 {hasRotation && <Badge variant="secondary" className="text-[10px] h-4 px-1 bg-blue-500/10 text-blue-500 border-blue-500/20">Rotated</Badge>}
+                                {log.is_cache_hit && <Badge variant="secondary" className="text-[10px] h-4 px-1 bg-green-500/10 text-green-500 border-green-500/20">Cache Hit</Badge>}
+                                {!log.is_cache_hit && log.request_payload?.cache_enabled && <Badge variant="secondary" className="text-[10px] h-4 px-1 bg-gray-500/10 text-gray-400 border-gray-500/20">Cache Miss</Badge>}
                               </div>
                             </div>
                           </td>
@@ -424,16 +426,43 @@ const Logs = () => {
                                   </div>
                                   <div>
                                     <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Rotation Log</span>
-                                    <div className="space-y-1 max-h-20 overflow-y-auto">
+                                    <div className="space-y-1 max-h-20 overflow-y-auto font-mono">
                                       {log.key_rotation_log && log.key_rotation_log.length > 0 ? (
                                         log.key_rotation_log.map((entry: any, i: number) => (
-                                          <div key={i} className="flex justify-between text-xs">
+                                          <div key={i} className="flex justify-between text-[10px]">
                                             <span className="text-[#9d9d9d]">{entry.key}:</span>
                                             <span className={entry.status === 'success' ? 'text-green-500' : 'text-red-500'}>{entry.status}</span>
                                           </div>
                                         ))
                                       ) : (
                                         <span className="text-[#555] text-xs">No rotation events</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <span className="text-[#7f7f7f] text-xs uppercase tracking-wider block mb-1">Cache Info</span>
+                                    <div className="space-y-1">
+                                      <div className="flex justify-between">
+                                        <span className="text-[#9d9d9d] text-xs">Status:</span>
+                                        <span className={`text-xs ${log.is_cache_hit ? 'text-green-500' : 'text-white'}`}>
+                                          {log.is_cache_hit ? 'Hit' : (log.request_payload?.cache_enabled ? 'Miss' : 'Disabled')}
+                                        </span>
+                                      </div>
+                                      {log.is_cache_hit && (
+                                        <>
+                                          <div className="flex justify-between">
+                                            <span className="text-[#9d9d9d] text-xs">Type:</span>
+                                            <span className="text-white text-xs capitalize">{log.response_payload?.usage?.cache_type || 'N/A'}</span>
+                                          </div>
+                                          <div className="flex justify-between">
+                                            <span className="text-[#9d9d9d] text-xs">Similarity:</span>
+                                            <span className="text-white text-xs">
+                                              {log.response_payload?.usage?.cache_similarity
+                                                ? `${(log.response_payload.usage.cache_similarity * 100).toFixed(1)}%`
+                                                : 'N/A'}
+                                            </span>
+                                          </div>
+                                        </>
                                       )}
                                     </div>
                                   </div>

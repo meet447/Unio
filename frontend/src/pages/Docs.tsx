@@ -10,6 +10,7 @@ const sections = [
     { id: "models", title: "Models", icon: <Cuboid className="w-5 h-5 text-purple-400" /> },
     { id: "chat", title: "Chat Completions", icon: <Activity className="w-5 h-5 text-pink-400" /> },
     { id: "fallback", title: "Fallback Models", icon: <Zap className="w-5 h-5 text-orange-400" /> },
+    { id: "cache", title: "Semantic Caching", icon: <Zap className="w-5 h-5 text-cyan-400" /> },
     { id: "vaults", title: "Knowledge Vaults", icon: <Database className="w-5 h-5 text-green-400" /> },
     { id: "logs", title: "Logs & Analytics", icon: <Activity className="w-5 h-5 text-red-400" /> },
     { id: "changelog", title: "Changelog", icon: <Tag className="w-5 h-5 text-blue-400" />, isExternal: true },
@@ -207,6 +208,76 @@ for await (const chunk of stream) {
   messages: [{ role: "user", content: "..." }],
   fallback_model: "groq:llama-3.1-70b-versatile" // Supported via Unio gateway
 });`} />
+                            </div>
+                        </div>
+                    )}
+
+                    {activeSection === "cache" && (
+                        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div>
+                                <h1 className="text-3xl font-bold mb-4">Semantic Caching</h1>
+                                <p className="text-[#9d9d9d] leading-relaxed">
+                                    Unio's Smart Semantic Caching reduces latency and eliminates redundant costs by serving similar requests from a vector-based cache.
+                                    Unlike traditional caching, semantic caching understands the context and intent of your prompt.
+                                </p>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h2 className="text-xl font-semibold">How it Works</h2>
+                                <ul className="list-disc list-inside space-y-2 text-[#9d9d9d]">
+                                    <li><strong>Exact Match:</strong> Lightning-fast string comparison for identical prompts.</li>
+                                    <li><strong>Semantic Match:</strong> Uses vector similarity (pgvector) to identify similar prompts (e.g., "What's the weather?" vs "Tell me the weather").</li>
+                                    <li><strong>Auto-Storage:</strong> All successful responses are cached automatically by default.</li>
+                                </ul>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h2 className="text-xl font-semibold">Parameters</h2>
+                                <p className="text-[#9d9d9d]">You can control caching behavior in your request body:</p>
+                                <div className="bg-[#0a0a0a] border border-[#1b1b1b] rounded-xl p-4 space-y-3">
+                                    <div className="flex justify-between items-center pb-2 border-b border-[#1b1b1b]/50">
+                                        <span className="font-mono text-sm text-blue-400">cache_enabled</span>
+                                        <span className="text-xs text-[#6f6f6f]">boolean (default: true)</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pb-2 border-b border-[#1b1b1b]/50">
+                                        <span className="font-mono text-sm text-blue-400">cache_threshold</span>
+                                        <span className="text-xs text-[#6f6f6f]">float (default: 0.95)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-4">
+                                <h2 className="text-xl font-semibold text-blue-400">cURL Example</h2>
+                                <CodeBlock code={`curl https://api.unio.chipling.xyz/v1/chat/completions \\
+  -H "Authorization: Bearer YOUR_UNIO_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "openai:gpt-4o",
+    "messages": [{"role": "user", "content": "How\\'s the weather?"}],
+    "cache_enabled": true,
+    "cache_threshold": 0.92
+  }'`} />
+                            </div>
+
+                            <div className="space-y-4">
+                                <h2 className="text-xl font-semibold text-blue-400">OpenAI SDK (Python)</h2>
+                                <CodeBlock code={`from openai import OpenAI
+
+client = OpenAI(
+    api_key="YOUR_UNIO_KEY",
+    base_url="https://api.unio.chipling.xyz/v1"
+)
+
+response = client.chat.completions.create(
+    model="openai:gpt-4o",
+    messages=[{"role": "user", "content": "How\\'s the weather?"}],
+    extra_body={
+        "cache_enabled": True,
+        "cache_threshold": 0.95
+    }
+)
+
+print(response.choices[0].message.content)`} />
                             </div>
                         </div>
                     )}

@@ -99,9 +99,10 @@ class ChatRequest(BaseModel):
     reasoning_effort: Optional[str] = None
     fallback_model: Optional[str] = None  # For automatic fallback when primary provider fails
     tools: Optional[List[Tool]] = None  # Tool definitions for function calling
-    tools: Optional[List[Tool]] = None  # Tool definitions for function calling
     tool_choice: Optional[Union[str, dict]] = None  # Controls tool usage: "none", "auto", or specific tool
     vault_id: Optional[str] = None  # ID of the vault for RAG retrieval
+    cache_enabled: Optional[bool] = True
+    cache_threshold: Optional[float] = 0.95
 
 
 class ChatResponse(BaseModel):
@@ -146,9 +147,10 @@ class ResponseRequest(BaseModel):
     response_format: Optional[dict] = None
     top_p: Optional[float] = None
     truncation: Optional[dict] = None
-    truncation: Optional[dict] = None
     user: Optional[str] = None
     vault_id: Optional[str] = None  # ID of the vault for RAG retrieval
+    cache_enabled: Optional[bool] = True
+    cache_threshold: Optional[float] = 0.95
 
 
 # Response content part structures (matching OpenAI official types)
