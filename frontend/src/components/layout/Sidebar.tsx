@@ -6,7 +6,10 @@ import {
   User,
   Heart,
   FileText,
-  Database
+  Activity,
+  BookOpen,
+  Database,
+  Tag
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -16,6 +19,8 @@ export const navItems = [
   { path: "/dashboard/logs", label: "Logs", icon: FileText },
   { path: "/dashboard/models", label: "Models", icon: Zap },
   { path: "/dashboard/vaults", label: "Knowledge Vaults", icon: Database },
+  { path: "/docs", label: "Documentation", icon: BookOpen },
+  { path: "/changelog", label: "Changelog", icon: Tag },
 ];
 
 export const bottomNavItems = [
@@ -65,7 +70,8 @@ const Sidebar = () => {
                   !location.pathname.includes("/models") &&
                   !location.pathname.includes("/logs") &&
                   !location.pathname.includes("/credits") &&
-                  !location.pathname.includes("/vaults"));
+                  !location.pathname.includes("/vaults") &&
+                  !location.pathname.includes("/docs"));
 
               return (
                 <Link

@@ -19,6 +19,8 @@ const Models = lazy(() => import("./pages/Models"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Analytics = lazy(() => import("./pages/Analytics"));
 const Vaults = lazy(() => import("./pages/Vaults"));
+const Docs = lazy(() => import("./pages/Docs"));
+const Changelog = lazy(() => import("./pages/Changelog"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -50,6 +52,8 @@ const App = () => (
                 <Route path="models" element={<Models />} />
                 <Route path="vaults" element={<Vaults />} />
               </Route>
+              <Route path="/docs" element={<Docs />} />
+              <Route path="/changelog" element={<Changelog />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

@@ -36,10 +36,10 @@ const Footer = () => {
             <div className="flex items-center space-x-2 pt-2">
               <div
                 className={`w-2 h-2 rounded-full ${apiStatus === "online"
-                    ? "bg-[#82f2a6] shadow-[0_0_8px_rgba(130,242,166,0.5)]"
-                    : apiStatus === "offline"
-                      ? "bg-red-500"
-                      : "bg-yellow-500"
+                  ? "bg-[#82f2a6] shadow-[0_0_8px_rgba(130,242,166,0.5)]"
+                  : apiStatus === "offline"
+                    ? "bg-red-500"
+                    : "bg-yellow-500"
                   }`}
               ></div>
               <span className="text-xs text-[#888] font-medium uppercase tracking-wider">
@@ -61,6 +61,12 @@ const Footer = () => {
               </Link>
               <Link to="/register" className="block text-sm text-[#888] hover:text-white transition-colors">
                 Sign up
+              </Link>
+              <Link to="/docs" className="block text-sm text-[#888] hover:text-white transition-colors">
+                Documentation
+              </Link>
+              <Link to="/changelog" className="block text-sm text-[#888] hover:text-white transition-colors">
+                Changelog
               </Link>
             </div>
           </div>

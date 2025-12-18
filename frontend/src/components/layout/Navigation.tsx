@@ -18,6 +18,8 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const publicNavItems: Array<{ path: string; label: string }> = [
+    { path: "/docs", label: "Documentation" },
+    { path: "/changelog", label: "Changelog" },
   ];
 
   const userNavItems: Array<{ path: string; label: string; icon: React.ReactNode }> = [
@@ -49,24 +51,24 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
             </Link>
           )}
 
-          {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-8">
-            {!user && publicNavItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`text-sm font-medium transition-colors ${location.pathname === item.path
-                  ? 'text-white'
-                  : 'text-[#888] hover:text-white'
-                  }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
           {/* Right side items */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
+            {/* Desktop Public Navigation */}
+            <div className="hidden lg:flex items-center gap-6 mr-2">
+              {publicNavItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className={`text-sm font-medium transition-colors ${location.pathname === item.path
+                    ? 'text-white'
+                    : 'text-[#888] hover:text-white'
+                    }`}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+
             {!user ? (
               <>
                 <Link
@@ -147,21 +149,35 @@ const Navigation: React.FC<NavigationProps> = ({ isDashboard = false }) => {
                     })
                   ) : (
                     // Public/Home Mobile Menu
-                    (!user ? publicNavItems : userNavItems).map((item) => (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${location.pathname === item.path
-                          ? 'text-black bg-white'
-                          : 'text-[#888] hover:text-white hover:bg-[#111]'
-                          }`}
-                        onClick={() => setIsMenuOpen(false)}
-                      >
-                        {/* Render icon if it exists, otherwise nothing */}
-                        {'icon' in (item as any) ? (item as any).icon : null}
-                        {item.label}
-                      </Link>
-                    ))
+                    <>
+                      {publicNavItems.map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${location.pathname === item.path
+                            ? 'text-black bg-white'
+                            : 'text-[#888] hover:text-white hover:bg-[#111]'
+                            }`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      ))}
+                      {user && userNavItems.map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className={`flex items-center gap-3 px-4 py-3 text-base font-medium rounded-xl transition-colors ${location.pathname === item.path
+                            ? 'text-black bg-white'
+                            : 'text-[#888] hover:text-white hover:bg-[#111]'
+                            }`}
+                          onClick={() => setIsMenuOpen(false)}
+                        >
+                          {item.icon}
+                          {item.label}
+                        </Link>
+                      ))}
+                    </>
                   )}
 
                   {user && (

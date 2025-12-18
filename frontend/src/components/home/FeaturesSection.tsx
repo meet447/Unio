@@ -4,12 +4,20 @@ import {
     Zap,
     BarChart3,
     Globe2,
-    Key
+    Key,
+    Database
 } from "lucide-react";
 import { Badge } from "@/components/kibo-ui/badge";
 
 const FeaturesSection = () => {
     const features = [
+        {
+            title: "Knowledge Vaults (RAG)",
+            description: "Upload documents and chat with your data. Automated embeddings, vector storage, and context retrieval.",
+            icon: Database,
+            className: "md:col-span-3",
+            color: "bg-[#c4b5fd] text-black"
+        },
         {
             title: "Unified Interface",
             description: "One API format for OpenAI, Anthropic, Gemini, and more. Switch providers with a single config change.",
