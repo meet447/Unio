@@ -52,3 +52,5 @@ htmlcov/
 
 # Vercel
 .vercel
+
+test.py

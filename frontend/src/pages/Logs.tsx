@@ -45,7 +45,7 @@ const PayloadViewer = ({ title, data }: { title: string, data: any }) => {
 
       {isOpen && (
         <div className="border-t border-[#1b1b1b] bg-[#050505]">
-          <pre className="text-xs p-4 overflow-auto max-h-[400px] text-[#9d9d9d] font-mono leading-relaxed">
+          <pre className="text-xs p-4 overflow-auto max-h-[400px] text-[#9d9d9d] font-mono leading-relaxed whitespace-pre-wrap break-words">
             {JSON.stringify(data, null, 2)}
           </pre>
         </div>

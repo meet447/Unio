@@ -1,8 +1,8 @@
 from fastapi import Header, APIRouter, Request, BackgroundTasks
 from fastapi.responses import StreamingResponse, JSONResponse
-from models.chat import ChatRequest
+from models.chat import ChatRequest, Message
 from services.provider import get_provider, get_all_providers
-from services.provider import get_provider, get_all_providers
+from services.vault import VaultService
 from auth.check_key import fetch_userid, fetch_all_providers_with_keys
 from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIError, ModelNotFoundError
 from utils.error_handler import create_error_response, get_error_response, log_request_async
@@ -198,6 +198,71 @@ async def chat_completions(
     if x_fallback_model:
         req.fallback_model = x_fallback_model
     
+    # Initialize request payload for logging early to capture RAG meta
+    request_payload = req.model_dump(exclude_unset=True)
+
+    # RAG Retrieval
+    if req.vault_id:
+        try:
+            # 1. Identify query (last user message)
+            query = ""
+            for m in reversed(req.messages):
+                if m.role == "user":
+                    if isinstance(m.content, str):
+                        query = m.content
+                    elif isinstance(m.content, list):
+                        # Extract text parts
+                        parts = []
+                        for c in m.content:
+                            if hasattr(c, 'text'):
+                                parts.append(c.text)
+                        query = " ".join(parts)
+                    break
+            
+            if query:
+                context_list = await VaultService.retrieve_context(req.vault_id, user_id, query)
+                if context_list:
+                    # Update request payload for logging
+                    if "rag_meta" not in request_payload: request_payload["rag_meta"] = {}
+                    request_payload["rag_meta"].update({
+                        "enabled": True,
+                        "vault_id": req.vault_id,
+                        "retrieved_chunks": len(context_list),
+                        "context_preview": [c[:200] + "..." for c in context_list] 
+                    })
+
+                    context_str = "\n\n".join(context_list)
+                    rag_prompt = f"RETRIEVED CONTEXT FROM KNOWLEDGE VAULT:\n{context_str}\n\nINSTRUCTIONS:\nUse the above context to answer the user's question if relevant."
+                    
+                    # Inject into system prompt
+                    has_system = False
+                    for m in req.messages:
+                        if m.role == "system":
+                            if isinstance(m.content, str):
+                                m.content += f"\n\n{rag_prompt}"
+                            elif isinstance(m.content, list):
+                                from models.chat import TextContent
+                                m.content.append(TextContent(type="text", text=f"\n\n{rag_prompt}"))
+                            has_system = True
+                            break
+                    
+                    if not has_system:
+                        # Insert system prompt at start
+                        req.messages.insert(0, Message(role="system", content=rag_prompt))
+                else:
+                    if "rag_meta" not in request_payload: request_payload["rag_meta"] = {}
+                    request_payload["rag_meta"].update({
+                        "enabled": True,
+                        "vault_id": req.vault_id,
+                        "retrieved_chunks": 0,
+                        "context_preview": []
+                    })
+                        
+        except Exception as e:
+            logger.error(f"RAG retrieval failed: {e}")
+            if "rag_meta" not in request_payload: request_payload["rag_meta"] = {}
+            request_payload["rag_meta"]["error"] = str(e)
+    
     # Get provider client
     try:
         client = get_provider(model=req.model, user_id=user_id)
@@ -208,7 +273,8 @@ async def chat_completions(
         )
 
     start_time = time.time()
-    request_payload = req.model_dump(exclude_unset=True)
+    # request_payload already initialized above
+
 
     try:
         if req.stream:

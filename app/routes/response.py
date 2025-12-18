@@ -5,6 +5,7 @@ from models.chat import (
     Message, Usage, ChatRequest
 )
 from services.provider import get_provider
+from services.vault import VaultService
 from auth.check_key import fetch_userid
 from exceptions import InvalidAPIKeyError, RateLimitExceededError, ProviderAPIError
 from utils.error_handler import create_error_response, log_request_async
@@ -87,6 +88,55 @@ async def _generate_response(client, req: ResponseRequest, user_id: str, api_key
     # Convert input to messages
     messages = [Message(role="user", content=req.input)] if isinstance(req.input, str) else req.input
     
+    # RAG Retrieval
+    if req.vault_id:
+        try:
+            query = ""
+            for m in reversed(messages):
+                if m.role == "user":
+                    if isinstance(m.content, str):
+                        query = m.content
+                    elif isinstance(m.content, list):
+                        parts = []
+                        for c in m.content:
+                            if hasattr(c, 'text'): parts.append(c.text)
+                        query = " ".join(parts)
+                    break
+            
+            if query:
+                context_list = await VaultService.retrieve_context(req.vault_id, user_id, query)
+                if context_list:
+                    # Update payload
+                    if "rag_meta" not in request_payload: request_payload["rag_meta"] = {}
+                    request_payload["rag_meta"].update({
+                        "enabled": True, "vault_id": req.vault_id,
+                        "retrieved_chunks": len(context_list),
+                        "context_preview": [c[:200] + "..." for c in context_list]
+                    })
+
+                    context_str = "\n\n".join(context_list)
+                    rag_prompt = f"RETRIEVED CONTEXT FROM KNOWLEDGE VAULT:\n{context_str}\n\nINSTRUCTIONS:\nUse the above context to answer the user's question if relevant."
+                    
+                    has_system = False
+                    for m in messages:
+                        if m.role == "system":
+                            if isinstance(m.content, str): m.content += f"\n\n{rag_prompt}"
+                            elif isinstance(m.content, list): 
+                                from models.chat import TextContent
+                                m.content.append(TextContent(type="text", text=f"\n\n{rag_prompt}"))
+                            has_system = True
+                            break
+                    if not has_system:
+                        messages.insert(0, Message(role="system", content=rag_prompt))
+                else:
+                    if "rag_meta" not in request_payload: request_payload["rag_meta"] = {}
+                    request_payload["rag_meta"].update({
+                        "enabled": True, "vault_id": req.vault_id,
+                        "retrieved_chunks": 0, "context_preview": []
+                    })
+        except Exception as e:
+            logger.error(f"RAG retrieval failed: {e}")
+
     chat_req = ChatRequest(
         model=req.model,
         messages=messages,
@@ -127,6 +177,55 @@ async def _generate_response(client, req: ResponseRequest, user_id: str, api_key
 async def _generate_streaming_response(client, req: ResponseRequest, user_id: str, api_key: str, request_payload: dict, start_time: float) -> StreamingResponse:
     """Generate streaming response in OpenAI Responses API format."""
     messages = [Message(role="user", content=req.input)] if isinstance(req.input, str) else req.input
+
+    # RAG Retrieval
+    if req.vault_id:
+        try:
+            query = ""
+            for m in reversed(messages):
+                if m.role == "user":
+                    if isinstance(m.content, str):
+                        query = m.content
+                    elif isinstance(m.content, list):
+                        parts = []
+                        for c in m.content:
+                            if hasattr(c, 'text'): parts.append(c.text)
+                        query = " ".join(parts)
+                    break
+            
+            if query:
+                context_list = await VaultService.retrieve_context(req.vault_id, user_id, query)
+                if context_list:
+                    # Update payload
+                    if "rag_meta" not in request_payload: request_payload["rag_meta"] = {}
+                    request_payload["rag_meta"].update({
+                        "enabled": True, "vault_id": req.vault_id,
+                        "retrieved_chunks": len(context_list),
+                        "context_preview": [c[:200] + "..." for c in context_list]
+                    })
+
+                    context_str = "\n\n".join(context_list)
+                    rag_prompt = f"RETRIEVED CONTEXT FROM KNOWLEDGE VAULT:\n{context_str}\n\nINSTRUCTIONS:\nUse the above context to answer the user's question if relevant."
+                    
+                    has_system = False
+                    for m in messages:
+                        if m.role == "system":
+                            if isinstance(m.content, str): m.content += f"\n\n{rag_prompt}"
+                            elif isinstance(m.content, list): 
+                                from models.chat import TextContent
+                                m.content.append(TextContent(type="text", text=f"\n\n{rag_prompt}"))
+                            has_system = True
+                            break
+                    if not has_system:
+                        messages.insert(0, Message(role="system", content=rag_prompt))
+                else:
+                    if "rag_meta" not in request_payload: request_payload["rag_meta"] = {}
+                    request_payload["rag_meta"].update({
+                        "enabled": True, "vault_id": req.vault_id,
+                        "retrieved_chunks": 0, "context_preview": []
+                    })
+        except Exception as e:
+            logger.error(f"RAG retrieval failed: {e}")
     
     chat_req = ChatRequest(
         model=req.model,

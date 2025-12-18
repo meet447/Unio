@@ -18,6 +18,7 @@ const Logs = lazy(() => import("./pages/Logs"));
 const Models = lazy(() => import("./pages/Models"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Analytics = lazy(() => import("./pages/Analytics"));
+const Vaults = lazy(() => import("./pages/Vaults"));
 const Login = lazy(() => import("./pages/Login"));
 const Register = lazy(() => import("./pages/Register"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -47,6 +48,7 @@ const App = () => (
                 <Route path="api-keys" element={<ApiKeys />} />
                 <Route path="logs" element={<Logs />} />
                 <Route path="models" element={<Models />} />
+                <Route path="vaults" element={<Vaults />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

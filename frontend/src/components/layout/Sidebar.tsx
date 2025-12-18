@@ -5,7 +5,8 @@ import {
   Zap,
   User,
   Heart,
-  FileText
+  FileText,
+  Database
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -14,6 +15,7 @@ export const navItems = [
   { path: "/dashboard/api-keys", label: "API Keys", icon: Key },
   { path: "/dashboard/logs", label: "Logs", icon: FileText },
   { path: "/dashboard/models", label: "Models", icon: Zap },
+  { path: "/dashboard/vaults", label: "Knowledge Vaults", icon: Database },
 ];
 
 export const bottomNavItems = [
@@ -58,15 +60,20 @@ const Sidebar = () => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path ||
-                (item.path === "/dashboard" && location.pathname.startsWith("/dashboard") && !location.pathname.includes("/api-keys") && !location.pathname.includes("/models") && !location.pathname.includes("/logs") && !location.pathname.includes("/credits"));
+                (item.path === "/dashboard" && location.pathname.startsWith("/dashboard") &&
+                  !location.pathname.includes("/api-keys") &&
+                  !location.pathname.includes("/models") &&
+                  !location.pathname.includes("/logs") &&
+                  !location.pathname.includes("/credits") &&
+                  !location.pathname.includes("/vaults"));
 
               return (
                 <Link
                   key={item.path}
                   to={item.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-0 ${isActive
-                      ? 'bg-[#0f0f0f] text-white'
-                      : 'text-[#a9a9a9] hover:text-white hover:bg-[#111111]'
+                    ? 'bg-[#0f0f0f] text-white'
+                    : 'text-[#a9a9a9] hover:text-white hover:bg-[#111111]'
                     }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -90,8 +97,8 @@ const Sidebar = () => {
                   key={item.path}
                   to={item.path}
                   className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors focus:outline-none focus:ring-0 ${isActive
-                      ? 'bg-[#0f0f0f] text-white'
-                      : 'text-[#a9a9a9] hover:text-white hover:bg-[#111111]'
+                    ? 'bg-[#0f0f0f] text-white'
+                    : 'text-[#a9a9a9] hover:text-white hover:bg-[#111111]'
                     }`}
                 >
                   <Icon className="h-5 w-5" />

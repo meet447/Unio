@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
-from routes import api, response
+from routes import api, response, vault
 from config import CORS_ORIGINS, RATE_LIMIT
 
 # Initialize rate limiter
@@ -38,7 +38,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "OPTIONS", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "X-Fallback-Model"],
 )
 
@@ -49,6 +49,11 @@ app.include_router(
 
 app.include_router(
     response.router,
+    prefix="/v1",
+)
+
+app.include_router(
+    vault.router,
     prefix="/v1",
 )
 
