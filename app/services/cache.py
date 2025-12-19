@@ -1,5 +1,6 @@
 import logging
 import json
+import hashlib
 from typing import List, Dict, Optional, Any
 from config import supabase_admin
 from services.vault import VaultService
@@ -30,25 +31,35 @@ class CacheService:
         """
         Search for a similar prompt in the semantic cache.
         """
-        # 1. Exact match check (fastest, no embedding needed)
+        # 1. Hash-based exact match (fastest, < 10ms with index)
+        prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()
+        
+        logger.info(f"🔍 Cache lookup - user_id: {user_id}, model: {model}, hash: {prompt_hash}")
+        
         try:
             res = supabase_admin.table('semantic_cache') \
                 .select("response, metadata") \
                 .eq("user_id", user_id) \
                 .eq("model", model) \
-                .eq("prompt", prompt) \
+                .eq("prompt_hash", prompt_hash) \
                 .limit(1) \
                 .execute()
             
+            logger.info(f"📊 Hash query executed - data count: {len(res.data) if res.data else 0}")
+            
             if res.data:
-                logger.info(f"Exact cache hit for prompt: {prompt[:50]}...")
+                logger.info(f"✅ Exact cache hit (hash) for prompt: {prompt[:50]}...")
                 return {
                     "response": res.data[0]["response"],
                     "hit_type": "exact",
                     "similarity": 1.0
                 }
+            else:
+                logger.info(f"❌ Hash lookup returned no results")
         except Exception as e:
-            logger.error(f"Exact cache lookup failed: {e}")
+            logger.error(f"💥 Hash-based cache lookup failed: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
 
         # 2. Semantic match check
         embedding = await CacheService.get_embedding(user_id, prompt)
@@ -99,6 +110,9 @@ class CacheService:
         if not embedding:
              return
 
+        # Generate hash for fast exact matching
+        prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()
+
         try:
             # Store everything as JSON/Text
             # response can be a full OpenAI Response object (dict)
@@ -106,6 +120,7 @@ class CacheService:
                 "user_id": user_id,
                 "model": model,
                 "prompt": prompt,
+                "prompt_hash": prompt_hash,
                 "response": response,
                 "embedding": embedding,
                 "metadata": metadata or {}
