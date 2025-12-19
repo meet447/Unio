@@ -33,10 +33,10 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
         }
     )
 
-# CORS middleware with configurable origins
+# CORS middleware - allow all origins (public API)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Public API - allow all origins
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS", "DELETE"],
     allow_headers=["Authorization", "Content-Type", "X-Fallback-Model"],

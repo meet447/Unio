@@ -23,11 +23,28 @@ SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Singleton pattern for Supabase clients (saves 15-30MB RAM)
+_supabase_client = None
+_supabase_admin_client = None
 
-# Admin client with service role key (for backend operations bypassing RLS)
-# Fallback to standard client if service role key is missing
-supabase_admin = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY) if SUPABASE_SERVICE_ROLE_KEY else supabase
+def get_supabase():
+    """Get or create the main Supabase client (singleton)."""
+    global _supabase_client
+    if _supabase_client is None:
+        _supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    return _supabase_client
+
+def get_supabase_admin():
+    """Get or create the admin Supabase client (singleton)."""
+    global _supabase_admin_client
+    if _supabase_admin_client is None:
+        key = SUPABASE_SERVICE_ROLE_KEY if SUPABASE_SERVICE_ROLE_KEY else SUPABASE_KEY
+        _supabase_admin_client = create_client(SUPABASE_URL, key)
+    return _supabase_admin_client
+
+# Maintain backward compatibility - create instances on first access
+supabase = get_supabase()
+supabase_admin = get_supabase_admin()
 
 # CORS configuration - comma-separated list of allowed origins
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")

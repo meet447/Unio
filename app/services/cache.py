@@ -34,7 +34,7 @@ class CacheService:
         # 1. Hash-based exact match (fastest, < 10ms with index)
         prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()
         
-        logger.info(f"🔍 Cache lookup - user_id: {user_id}, model: {model}, hash: {prompt_hash}")
+        logger.debug(f"🔍 Cache lookup - user_id: {user_id}, model: {model}, hash: {prompt_hash}")
         
         try:
             res = supabase_admin.table('semantic_cache') \
@@ -45,7 +45,7 @@ class CacheService:
                 .limit(1) \
                 .execute()
             
-            logger.info(f"📊 Hash query executed - data count: {len(res.data) if res.data else 0}")
+            logger.debug(f"📊 Hash query executed - data count: {len(res.data) if res.data else 0}")
             
             if res.data:
                 logger.info(f"✅ Exact cache hit (hash) for prompt: {prompt[:50]}...")
@@ -55,7 +55,7 @@ class CacheService:
                     "similarity": 1.0
                 }
             else:
-                logger.info(f"❌ Hash lookup returned no results")
+                logger.debug(f"❌ Hash lookup returned no results")
         except Exception as e:
             logger.error(f"💥 Hash-based cache lookup failed: {e}")
             import traceback
