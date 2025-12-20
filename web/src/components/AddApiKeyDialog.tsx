@@ -74,7 +74,7 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
 
       // Perform verification request
       try {
-        const verifyRes = await fetch("http://api.unio.chipling.xyz/v1/verify-key", {
+        const verifyRes = await fetch("https://api.unio.chipling.xyz/v1/verify-key", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -213,7 +213,7 @@ export const AddApiKeyDialog = ({ onApiKeyAdded, children }: AddApiKeyDialogProp
                 <Label htmlFor="newProviderBaseUrl">Base URL (Optional)</Label>
                 <Input
                   id="newProviderBaseUrl"
-                  placeholder="e.g., http://api.unio.chipling.xyz/v1"
+                  placeholder="e.g., https://api.unio.chipling.xyz/v1"
                   value={newProviderBaseUrl}
                   onChange={(e) => setNewProviderBaseUrl(e.target.value)}
                 />
